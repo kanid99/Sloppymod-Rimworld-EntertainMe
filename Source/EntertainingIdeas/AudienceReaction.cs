@@ -8,7 +8,12 @@ namespace EntertainingIdeas
     /// While someone is using this building, everyone else in the room forms an
     /// opinion about it. Whether they enjoy it depends on how good the user is,
     /// what they think of them, and a fixed streak of taste that makes some
-    /// colonists reliable fans and others reliable sufferers.
+    /// colonists reliable fans and others reliable sufferers. Being well liked
+    /// carries a bad performer: affection is weighted heavily enough to cover
+    /// the whole skill penalty and then some.
+    ///
+    /// Also hands the performer experience in a second skill, since a JobDef
+    /// only carries one joySkill and singing is practice at two things.
     /// </summary>
     public class CompProperties_AudienceReaction : CompProperties
     {
@@ -29,6 +34,9 @@ namespace EntertainingIdeas
         /// <summary>How far personal taste can swing the verdict either way.</summary>
         public float tasteSpread = 25f;
         public bool requiresHearing = true;
+        /// <summary>Second skill the performer practises, beyond the job's joySkill.</summary>
+        public SkillDef performerSkill;
+        public float performerXpPerPulse = 0f;
 
         public CompProperties_AudienceReaction()
         {
@@ -113,6 +121,13 @@ namespace EntertainingIdeas
                 return;
             }
 
+            // The performer practises whether or not anyone is listening.
+            if (Props.performerSkill != null && Props.performerXpPerPulse > 0f
+                && performer.skills != null)
+            {
+                performer.skills.Learn(Props.performerSkill, Props.performerXpPerPulse);
+            }
+
             Room room = parent.GetRoom();
             if (room == null)
             {
@@ -156,6 +171,10 @@ namespace EntertainingIdeas
         /// way, opinion of the performer pulls each listener individually, and
         /// taste is fixed per pawn so the same colonist reacts the same way
         /// every time rather than flip-flopping.
+        ///
+        /// Opinion is deliberately the heavier term. A hopeless singer their
+        /// friends are fond of still goes down well; the same performance in
+        /// front of strangers does not.
         /// </summary>
         private bool Verdict(Pawn listener, Pawn performer)
         {

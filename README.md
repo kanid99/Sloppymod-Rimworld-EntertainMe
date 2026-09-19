@@ -22,7 +22,7 @@ each — see [Versions](#versions).
 | Archotech dreamtable | Spacer | Dexterity | Holographic entertainment | Projected ball, glows, absurdly expensive. |
 | Cocktail arcade table | Industrial | Dexterity | + Microelectronics basics | 1×1, seats two — put a chair on either side. Screen animates in play. |
 | Aquarium | Industrial | Solitary relaxation | Complex furniture + Electricity | 2×1. Fish swim whether or not anyone is watching. High beauty. |
-| Karaoke machine | Industrial | Social | Microelectronics basics | A crowd of up to five. Trains social; how well it goes down rides on the singer's *artistic* skill. |
+| Karaoke machine | Industrial | Social | Microelectronics basics | A crowd of up to five. Trains artistic *and* social; how well it goes down rides on artistic skill and on who likes the singer. |
 | Massage chair | Industrial | Solitary relaxation | Complex furniture + Electricity | Pawns sit *in* it. Comfortable enough to use as an ordinary chair. |
 | Hologame pod | Spacer | Cerebral | Holographic entertainment | Trains intellectual. |
 | Vista panel | Spacer | — (outdoors need) | Holographic entertainment | 3×1 wall display. Follows the local clock and eases cabin fever for the room. |
@@ -86,9 +86,23 @@ conditional on a building being in use:
 - **`CompAudienceReaction`** gives everyone *else* in the room a memory while
   someone is performing. The singer enjoys themselves regardless; the audience
   is a mixed bag, decided by the performer's artistic skill (whether they can
-  actually sing), each listener's opinion of them (friends are forgiving), and a
-  taste value hashed from the listener's ID so the same colonist reacts the
-  same way every time instead of flip-flopping. Deaf pawns are skipped.
+  actually sing), each listener's opinion of them, and a taste value hashed from
+  the listener's ID so the same colonist reacts the same way every time instead
+  of flip-flopping. Deaf pawns are skipped.
+
+  Opinion is the heavier term on purpose, so being liked covers for being bad —
+  roughly what share of a room enjoys it:
+
+  | singer's artistic skill | dislikes them | stranger | friendly | good friend | lover |
+  |---|---|---|---|---|---|
+  | tone deaf (0) | 0% | 20% | 48% | 76% | 100% |
+  | average (5) | 0% | 50% | 78% | 100% | 100% |
+  | good (10) | 24% | 80% | 100% | 100% | 100% |
+  | superb (16) | 60% | 100% | 100% | 100% | 100% |
+
+  The comp also hands the performer experience in a second skill, because a
+  `JobDef` carries only one `joySkill`: the job trains social, the comp adds
+  artistic, so a turn at the microphone builds both.
 - **`CompOutdoorsSimulator`** tops up the outdoors need of everyone sharing the
   room, but only up to a ceiling (35% by default) — enough to hold off cabin
   fever in a sealed base, never enough to replace going outside.

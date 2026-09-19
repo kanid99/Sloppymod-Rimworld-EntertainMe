@@ -895,7 +895,7 @@
   <ThingDef ParentName="EI_JoyBuildingBase">
     <defName>EI_KaraokeMachine</defName>
     <label>karaoke machine</label>
-    <description>A screen, two speakers and a microphone on a short cord. It scrolls the words, it keeps the tune, and it is entirely indifferent to whether anyone can sing. A crowd gathers because the alternative is being the one holding the microphone.\n\nWhoever is singing enjoys themselves regardless. Everyone else in the room makes up their own mind: a colonist who can actually hold a tune wins the room over, one who cannot very much does not, friends are more forgiving than strangers, and some colonists were never going to enjoy this under any circumstances. Get your artists on the microphone.</description>
+    <description>A screen, two speakers and a microphone on a short cord. It scrolls the words, it keeps the tune, and it is entirely indifferent to whether anyone can sing. A crowd gathers because the alternative is being the one holding the microphone.\n\nWhoever is singing enjoys themselves regardless. Everyone else in the room makes up their own mind: a colonist who can actually hold a tune wins the room over, one who cannot very much does not, friends are more forgiving than strangers, and some colonists were never going to enjoy this under any circumstances. A turn at the microphone is practice at both singing and handling a crowd, so it builds artistic and social skill together.</description>
     <graphicData>
       <texPath>EntertainingIdeas/Buildings/KaraokeMachine</texPath>
       <graphicClass>Graphic_Multi</graphicClass>
@@ -970,11 +970,19 @@
              would mean almost every singer emptied the room. -->
         <performanceSkill>Artistic</performanceSkill>
         <neutralSkill>5</neutralSkill>
-        <skillWeight>4</skillWeight>
-        <opinionWeight>0.4</opinionWeight>
+        <skillWeight>3</skillWeight>
+        <!-- Heavier than skill on purpose. A tone-deaf colonist their friends
+             are fond of (+40 opinion) clears the bar comfortably despite the
+             skill penalty, while the same performance in front of strangers
+             does not. -->
+        <opinionWeight>0.7</opinionWeight>
         <tasteSpread>25</tasteSpread>
         <intervalTicks>1250</intervalTicks>
         <scanRadius>5</scanRadius>
+        <!-- The job's joySkill trains social; this adds the artistic half, so
+             a turn at the microphone is practice at both. -->
+        <performerSkill>Artistic</performerSkill>
+        <performerXpPerPulse>4</performerXpPerPulse>
       </li>
     </comps>
     <researchPrerequisites>
