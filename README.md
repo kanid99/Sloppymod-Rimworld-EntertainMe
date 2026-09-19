@@ -56,9 +56,9 @@ Powered machines are gated by the giver, which skips buildings whose
 
 ## The moving parts
 
-Three things needed code, because vanilla has no XML-only frame animation (its
-one animated graphic class, `Graphic_Flicker`, is fire) and no way to make
-anything conditional on a building being in use:
+These needed code, because vanilla has no XML-only frame animation (its one
+animated graphic class, `Graphic_Flicker`, is fire) and no way to make anything
+conditional on a building being in use:
 
 - **`CompAnimatedScreen`** cycles a strip of textures over a building. It draws
   only while a pawn is actually using it and only while the thing has power,
@@ -76,6 +76,12 @@ anything conditional on a building being in use:
 - **`CompDayCycleDisplay`** picks a frame strip by local time of day and
   recolours the building's glower to match, so a vista panel washes the room
   amber at sunset and blue after dark.
+- **`drawOverPawns`** on the animation comp draws above the pawn layer, which
+  is how the soaking tub hides its occupant below the waterline. RimWorld 1.6
+  does have a real swimming pose, but it swaps the pawn to a dedicated swimming
+  graphic gated on `Pawn.Swimming` — read-only, and derived from the terrain
+  underfoot — so a building standing on an ordinary floor cannot invoke it. The
+  painted waterline gets the same read and works on 1.5 as well.
 - **`CompOutdoorsSimulator`** tops up the outdoors need of everyone sharing the
   room, but only up to a ceiling (35% by default) — enough to hold off cabin
   fever in a sealed base, never enough to replace going outside.

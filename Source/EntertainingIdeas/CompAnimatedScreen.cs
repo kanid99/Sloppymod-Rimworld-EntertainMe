@@ -33,9 +33,14 @@ namespace EntertainingIdeas
         public bool rotateWithBuilding = false;
         /// <summary>
         /// Draw above pawns instead of on the building. Used to hide the lower
-        /// half of whoever is in a soaking tub: RimWorld has no submersion
-        /// rendering, so a waterline drawn over the pawn is the only way to
-        /// make someone look like they are in the water rather than on it.
+        /// half of whoever is in a soaking tub.
+        ///
+        /// 1.6 does render swimmers properly, but it does it by swapping the
+        /// pawn to a dedicated swimming graphic, gated on Pawn.Swimming, which
+        /// is read-only and derived from the terrain the pawn is standing in.
+        /// A building on an ordinary floor can never set it, so a waterline
+        /// painted over the occupant is the portable way to get the look - and
+        /// unlike the real pose it also works on 1.5.
         /// </summary>
         public bool drawOverPawns = false;
         /// <summary>Only draw while a refuelable parent still has fuel.</summary>

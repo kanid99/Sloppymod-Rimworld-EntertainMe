@@ -739,10 +739,11 @@
         <glowRadius>3</glowRadius>
         <glowColor>(252,187,113,0)</glowColor>
       </li>
-      <!-- The near half of the tub, painted back over whoever is in it. The
-           game draws pawns standing on the tile and has no submersion
-           rendering, so this waterline is what makes an occupant read as
-           being in the water rather than on top of it. -->
+      <!-- The near half of the tub, painted back over whoever is in it.
+           1.6's own swimming pose is keyed to Pawn.Swimming, which is
+           read-only and comes from the terrain underfoot, so a building on a
+           normal floor cannot invoke it. This waterline gets the same read and
+           works on 1.5 too. -->
       <li Class="EntertainingIdeas.CompProperties_AnimatedScreen">
         <framePath>EntertainingIdeas/Buildings/SoakingTubWater</framePath>
         <frameCount>6</frameCount>

@@ -840,10 +840,11 @@ def soaking_tub():
 def soaking_tub_water_frames(total=6):
     """The near half of the tub, drawn OVER the occupant.
 
-    RimWorld draws a pawn standing on the tile, so the only way to make someone
-    look like they are in the water is to paint the front of the tub back over
-    their legs. Everything above the waterline is left clear so their head and
-    shoulders still show.
+    1.6 has a real swimming pose, but it is keyed to Pawn.Swimming, which is
+    read-only and comes from the terrain underfoot - a building cannot ask for
+    it. Painting the front of the tub back over the occupant's legs gets the
+    same read on both 1.5 and 1.6. Everything above the waterline is left clear
+    so their head and shoulders still show.
     """
     import math
     for i in range(total):
