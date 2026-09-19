@@ -140,7 +140,8 @@ for name, node in thing_defs.items():
 
 # --- C# classes named from XML, and their animation frames ------------------
 SRC = os.path.join(ROOT, "Source", "EntertainingIdeas")
-ASSEMBLY = os.path.join(ROOT, "Assemblies", "EntertainingIdeas.dll")
+ASSEMBLIES = [os.path.join(ROOT, v, "Assemblies", "EntertainingIdeas.dll")
+               for v in ("1.5", "1.6")]
 
 source_classes = set()
 if os.path.isdir(SRC):
@@ -181,12 +182,15 @@ for folder, _, files in os.walk(DEFS):
 for klass in sorted(our_classes_used):
     if klass not in source_classes:
         fail("XML names EntertainingIdeas.%s but no C# source defines it" % klass)
-if our_classes_used and not os.path.isfile(ASSEMBLY):
-    fail("XML names C# classes but Assemblies/EntertainingIdeas.dll is missing "
-         "- run Source/build.sh (defs naming a missing class will not load)")
+built = [a for a in ASSEMBLIES if os.path.isfile(a)]
+if our_classes_used and len(built) < len(ASSEMBLIES):
+    missing = [os.path.relpath(a, ROOT) for a in ASSEMBLIES if not os.path.isfile(a)]
+    fail("XML names C# classes but these assemblies are missing: %s - run "
+         "Source/build.sh (defs naming a missing class will not load)"
+         % ", ".join(missing))
 
-print("%d C# classes referenced from XML, assembly %s"
-      % (len(our_classes_used), "present" if os.path.isfile(ASSEMBLY) else "MISSING"))
+print("%d C# classes referenced from XML, %d/%d version assemblies built"
+      % (len(our_classes_used), len(built), len(ASSEMBLIES)))
 print("%d ThingDefs, %d JoyGiverDefs, %d JobDefs, %d ResearchProjectDefs"
       % (len(thing_defs), len(joy_givers), len(job_defs), len(research_defs)))
 if problems:

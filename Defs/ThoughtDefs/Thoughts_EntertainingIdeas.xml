@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Defs>
+
+  <!-- Whoever is holding the microphone is having a good time regardless; this
+       is what it does to everyone else in the room. Which one a colonist gets
+       depends on how good the singer is, what they think of them, and a fixed
+       streak of taste, so the same person reacts the same way every time. -->
+
+  <ThoughtDef>
+    <defName>EI_EnjoyedKaraoke</defName>
+    <durationDays>0.4</durationDays>
+    <stackLimit>3</stackLimit>
+    <stackedEffectMultiplier>0.7</stackedEffectMultiplier>
+    <stages>
+      <li>
+        <label>enjoyed the singing</label>
+        <description>Somebody has been murdering a song at the top of their lungs, and honestly, it was the best thing that happened all day.</description>
+        <baseMoodEffect>4</baseMoodEffect>
+      </li>
+    </stages>
+  </ThoughtDef>
+
+  <ThoughtDef>
+    <defName>EI_EnduredKaraoke</defName>
+    <durationDays>0.4</durationDays>
+    <stackLimit>3</stackLimit>
+    <stackedEffectMultiplier>0.7</stackedEffectMultiplier>
+    <stages>
+      <li>
+        <label>had to listen to that</label>
+        <description>Somebody has been murdering a song at the top of their lungs and there is nowhere in this room to go.</description>
+        <baseMoodEffect>-4</baseMoodEffect>
+      </li>
+    </stages>
+  </ThoughtDef>
+
+</Defs>

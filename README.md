@@ -5,7 +5,8 @@ the tech ladder, so a colony always has something worth doing — from a hide ma
 full of knucklebones to a room-sized shared hallucination.
 
 Mostly XML, plus a small assembly for the moving parts. No Harmony, no mod
-dependencies. Targets RimWorld 1.5 and 1.6.
+dependencies. Targets RimWorld 1.5 and 1.6, with a separate assembly built for
+each — see [Versions](#versions).
 
 ## What it adds
 
@@ -21,7 +22,7 @@ dependencies. Targets RimWorld 1.5 and 1.6.
 | Archotech dreamtable | Spacer | Dexterity | Holographic entertainment | Projected ball, glows, absurdly expensive. |
 | Cocktail arcade table | Industrial | Dexterity | + Microelectronics basics | 1×1, seats two — put a chair on either side. Screen animates in play. |
 | Aquarium | Industrial | Solitary relaxation | Complex furniture + Electricity | 2×1. Fish swim whether or not anyone is watching. High beauty. |
-| Karaoke machine | Industrial | Social | Microelectronics basics | A crowd of up to five. Trains social. |
+| Karaoke machine | Industrial | Social | Microelectronics basics | A crowd of up to five. Trains social. The room forms opinions — see below. |
 | Massage chair | Industrial | Solitary relaxation | Complex furniture + Electricity | Pawns sit *in* it. Comfortable enough to use as an ordinary chair. |
 | Hologame pod | Spacer | Cerebral | Holographic entertainment | Trains intellectual. |
 | Vista panel | Spacer | — (outdoors need) | Holographic entertainment | 3×1 wall display. Follows the local clock and eases cabin fever for the room. |
@@ -82,6 +83,12 @@ conditional on a building being in use:
   graphic gated on `Pawn.Swimming` — read-only, and derived from the terrain
   underfoot — so a building standing on an ordinary floor cannot invoke it. The
   painted waterline gets the same read and works on 1.5 as well.
+- **`CompAudienceReaction`** gives everyone *else* in the room a memory while
+  someone is performing. The singer enjoys themselves regardless; the audience
+  is a mixed bag, decided by the performer's social skill (a good singer wins
+  the room), each listener's opinion of them (friends are forgiving), and a
+  taste value hashed from the listener's ID so the same colonist reacts the
+  same way every time instead of flip-flopping. Deaf pawns are skipped.
 - **`CompOutdoorsSimulator`** tops up the outdoors need of everyone sharing the
   room, but only up to a ceiling (35% by default) — enough to hold off cabin
   fever in a sealed base, never enough to replace going outside.
@@ -98,7 +105,8 @@ Textures/         EntertainingIdeas/Buildings/*.png
 Assemblies/       EntertainingIdeas.dll (built from Source/EntertainingIdeas)
 Source/           tooling and code, not loaded by the game directly
   EntertainingIdeas/  the C# above
-  build.sh        fetches RimWorld reference assemblies and compiles the DLL
+  build.sh        fetches reference assemblies and compiles both versions
+  check_api.sh    checks XML class references against each game version
   validate.py     checks the defs without launching the game
   TextureGen/     regenerates every texture and the preview image
 ```
@@ -108,12 +116,31 @@ Source/           tooling and code, not loaded by the game directly
 ```bash
 python3 Source/validate.py                     # def sanity checks
 python3 Source/TextureGen/generate_textures.py # redraw all art + Preview.png
-./Source/build.sh                              # rebuild Assemblies/*.dll
+./Source/build.sh                              # rebuild both assemblies
+./Source/check_api.sh                          # check XML classes per version
 ```
 
 `build.sh` needs a C# compiler (`mono-devel` provides `mcs`) and pulls RimWorld's
-reference assemblies from NuGet, so the DLL can be rebuilt without a copy of the
-game installed. It targets 1.5 references and runs on 1.5 and 1.6.
+reference assemblies from NuGet, so the assemblies can be rebuilt without a copy
+of the game installed.
+
+## Versions
+
+One assembly cannot serve both versions. 1.6 changed APIs this mod uses:
+
+| | 1.5 | 1.6 |
+|---|---|---|
+| `JoyUtility.JoyTickCheckEnd` | `(Pawn, JoyTickFullJoyAction, float, Building)` | `(Pawn, int, JoyTickFullJoyAction, float, Building)` |
+| `Toil` tick hook | `tickAction` | `tickAction`, plus `tickIntervalAction(int delta)` |
+
+A 1.5-built assembly would throw `MissingMethodException` the moment a pawn sat
+in the massage chair on 1.6. So the sources carry one `#if RW16` branch, which
+also takes the opportunity to pass 1.6 the real elapsed tick count rather than
+assuming one tick has passed, `build.sh` produces an assembly per version, and
+`LoadFolders.xml` loads the right one. Defs, textures and About are shared.
+
+Everything else checks out on both: every class the XML names, and every vanilla
+def field it sets, verified against both versions' reference assemblies.
 
 `validate.py` catches the failures that are otherwise silent until runtime: a
 recreation building no `JoyGiverDef` lists, a `texPath` with no file behind it, a

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Defs, textures and About are shared; only the assembly differs per version,
+     because 1.6 changed JoyUtility.JoyTickCheckEnd and added Toil interval
+     ticking. Each game version loads the root plus its own folder. -->
+<loadFolders>
+  <v1.5>
+    <li>/</li>
+    <li>1.5</li>
+  </v1.5>
+  <v1.6>
+    <li>/</li>
+    <li>1.6</li>
+  </v1.6>
+</loadFolders>

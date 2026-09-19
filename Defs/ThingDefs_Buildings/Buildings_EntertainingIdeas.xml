@@ -895,7 +895,7 @@
   <ThingDef ParentName="EI_JoyBuildingBase">
     <defName>EI_KaraokeMachine</defName>
     <label>karaoke machine</label>
-    <description>A screen, two speakers and a microphone on a short cord. It scrolls the words, it keeps the tune, and it is entirely indifferent to whether anyone can sing. A crowd gathers because the alternative is being the one holding the microphone.\n\nSeveral colonists can take part at once, and it is good practice at handling other people.</description>
+    <description>A screen, two speakers and a microphone on a short cord. It scrolls the words, it keeps the tune, and it is entirely indifferent to whether anyone can sing. A crowd gathers because the alternative is being the one holding the microphone.\n\nWhoever is singing enjoys themselves regardless. Everyone else in the room makes up their own mind: a genuinely good singer wins the room over, a bad one very much does not, friends are more forgiving than strangers, and some colonists were never going to enjoy this under any circumstances.</description>
     <graphicData>
       <texPath>EntertainingIdeas/Buildings/KaraokeMachine</texPath>
       <graphicClass>Graphic_Multi</graphicClass>
@@ -906,6 +906,7 @@
     </graphicData>
     <rotatable>true</rotatable>
     <defaultPlacingRot>South</defaultPlacingRot>
+    <tickerType>Rare</tickerType>
     <fillPercent>0.45</fillPercent>
     <pathCost>50</pathCost>
     <constructEffect>ConstructMetal</constructEffect>
@@ -951,6 +952,24 @@
         <playJobs>
           <li>EI_Sing_Karaoke</li>
         </playJobs>
+      </li>
+      <!-- The singer is enjoying themselves either way. Everyone else in the
+           room forms their own view: a good singer wins the room over, a bad
+           one does not, colonists who like the singer are more forgiving, and
+           some people simply never enjoy this. -->
+      <li Class="EntertainingIdeas.CompProperties_AudienceReaction">
+        <userJobs>
+          <li>EI_Sing_Karaoke</li>
+        </userJobs>
+        <goodThought>EI_EnjoyedKaraoke</goodThought>
+        <badThought>EI_EnduredKaraoke</badThought>
+        <performanceSkill>Social</performanceSkill>
+        <neutralSkill>8</neutralSkill>
+        <skillWeight>4</skillWeight>
+        <opinionWeight>0.4</opinionWeight>
+        <tasteSpread>25</tasteSpread>
+        <intervalTicks>1250</intervalTicks>
+        <scanRadius>5</scanRadius>
       </li>
     </comps>
     <researchPrerequisites>

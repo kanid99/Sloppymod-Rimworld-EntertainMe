@@ -101,18 +101,36 @@ namespace EntertainingIdeas
             relax.defaultCompleteMode = ToilCompleteMode.Delay;
             relax.defaultDuration = job.def.joyDuration;
             relax.handlingFacing = true;
+#if RW16
+            // 1.6 ticks jobs in variable-size intervals and wants the elapsed
+            // ticks passed through, so joy accrues at the right rate whatever
+            // the pawn's current tick interval is.
+            relax.tickIntervalAction = delegate(int delta)
+            {
+                FaceTheRightWay();
+                JoyUtility.JoyTickCheckEnd(pawn, delta, JoyTickFullJoyAction.EndJob, 1f, Seat as Building);
+            };
+#else
             relax.tickAction = delegate
             {
-                // Face the way the furniture does, so pawns sit in it rather
-                // than standing on it at some random angle.
-                if (Seat != null)
-                {
-                    pawn.rotationTracker.FaceCell(pawn.Position + Seat.Rotation.FacingCell);
-                }
+                FaceTheRightWay();
                 JoyUtility.JoyTickCheckEnd(pawn, JoyTickFullJoyAction.EndJob, 1f, Seat as Building);
             };
+#endif
             relax.socialMode = RandomSocialMode.Quiet;
             yield return relax;
+        }
+
+        /// <summary>
+        /// Face the way the furniture does, so pawns sit in it rather than
+        /// standing on it at some random angle.
+        /// </summary>
+        private void FaceTheRightWay()
+        {
+            if (Seat != null)
+            {
+                pawn.rotationTracker.FaceCell(pawn.Position + Seat.Rotation.FacingCell);
+            }
         }
     }
 }
