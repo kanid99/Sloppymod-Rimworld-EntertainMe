@@ -248,6 +248,8 @@ python3 Source/TextureGen/contact_sheet.py      # every texture on one sheet
 python3 Source/TextureGen/promo_art.py          # release-post graphics -> promo/
 ```
 
+`docs/release-post.md` holds the release-post copy that goes with those images.
+
 They are honest placeholder sprites; swap in hand-drawn art any time by
 replacing the PNGs.
 
