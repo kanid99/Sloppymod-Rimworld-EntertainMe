@@ -739,14 +739,27 @@
         <glowRadius>3</glowRadius>
         <glowColor>(252,187,113,0)</glowColor>
       </li>
-      <!-- Steam only while the firebox is lit; the comp skips a building whose
-           refuelable comp has run dry. -->
+      <!-- The near half of the tub, painted back over whoever is in it. The
+           game draws pawns standing on the tile and has no submersion
+           rendering, so this waterline is what makes an occupant read as
+           being in the water rather than on top of it. -->
+      <li Class="EntertainingIdeas.CompProperties_AnimatedScreen">
+        <framePath>EntertainingIdeas/Buildings/SoakingTubWater</framePath>
+        <frameCount>6</frameCount>
+        <ticksPerFrame>16</ticksPerFrame>
+        <drawSize>(1.15,1.15)</drawSize>
+        <requireUser>false</requireUser>
+        <drawOverPawns>true</drawOverPawns>
+      </li>
+      <!-- Steam sits above the waterline, and only while the firebox is lit. -->
       <li Class="EntertainingIdeas.CompProperties_AnimatedScreen">
         <framePath>EntertainingIdeas/Buildings/SoakingTubSteam</framePath>
         <frameCount>6</frameCount>
         <ticksPerFrame>14</ticksPerFrame>
         <drawSize>(1.15,1.15)</drawSize>
         <requireUser>false</requireUser>
+        <requireFuel>true</requireFuel>
+        <drawOverPawns>true</drawOverPawns>
       </li>
     </comps>
   </ThingDef>
@@ -827,30 +840,30 @@
   <ThingDef ParentName="EI_JoyBuildingBase">
     <defName>EI_SkittlesLane</defName>
     <label>skittles lane</label>
-    <description>Five tiles of planed board, a shallow gutter down each side, and nine turned pins standing at the far end. Roll the ball, knock down what you can, walk up and set them again. It eats floor space and it is worth it.\n\nThe thrower stands off the near end. Steady rolling trains shooting.</description>
+    <description>Seven tiles of planed board with a shallow gutter down each side, and nine turned pins standing in a diamond at the far end. Roll the ball down, knock over what you can, walk up and set them again. The old game that ten-pin bowling was eventually made from, and it eats floor space exactly the way the real thing does.\n\nThe thrower stands off the near end. Steady rolling trains shooting.</description>
     <graphicData>
       <texPath>EntertainingIdeas/Buildings/SkittlesLane</texPath>
       <graphicClass>Graphic_Multi</graphicClass>
-      <drawSize>(1,5)</drawSize>
+      <drawSize>(1,7)</drawSize>
       <shadowData>
-        <volume>(0.85,0.2,4.5)</volume>
+        <volume>(0.85,0.2,6.5)</volume>
       </shadowData>
     </graphicData>
-    <size>(1,5)</size>
+    <size>(1,7)</size>
     <rotatable>true</rotatable>
     <defaultPlacingRot>South</defaultPlacingRot>
     <fillPercent>0.2</fillPercent>
     <pathCost>22</pathCost>
     <canOverlapZones>false</canOverlapZones>
     <hasInteractionCell>true</hasInteractionCell>
-    <interactionCellOffset>(0,0,3)</interactionCellOffset>
+    <interactionCellOffset>(0,0,4)</interactionCellOffset>
     <placeWorkers>
       <li>PlaceWorker_PreventInteractionSpotOverlap</li>
     </placeWorkers>
     <statBases>
-      <MaxHitPoints>140</MaxHitPoints>
-      <WorkToBuild>5000</WorkToBuild>
-      <Mass>60</Mass>
+      <MaxHitPoints>180</MaxHitPoints>
+      <WorkToBuild>6500</WorkToBuild>
+      <Mass>85</Mass>
       <Beauty>4</Beauty>
       <JoyGainFactor>1.15</JoyGainFactor>
     </statBases>
@@ -858,7 +871,7 @@
       <li>Woody</li>
       <li>Stony</li>
     </stuffCategories>
-    <costStuffCount>70</costStuffCount>
+    <costStuffCount>95</costStuffCount>
     <building>
       <joyKind>Gaming_Dexterity</joyKind>
     </building>
@@ -867,7 +880,7 @@
         <framePath>EntertainingIdeas/Buildings/SkittlesLaneRoll</framePath>
         <frameCount>6</frameCount>
         <ticksPerFrame>13</ticksPerFrame>
-        <drawSize>(1,5)</drawSize>
+        <drawSize>(1,7)</drawSize>
         <rotateWithBuilding>true</rotateWithBuilding>
         <playJobs>
           <li>EI_Play_Skittles</li>

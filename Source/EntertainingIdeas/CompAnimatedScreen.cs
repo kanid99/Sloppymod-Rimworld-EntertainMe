@@ -32,6 +32,15 @@ namespace EntertainingIdeas
         /// <summary>Turn the frames to match a rotatable building's facing.</summary>
         public bool rotateWithBuilding = false;
         /// <summary>
+        /// Draw above pawns instead of on the building. Used to hide the lower
+        /// half of whoever is in a soaking tub: RimWorld has no submersion
+        /// rendering, so a waterline drawn over the pawn is the only way to
+        /// make someone look like they are in the water rather than on it.
+        /// </summary>
+        public bool drawOverPawns = false;
+        /// <summary>Only draw while a refuelable parent still has fuel.</summary>
+        public bool requireFuel = false;
+        /// <summary>
         /// How far to look for someone using this, in cells. 0 checks the
         /// building's own cells and the ring around them, which covers
         /// interaction cells and adjacent chairs.
@@ -78,6 +87,7 @@ namespace EntertainingIdeas
     {
         private FrameSet frames;
         private CompPowerTrader power;
+        private CompRefuelable fuel;
         private bool inUse;
         private int nextRecheckTick = -99999;
 
@@ -90,6 +100,7 @@ namespace EntertainingIdeas
         {
             base.PostSpawnSetup(respawningAfterLoad);
             power = parent.TryGetComp<CompPowerTrader>();
+            fuel = parent.TryGetComp<CompRefuelable>();
             frames = new FrameSet(Props.framePath, Props.frameCount, Props.drawSize);
             nextRecheckTick = -99999;
         }
@@ -106,6 +117,10 @@ namespace EntertainingIdeas
             {
                 return;
             }
+            if (Props.requireFuel && fuel != null && !fuel.HasFuel)
+            {
+                return;
+            }
             if (Props.requireUser && !AnyoneStillPlaying())
             {
                 return;
@@ -118,7 +133,9 @@ namespace EntertainingIdeas
             }
 
             Vector3 drawPos = parent.DrawPos;
-            drawPos.y += Props.altitudeOffset;
+            drawPos.y = Props.drawOverPawns
+                ? AltitudeLayer.MoteOverhead.AltitudeFor() + Props.altitudeOffset
+                : drawPos.y + Props.altitudeOffset;
             float extraRotation = Props.rotateWithBuilding ? parent.Rotation.AsAngle - 180f : 0f;
             graphic.Draw(drawPos, Rot4.North, parent, extraRotation);
         }

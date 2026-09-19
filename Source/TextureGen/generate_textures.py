@@ -805,25 +805,16 @@ def pinball_play_frames(total=8):
 # ---------------------------------------------------------------------------
 
 def draw_tub_water(c, frame=None, total=6):
+    """Still water for the cabinet texture itself."""
     import math
     p = 0.0 if frame is None else float(frame) / total
-    c.circle(64, 62, 38, (46, 104, 112, 255))                  # water
+    c.circle(64, 62, 38, (46, 104, 112, 255))
     c.circle(64, 62, 38, (60, 130, 138, 120))
-    for k in range(3):                                          # ripples
+    for k in range(3):
         r = 8 + ((p + k / 3.0) % 1.0) * 28
         alpha = int(130 * (1.0 - (r - 8) / 28.0))
         if alpha > 8:
             c.ring(64, 62, r, r - 2, (186, 232, 236, alpha))
-    if frame is not None:
-        # Seen from above, steam reads as soft puffs drifting off the surface.
-        for k in range(6):
-            t = (p + k / 6.0) % 1.0
-            a = k / 6.0 * 2 * math.pi
-            drift = 6 + t * 30
-            sx = 64 + math.cos(a) * drift
-            sy = 58 + math.sin(a) * drift * 0.8
-            c.ellipse(sx, sy, 9 + t * 9, 7 + t * 7, (240, 248, 250, int(120 * (1 - t))))
-        c.circle(64, 60, 16 + 10 * p, (240, 248, 250, int(60 * (1 - p))))
 
 
 def soaking_tub():
@@ -846,12 +837,54 @@ def soaking_tub():
     return c
 
 
-def soaking_tub_frames(total=6):
+def soaking_tub_water_frames(total=6):
+    """The near half of the tub, drawn OVER the occupant.
+
+    RimWorld draws a pawn standing on the tile, so the only way to make someone
+    look like they are in the water is to paint the front of the tub back over
+    their legs. Everything above the waterline is left clear so their head and
+    shoulders still show.
+    """
+    import math
     for i in range(total):
         c = Canvas(128, 128)
-        draw_tub_water(c, i, total)
-        import math
-        glow = 200 + int(45 * math.sin(2 * math.pi * float(i) / total))
+        p = float(i) / total
+        # Everything below the waterline, filled scanline by scanline so the
+        # line sits where a pawn's chest is rather than halfway up their head.
+        waterline = 72
+        for y in range(waterline, 102):
+            dy = y - 62
+            half = math.sqrt(max(0.0, 39.0 * 39.0 - dy * dy))
+            if half > 0:
+                c.line(64 - half, y, 64 + half, y, (46, 104, 112, 255), 1.4)
+        c.line(64 - 36, waterline, 64 + 36, waterline, (96, 176, 184, 200), 2.4)
+        for k in range(3):                                      # ripples
+            r = 10 + ((p + k / 3.0) % 1.0) * 26
+            alpha = int(140 * (1.0 - (r - 10) / 26.0))
+            if alpha > 8:
+                c.wedge(64, 62, r, r - 2.4, 200, 340, (192, 236, 240, alpha))
+        c.wedge(64, 62, 46, 39, 184, 356, (112, 78, 48, 255))   # near rim
+        c.wedge(64, 62, 45, 41, 184, 356, (146, 150, 158, 255))  # iron band
+        c.wedge(64, 62, 48, 46, 184, 356, DARK)
+        c.save(os.path.join(OUT, "SoakingTubWater_%d.png" % i))
+    print("  SoakingTubWater_0..%d.png  (128x128)" % (total - 1))
+
+
+def soaking_tub_frames(total=6):
+    """Steam only - drawn over the waterline, and only while the box is lit."""
+    import math
+    for i in range(total):
+        c = Canvas(128, 128)
+        p = float(i) / total
+        for k in range(6):
+            t = (p + k / 6.0) % 1.0
+            a = k / 6.0 * 2 * math.pi
+            drift = 6 + t * 30
+            sx = 64 + math.cos(a) * drift
+            sy = 58 + math.sin(a) * drift * 0.8
+            c.ellipse(sx, sy, 9 + t * 9, 7 + t * 7, (240, 248, 250, int(110 * (1 - t))))
+        c.circle(64, 60, 16 + 10 * p, (240, 248, 250, int(55 * (1 - p))))
+        glow = 200 + int(45 * math.sin(2 * math.pi * p))
         c.circle(64, 114, 6, (226, 120, 52, min(255, glow)))
         c.circle(64, 114, 3, (255, 206, 120, 255))
         c.save(os.path.join(OUT, "SoakingTubSteam_%d.png" % i))
@@ -926,28 +959,29 @@ def aquarium_frames(total=8):
 # 11. Skittles lane  (medieval, 1x5, rolled from the near end)
 # ---------------------------------------------------------------------------
 
-PIN_ROWS = [(78,), (64, 92), (50, 78, 106), (36, 64, 92, 120)]
+# Nine pins in a diamond, which is what skittles actually uses.
+PIN_ROWS = [(64,), (50, 78), (36, 64, 92), (50, 78), (64,)]
 
 
 def draw_skittles(c, frame=None, total=6):
     import math
     p = None if frame is None else float(frame) / (total - 1)
 
-    c.rect(6, 8, 122, 632, DARK, 10)
-    c.rect(9, 11, 119, 629, (72, 50, 32, 255), 8)               # frame
-    c.rect(24, 16, 104, 624, (186, 148, 96, 255), 4)            # lane
-    for y in range(20, 620, 26):                                 # planks
+    c.rect(6, 8, 122, 888, DARK, 10)
+    c.rect(9, 11, 119, 885, (72, 50, 32, 255), 8)               # frame
+    c.rect(24, 16, 104, 880, (186, 148, 96, 255), 4)            # lane
+    for y in range(20, 876, 26):                                 # planks
         c.line(26, y, 102, y, (168, 130, 82, 120), 1.6)
-    c.rect(12, 16, 24, 624, (54, 38, 24, 255), 3)               # gutters
-    c.rect(104, 16, 116, 624, (54, 38, 24, 255), 3)
-    c.rect(24, 16, 104, 150, (198, 164, 112, 255), 4)           # pin deck
-    c.line(26, 150, 102, 150, (120, 88, 54, 190), 2)
-    c.line(26, 566, 102, 566, (150, 60, 50, 220), 3)            # foul line
+    c.rect(12, 16, 24, 880, (54, 38, 24, 255), 3)               # gutters
+    c.rect(104, 16, 116, 880, (54, 38, 24, 255), 3)
+    c.rect(24, 16, 104, 190, (198, 164, 112, 255), 4)           # pin deck
+    c.line(26, 190, 102, 190, (120, 88, 54, 190), 2)
+    c.line(26, 812, 102, 812, (150, 60, 50, 220), 3)            # foul line
 
     # Pins: standing, or scattered once the ball has reached them.
     scattered = p is not None and p > 0.72
     for row, xs in enumerate(PIN_ROWS):
-        py = 52 + row * 26
+        py = 46 + row * 27
         for k, px in enumerate(xs):
             if scattered:
                 shove = (p - 0.72) / 0.28
@@ -963,9 +997,9 @@ def draw_skittles(c, frame=None, total=6):
 
     # The ball, rolling up the lane.
     if p is None:
-        bx, by = 64, 596
+        bx, by = 64, 846
     else:
-        by = 596 - min(1.0, p / 0.72) * 440
+        by = 846 - min(1.0, p / 0.72) * 640
         bx = 64 + 10 * math.sin(p * 5)
     c.circle(bx, by, 13, DARK)
     c.circle(bx, by, 11, (58, 62, 78, 255))
@@ -973,11 +1007,11 @@ def draw_skittles(c, frame=None, total=6):
     for k in range(3):                                           # finger holes
         c.circle(bx - 3 + k * 3, by + 3, 1.6, (28, 30, 38, 255))
     if p is not None and p > 0.05:
-        c.line(bx, by + 18, bx, min(600, by + 60), (255, 255, 255, 50), 10)
+        c.line(bx, by + 18, bx, min(860, by + 72), (255, 255, 255, 50), 10)
 
 
 def skittles_lane():
-    c = Canvas(128, 640)
+    c = Canvas(128, 896)
     draw_skittles(c, None)
     save_rotations(c, "SkittlesLane")
     return c
@@ -985,10 +1019,10 @@ def skittles_lane():
 
 def skittles_frames(total=6):
     for i in range(total):
-        c = Canvas(128, 640)
+        c = Canvas(128, 896)
         draw_skittles(c, i, total)
         c.save(os.path.join(OUT, "SkittlesLaneRoll_%d.png" % i))
-    print("  SkittlesLaneRoll_0..%d.png  (128x640)" % (total - 1))
+    print("  SkittlesLaneRoll_0..%d.png  (128x896)" % (total - 1))
 
 
 # ---------------------------------------------------------------------------
@@ -1220,6 +1254,7 @@ def _build_massagechair():
 
 def _build_soakingtub():
     canvas = soaking_tub()
+    soaking_tub_water_frames()
     soaking_tub_frames()
     return {"SoakingTub": canvas}
 
