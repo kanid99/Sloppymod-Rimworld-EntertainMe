@@ -24,10 +24,10 @@ for each — see [Versions](#versions).
 
 | Building | Size | Recreation | Power | Research |
 |---|---|---|---|---|
-| Pinball machine | 1×3 | Dexterity | 120W | Pinball engineering |
-| Boomalope blitz pinball | 1×3 | Dexterity | 150W | Pinball engineering |
-| Mech rampage pinball | 1×3 | Dexterity | 180W | + Microelectronics basics |
-| Cocktail arcade table | 1×1 | Dexterity | 100W | + Microelectronics basics |
+| Pinball machine | 1×3 | Dexterity | 120W | Electricity |
+| Boomalope blitz pinball | 1×3 | Dexterity | 150W | Electricity |
+| Mech rampage pinball | 1×3 | Dexterity | 180W | Microelectronics basics |
+| Cocktail arcade table | 1×1 | Dexterity | 100W | Tube television |
 | Massage chair | 1×1 | Solitary relaxation | 90W | Complex furniture + Electricity |
 | Aquarium | 2×1 | Solitary relaxation | 60W | Complex furniture + Electricity |
 | Karaoke machine | 1×1 | Social | 120W | Microelectronics basics |
@@ -38,8 +38,9 @@ cost, power, beauty and how much joy they give. The cocktail table seats two —
 put a chair on either side.
 
 The heated tub is the wood-fired one with the firebox swapped for an element: no
-hauling and no ash, but a standing draw on the grid. The massage chair needs
-power to massage anyone, and without it is simply a very comfortable chair —
+hauling and no ash, but a standing draw on the grid. The massage chair is
+upholstered from cloth, leather or synthread — its sprite is painted
+near-neutral so the stuff colour carries — and needs power to massage anyone, and without it is simply a very comfortable chair —
 colonists will still sit in it to eat and talk, they just will not book a
 session.
 
@@ -47,16 +48,17 @@ session.
 
 | Building | Size | Recreation | Power | Research |
 |---|---|---|---|---|
-| Archotech dreamtable | 1×3 | Dexterity | 200W | Holographic entertainment |
-| Hologame pod | 1×1 | Cerebral | 250W | Holographic entertainment |
-| Vista panel | 3×1 | *(outdoors need)* | 150W | Holographic entertainment |
-| Dreamloop holotheater | 3×1 | Television | 500W | Dreamloop projection |
-| Gravball court | 3×3 | Dexterity | 400W | Dreamloop projection |
+| Archotech dreamtable | 1×3 | Dexterity | 200W | Fabrication + Microelectronics |
+| Hologame pod | 1×1 | Cerebral | 250W | Fabrication |
+| Vista panel | 3×1 | *(outdoors need)* | 150W | Flatscreen television |
+| Dreamloop holotheater | 3×1 | Television | 500W | Fabrication + Flatscreen television |
+| Gravball court | 3×3 | Dexterity | 400W | Fabrication + Microelectronics |
 
-Three research projects chain off vanilla: **pinball engineering** (Electricity +
-Complex furniture) → **holographic entertainment** (+ Microelectronics basics) →
-**dreamloop projection** (+ Fabrication). Everything lands in the Recreation tab
-of the architect menu.
+**No new research.** Everything gates on projects the game already has —
+Electricity for the first pinball tables, Tube television for the arcade
+cabinet, Microelectronics and Flatscreen television for the screens, Fabrication
+for the spacer and ultra builds — so the tree gains seventeen buildings and not
+one extra node. Everything lands in the Recreation tab of the architect menu.
 
 ## What the code does
 

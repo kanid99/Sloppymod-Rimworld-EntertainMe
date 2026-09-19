@@ -208,7 +208,7 @@
       </li>
     </comps>
     <researchPrerequisites>
-      <li>EI_PinballEngineering</li>
+      <li>Electricity</li>
     </researchPrerequisites>
   </ThingDef>
 
@@ -238,7 +238,7 @@
       </li>
     </comps>
     <researchPrerequisites>
-      <li>EI_PinballEngineering</li>
+      <li>Electricity</li>
     </researchPrerequisites>
   </ThingDef>
 
@@ -268,7 +268,6 @@
     </comps>
     <constructionSkillPrerequisite>8</constructionSkillPrerequisite>
     <researchPrerequisites>
-      <li>EI_PinballEngineering</li>
       <li>MicroelectronicsBasics</li>
     </researchPrerequisites>
   </ThingDef>
@@ -304,7 +303,8 @@
     </comps>
     <constructionSkillPrerequisite>8</constructionSkillPrerequisite>
     <researchPrerequisites>
-      <li>EI_HolographicEntertainment</li>
+      <li>Fabrication</li>
+      <li>MicroelectronicsBasics</li>
     </researchPrerequisites>
   </ThingDef>
 
@@ -370,8 +370,7 @@
       </li>
     </comps>
     <researchPrerequisites>
-      <li>EI_PinballEngineering</li>
-      <li>MicroelectronicsBasics</li>
+      <li>TubeTelevision</li>
     </researchPrerequisites>
   </ThingDef>
 
@@ -406,12 +405,19 @@
       <WorkToBuild>7000</WorkToBuild>
       <Mass>30</Mass>
       <Beauty>6</Beauty>
-      <Comfort>0.85</Comfort>
+      <Comfort>0.8</Comfort>
       <JoyGainFactor>1.2</JoyGainFactor>
     </statBases>
+    <!-- Upholstered in whatever you have: cloth, leather, synthread. The
+         sprite is painted near-neutral so the stuff colour carries it, the way
+         vanilla's stuffable furniture is drawn. -->
+    <stuffCategories>
+      <li>Fabric</li>
+      <li>Leathery</li>
+    </stuffCategories>
+    <costStuffCount>60</costStuffCount>
     <costList>
-      <Steel>45</Steel>
-      <Cloth>40</Cloth>
+      <Steel>40</Steel>
       <ComponentIndustrial>2</ComponentIndustrial>
     </costList>
     <building>
@@ -506,7 +512,7 @@
       </li>
     </comps>
     <researchPrerequisites>
-      <li>EI_HolographicEntertainment</li>
+      <li>Fabrication</li>
     </researchPrerequisites>
   </ThingDef>
 
@@ -605,7 +611,7 @@
       </li>
     </comps>
     <researchPrerequisites>
-      <li>EI_HolographicEntertainment</li>
+      <li>FlatscreenTelevision</li>
     </researchPrerequisites>
   </ThingDef>
 
@@ -680,7 +686,8 @@
       </li>
     </comps>
     <researchPrerequisites>
-      <li>EI_DreamloopProjection</li>
+      <li>Fabrication</li>
+      <li>FlatscreenTelevision</li>
     </researchPrerequisites>
   </ThingDef>
 
@@ -1155,7 +1162,8 @@
       </li>
     </comps>
     <researchPrerequisites>
-      <li>EI_DreamloopProjection</li>
+      <li>Fabrication</li>
+      <li>MicroelectronicsBasics</li>
     </researchPrerequisites>
   </ThingDef>
 

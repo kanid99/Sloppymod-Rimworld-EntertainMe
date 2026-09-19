@@ -523,34 +523,42 @@ def cocktail_arcade_frames(total=16):
 # chair are actually visible while it is running.
 # ---------------------------------------------------------------------------
 def massage_chair():
+    """Drawn near-neutral on purpose.
+
+    Stuffable buildings are tinted by their material, and the game multiplies
+    that colour through the texture. A deep red chair built from green cloth
+    would come out muddy, so the upholstery is painted in pale greys and lets
+    the stuff supply the colour, the way vanilla's stuffable furniture does.
+    """
     c = Canvas(128, 128)
-    leather = (128, 46, 44, 255)
-    leather_dark = (96, 32, 32, 255)
-    frame_col = (66, 68, 78, 255)
+    pale = (208, 202, 198, 255)         # takes the stuff colour
+    pale_dark = (170, 164, 160, 255)
+    seam = (138, 132, 128, 180)
+    frame_col = (120, 118, 120, 255)
 
     c.rect(22, 16, 106, 118, DARK, 14)                  # chassis
     c.rect(25, 19, 103, 115, frame_col, 12)
 
     c.rect(30, 20, 98, 62, DARK, 12)                    # backrest
-    c.rect(33, 23, 95, 60, leather, 10)
-    c.rect(38, 26, 90, 40, leather_dark, 8)             # headrest panel
+    c.rect(33, 23, 95, 60, pale, 10)
+    c.rect(38, 26, 90, 40, pale_dark, 8)                # headrest panel
     for y in range(30, 58, 7):                          # upholstery seams
-        c.line(36, y, 92, y, (72, 24, 24, 160), 2)
+        c.line(36, y, 92, y, seam, 2)
 
     c.rect(32, 58, 96, 96, DARK, 10)                    # seat
-    c.rect(35, 60, 93, 94, leather, 8)
+    c.rect(35, 60, 93, 94, pale, 8)
     for y in range(68, 92, 8):
-        c.line(40, y, 88, y, (72, 24, 24, 140), 2)
+        c.line(40, y, 88, y, seam, 2)
 
     c.rect(38, 96, 90, 116, DARK, 9)                    # footrest
-    c.rect(41, 98, 87, 114, leather_dark, 7)
+    c.rect(41, 98, 87, 114, pale_dark, 7)
 
     for ax in (22, 92):                                 # armrests
         c.rect(ax, 56, ax + 14, 100, DARK, 7)
-        c.rect(ax + 2, 58, ax + 12, 98, leather_dark, 6)
-    c.rect(94, 62, 104, 80, (28, 28, 34, 255), 4)       # control pad
+        c.rect(ax + 2, 58, ax + 12, 98, pale_dark, 6)
+    c.rect(94, 62, 104, 80, (52, 52, 56, 255), 4)       # control pad
     for i in range(3):
-        c.circle(99, 67 + i * 6, 2.2, (236, 176, 64, 255))
+        c.circle(99, 67 + i * 6, 2.2, (236, 228, 210, 255))
     save_rotations(c, "MassageChair")
     return c
 

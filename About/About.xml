@@ -23,5 +23,5 @@
 - Gravball court (ultratech) - a 3x3 court with the ball held in a lazy orbit, played from the edges by up to four colonists.
 - Dreamloop holotheater (ultratech) - point it at a wall within six tiles and it throws a moving picture onto that wall. A whole room can watch, bedridden colonists included.
 
-Includes a small assembly for the animated screens, the wall projection, the sit-in furniture, the vista panel and the karaoke crowd, built separately for 1.5 and 1.6 because 1.6 changed the joy-tick API. No Harmony and no mod dependencies. If Dubs Bad Hygiene happens to be installed, the aquarium plumbs into its water network and the tubs join its hydrotherapy category; without it, nothing changes.</description>
+Includes a small assembly for the animated screens, the wall projection, the sit-in furniture, the vista panel and the karaoke crowd, built separately for 1.5 and 1.6 because 1.6 changed the joy-tick API. No new research either - everything gates on projects the game already has, so the tree gains seventeen buildings and not one extra node. No Harmony and no mod dependencies. If Dubs Bad Hygiene happens to be installed, the aquarium plumbs into its water network and the tubs join its hydrotherapy category; without it, nothing changes.</description>
 </ModMetaData>
