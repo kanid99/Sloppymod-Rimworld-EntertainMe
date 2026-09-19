@@ -69,10 +69,10 @@
   </JobDef>
 
   <!-- Custom driver: the pawn sits in the chair itself, which no vanilla
-       joy driver does. Defined in Source/EntertainingIdeas/MassageChair.cs. -->
+       joy driver does. Defined in Source/EntertainingIdeas/SitInBuilding.cs. -->
   <JobDef>
     <defName>EI_UseMassageChair</defName>
-    <driverClass>EntertainingIdeas.JobDriver_UseMassageChair</driverClass>
+    <driverClass>EntertainingIdeas.JobDriver_SitInBuilding</driverClass>
     <reportString>relaxing in a massage chair.</reportString>
     <joyDuration>3000</joyDuration>
     <joyMaxParticipants>1</joyMaxParticipants>
@@ -87,6 +87,65 @@
     <joyDuration>4000</joyDuration>
     <joyMaxParticipants>8</joyMaxParticipants>
     <joyKind>Television</joyKind>
+    <allowOpportunisticPrefix>true</allowOpportunisticPrefix>
+  </JobDef>
+
+  <JobDef>
+    <defName>EI_UseSoakingTub</defName>
+    <driverClass>EntertainingIdeas.JobDriver_SitInBuilding</driverClass>
+    <reportString>soaking in the tub.</reportString>
+    <joyDuration>3000</joyDuration>
+    <joyMaxParticipants>1</joyMaxParticipants>
+    <joyKind>Meditative</joyKind>
+    <allowOpportunisticPrefix>true</allowOpportunisticPrefix>
+  </JobDef>
+
+  <JobDef>
+    <defName>EI_Watch_Aquarium</defName>
+    <driverClass>JobDriver_WatchBuilding</driverClass>
+    <reportString>watching the fish.</reportString>
+    <joyDuration>3000</joyDuration>
+    <joyMaxParticipants>3</joyMaxParticipants>
+    <joyKind>Meditative</joyKind>
+    <allowOpportunisticPrefix>true</allowOpportunisticPrefix>
+  </JobDef>
+
+  <JobDef>
+    <defName>EI_Play_Skittles</defName>
+    <driverClass>JobDriver_WatchBuilding</driverClass>
+    <reportString>rolling at the skittles.</reportString>
+    <joyDuration>4000</joyDuration>
+    <joyMaxParticipants>1</joyMaxParticipants>
+    <joySkill>Shooting</joySkill>
+    <joyXpPerTick>0.004</joyXpPerTick>
+    <joyKind>Gaming_Dexterity</joyKind>
+    <taleOnCompletion>PlayedGame</taleOnCompletion>
+    <allowOpportunisticPrefix>true</allowOpportunisticPrefix>
+  </JobDef>
+
+  <JobDef>
+    <defName>EI_Sing_Karaoke</defName>
+    <driverClass>JobDriver_WatchBuilding</driverClass>
+    <reportString>singing karaoke.</reportString>
+    <joyDuration>4000</joyDuration>
+    <joyMaxParticipants>5</joyMaxParticipants>
+    <joySkill>Social</joySkill>
+    <joyXpPerTick>0.004</joyXpPerTick>
+    <joyKind>Social</joyKind>
+    <taleOnCompletion>PlayedGame</taleOnCompletion>
+    <allowOpportunisticPrefix>true</allowOpportunisticPrefix>
+  </JobDef>
+
+  <JobDef>
+    <defName>EI_Play_Gravball</defName>
+    <driverClass>JobDriver_WatchBuilding</driverClass>
+    <reportString>playing gravball.</reportString>
+    <joyDuration>4000</joyDuration>
+    <joyMaxParticipants>4</joyMaxParticipants>
+    <joySkill>Melee</joySkill>
+    <joyXpPerTick>0.004</joyXpPerTick>
+    <joyKind>Gaming_Dexterity</joyKind>
+    <taleOnCompletion>PlayedGame</taleOnCompletion>
     <allowOpportunisticPrefix>true</allowOpportunisticPrefix>
   </JobDef>
 

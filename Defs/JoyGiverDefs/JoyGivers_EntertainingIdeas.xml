@@ -89,7 +89,7 @@
 
   <JoyGiverDef>
     <defName>EI_UseMassageChair</defName>
-    <giverClass>EntertainingIdeas.JoyGiver_UseMassageChair</giverClass>
+    <giverClass>EntertainingIdeas.JoyGiver_SitInBuilding</giverClass>
     <baseChance>3</baseChance>
     <thingDefs>
       <li>EI_MassageChair</li>
@@ -110,6 +110,80 @@
     <joyKind>Television</joyKind>
     <requiredCapacities>
       <li>Sight</li>
+    </requiredCapacities>
+  </JoyGiverDef>
+
+  <JoyGiverDef>
+    <defName>EI_UseSoakingTub</defName>
+    <giverClass>EntertainingIdeas.JoyGiver_SitInBuilding</giverClass>
+    <baseChance>2.5</baseChance>
+    <thingDefs>
+      <li>EI_SoakingTub</li>
+    </thingDefs>
+    <jobDef>EI_UseSoakingTub</jobDef>
+    <joyKind>Meditative</joyKind>
+  </JoyGiverDef>
+
+  <JoyGiverDef>
+    <defName>EI_Watch_Aquarium</defName>
+    <giverClass>JoyGiver_WatchBuilding</giverClass>
+    <baseChance>2</baseChance>
+    <thingDefs>
+      <li>EI_Aquarium</li>
+    </thingDefs>
+    <jobDef>EI_Watch_Aquarium</jobDef>
+    <joyKind>Meditative</joyKind>
+    <requiredCapacities>
+      <li>Sight</li>
+    </requiredCapacities>
+  </JoyGiverDef>
+
+  <JoyGiverDef>
+    <defName>EI_Play_Skittles</defName>
+    <giverClass>JoyGiver_InteractBuildingInteractionCell</giverClass>
+    <baseChance>3</baseChance>
+    <desireSit>false</desireSit>
+    <thingDefs>
+      <li>EI_SkittlesLane</li>
+    </thingDefs>
+    <jobDef>EI_Play_Skittles</jobDef>
+    <joyKind>Gaming_Dexterity</joyKind>
+    <requiredCapacities>
+      <li>Sight</li>
+      <li>Manipulation</li>
+    </requiredCapacities>
+  </JoyGiverDef>
+
+  <JoyGiverDef>
+    <defName>EI_Sing_Karaoke</defName>
+    <giverClass>JoyGiver_WatchBuilding</giverClass>
+    <baseChance>3</baseChance>
+    <desireSit>false</desireSit>
+    <thingDefs>
+      <li>EI_KaraokeMachine</li>
+    </thingDefs>
+    <jobDef>EI_Sing_Karaoke</jobDef>
+    <joyKind>Social</joyKind>
+    <requiredCapacities>
+      <li>Talking</li>
+      <li>Hearing</li>
+    </requiredCapacities>
+  </JoyGiverDef>
+
+  <JoyGiverDef>
+    <defName>EI_Play_Gravball</defName>
+    <giverClass>JoyGiver_WatchBuilding</giverClass>
+    <baseChance>3</baseChance>
+    <desireSit>false</desireSit>
+    <thingDefs>
+      <li>EI_GravballCourt</li>
+    </thingDefs>
+    <jobDef>EI_Play_Gravball</jobDef>
+    <joyKind>Gaming_Dexterity</joyKind>
+    <requiredCapacities>
+      <li>Sight</li>
+      <li>Manipulation</li>
+      <li>Moving</li>
     </requiredCapacities>
   </JoyGiverDef>
 

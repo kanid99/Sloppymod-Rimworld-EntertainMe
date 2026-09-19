@@ -32,6 +32,12 @@ namespace EntertainingIdeas
         /// <summary>Turn the frames to match a rotatable building's facing.</summary>
         public bool rotateWithBuilding = false;
         /// <summary>
+        /// How far to look for someone using this, in cells. 0 checks the
+        /// building's own cells and the ring around them, which covers
+        /// interaction cells and adjacent chairs.
+        /// </summary>
+        public float scanRadius = 0f;
+        /// <summary>
         /// When false the animation runs whenever the building is on, instead
         /// of only while a pawn is using it. Suits things that move under their
         /// own steam, like a lantern that turns on its own draught.
@@ -141,9 +147,12 @@ namespace EntertainingIdeas
             }
 
             // A user may stand on the interaction cell, sit in a chair beside
-            // the building, or sit in the building itself, so check its own
-            // cells as well as the ring around them.
-            foreach (IntVec3 cell in GenAdj.CellsOccupiedBy(parent).Concat(GenAdj.CellsAdjacent8Way(parent)))
+            // the building, sit in the building itself, or - for things a crowd
+            // gathers around - stand a few tiles back.
+            IEnumerable<IntVec3> cells = Props.scanRadius > 0f
+                ? GenRadial.RadialCellsAround(parent.Position, Props.scanRadius, true)
+                : GenAdj.CellsOccupiedBy(parent).Concat(GenAdj.CellsAdjacent8Way(parent));
+            foreach (IntVec3 cell in cells)
             {
                 if (!cell.InBounds(map))
                 {

@@ -749,13 +749,423 @@ def vista_panel_frames(total=6):
     return made
 
 
+# ---------------------------------------------------------------------------
+# Pinball in play  (one overlay strip shared by all four tables)
+#
+# Only the ball, its trail and the lamps that just got hit are drawn, all in
+# neutral white and silver, so the same frames sit correctly on the red, green,
+# steel and violet cabinets.
+# ---------------------------------------------------------------------------
+
+BALL_PATH = [(126, 340), (126, 248), (117, 172), (96, 190),
+             (66, 210), (76, 262), (60, 338), (98, 392)]
+BUMPERS = [(60, 212, 17), (102, 196, 15), (78, 268, 14)]
+
+
+def pinball_play_frames(total=8):
+    import math
+    for i in range(total):
+        c = Canvas(160, 480)
+        bx, by = BALL_PATH[i % len(BALL_PATH)]
+        px, py = BALL_PATH[(i - 1) % len(BALL_PATH)]
+
+        # Motion trail back toward the previous position.
+        c.line(px, py, bx, by, (226, 232, 248, 70), 7)
+        c.line((px + bx) / 2, (py + by) / 2, bx, by, (238, 242, 255, 110), 8)
+
+        # Lamps flare when the ball is on top of them.
+        for mx, my, mr in BUMPERS:
+            if math.hypot(bx - mx, by - my) < mr + 14:
+                c.circle(mx, my, mr + 9, (255, 252, 226, 60))
+                c.ring(mx, my, mr + 5, mr + 1, (255, 250, 214, 190))
+                c.circle(mx, my, mr * 0.5, (255, 255, 244, 220))
+
+        # Flippers snap up as the ball comes down to them.
+        if by > 360:
+            for sx in (-1, 1):
+                x0, x1 = 80 + sx * 10, 80 + sx * 36
+                c.line(x0, 400, x1, 384, (255, 250, 220, 210), 10)
+
+        # Backglass keeps flashing while the table is live.
+        if i % 2 == 0:
+            c.rect(21, 16, 139, 112, (255, 248, 210, 30), 6)
+        for k in range(6):
+            if (i + k) % 3 == 0:
+                c.circle(30 + k * 21.6, 106, 4.6, (255, 250, 220, 200))
+
+        c.circle(bx, by, 7.5, (30, 30, 36, 220))
+        c.circle(bx, by, 6, (232, 236, 246, 255))
+        c.circle(bx - 1.8, by - 1.8, 2.4, (255, 255, 255, 240))
+        c.save(os.path.join(OUT, "PinballPlay_%d.png" % i))
+    print("  PinballPlay_0..%d.png  (160x480)" % (total - 1))
+
+
+# ---------------------------------------------------------------------------
+# 9. Soaking tub  (medieval, 1x1, wood-fired, pawns get in)
+# ---------------------------------------------------------------------------
+
+def draw_tub_water(c, frame=None, total=6):
+    import math
+    p = 0.0 if frame is None else float(frame) / total
+    c.circle(64, 62, 38, (46, 104, 112, 255))                  # water
+    c.circle(64, 62, 38, (60, 130, 138, 120))
+    for k in range(3):                                          # ripples
+        r = 8 + ((p + k / 3.0) % 1.0) * 28
+        alpha = int(130 * (1.0 - (r - 8) / 28.0))
+        if alpha > 8:
+            c.ring(64, 62, r, r - 2, (186, 232, 236, alpha))
+    if frame is not None:
+        # Seen from above, steam reads as soft puffs drifting off the surface.
+        for k in range(6):
+            t = (p + k / 6.0) % 1.0
+            a = k / 6.0 * 2 * math.pi
+            drift = 6 + t * 30
+            sx = 64 + math.cos(a) * drift
+            sy = 58 + math.sin(a) * drift * 0.8
+            c.ellipse(sx, sy, 9 + t * 9, 7 + t * 7, (240, 248, 250, int(120 * (1 - t))))
+        c.circle(64, 60, 16 + 10 * p, (240, 248, 250, int(60 * (1 - p))))
+
+
+def soaking_tub():
+    c = Canvas(128, 128)
+    c.circle(64, 62, 48, DARK)
+    c.circle(64, 62, 45, (112, 78, 48, 255))                    # staves
+    for k in range(14):
+        import math
+        a = k / 14.0 * 2 * math.pi
+        c.line(64 + math.cos(a) * 37, 62 + math.sin(a) * 37,
+               64 + math.cos(a) * 46, 62 + math.sin(a) * 46, (74, 48, 28, 255), 5)
+    c.ring(64, 62, 45, 41, (146, 150, 158, 255))                # iron band
+    c.ring(64, 62, 40, 38, DARK)
+    draw_tub_water(c, None)
+    c.rect(44, 104, 84, 124, DARK, 6)                           # firebox
+    c.rect(47, 107, 81, 121, (52, 44, 40, 255), 5)
+    c.circle(64, 114, 6, (226, 120, 52, 235))
+    c.circle(64, 114, 3, (255, 196, 110, 255))
+    save_single(c, "SoakingTub")
+    return c
+
+
+def soaking_tub_frames(total=6):
+    for i in range(total):
+        c = Canvas(128, 128)
+        draw_tub_water(c, i, total)
+        import math
+        glow = 200 + int(45 * math.sin(2 * math.pi * float(i) / total))
+        c.circle(64, 114, 6, (226, 120, 52, min(255, glow)))
+        c.circle(64, 114, 3, (255, 206, 120, 255))
+        c.save(os.path.join(OUT, "SoakingTubSteam_%d.png" % i))
+    print("  SoakingTubSteam_0..%d.png  (128x128)" % (total - 1))
+
+
+# ---------------------------------------------------------------------------
+# 10. Aquarium  (industrial, 2x1, something to watch)
+# ---------------------------------------------------------------------------
+
+TANK = (18, 20, 238, 108)
+
+
+def draw_tank_contents(c, frame=None, total=8):
+    import math
+    x0, y0, x1, y1 = TANK
+    p = 0.0 if frame is None else float(frame) / total
+
+    c.rect(x0, y0, x1, y1, (26, 74, 108, 255), 4)               # water
+    for band in range(4):                                        # light shafts
+        bx = x0 + 30 + band * 52
+        c.poly([(bx, y0), (bx + 16, y0), (bx + 4, y1), (bx - 10, y1)],
+               (150, 220, 240, 26))
+    c.rect(x0, y1 - 14, x1, y1, (96, 84, 62, 255), 3)           # gravel
+    for k in range(18):
+        c.circle(x0 + 8 + k * 13, y1 - 10 + (k % 3) * 3, 3, (120, 106, 80, 255))
+
+    for k, px in enumerate((44, 96, 150, 206)):                  # weed
+        sway = 4 * math.sin(2 * math.pi * (p + k * 0.2))
+        c.line(px, y1 - 10, px + sway, y1 - 40, (54, 132, 84, 255), 5)
+        c.line(px + 6, y1 - 10, px + 6 + sway * 0.7, y1 - 28, (70, 158, 96, 255), 4)
+
+    fish = ((0.0, 42, (238, 146, 52)), (0.45, 62, (226, 96, 96)), (0.72, 80, (240, 206, 90)))
+    for phase, fy, col in fish:
+        t = (p + phase) % 1.0
+        fx = x0 + 10 + t * (x1 - x0 - 20)
+        facing = 1 if t < 0.5 else -1
+        wiggle = 3 * math.sin(2 * math.pi * (p * 3 + phase))
+        c.ellipse(fx, fy + wiggle, 11, 6, col + (255,))
+        c.poly([(fx - facing * 10, fy + wiggle), (fx - facing * 19, fy - 6 + wiggle),
+                (fx - facing * 19, fy + 6 + wiggle)], col + (255,))
+        c.circle(fx + facing * 5, fy - 1.5 + wiggle, 1.8, (20, 20, 28, 255))
+
+    for k in range(5):                                           # bubbles
+        t = (p + k * 0.2) % 1.0
+        c.circle(x0 + 24 + k * 47, y1 - 12 - t * (y1 - y0 - 18), 2.6 + k % 2,
+                 (226, 244, 250, int(150 * (1 - t * 0.5))))
+
+
+def aquarium():
+    c = Canvas(256, 128)
+    c.rect(8, 10, 248, 118, DARK, 10)
+    c.rect(11, 13, 245, 115, (58, 62, 74, 255), 8)              # cabinet
+    c.rect(TANK[0] - 4, TANK[1] - 4, TANK[2] + 4, TANK[3] + 4, (24, 26, 34, 255), 5)
+    draw_tank_contents(c, None)
+    c.frame(TANK[0] - 4, TANK[1] - 4, TANK[2] + 4, TANK[3] + 4, (168, 196, 210, 110), 2.5, 5)
+    c.rect(96, 4, 160, 16, DARK, 5)                              # hood light
+    c.rect(99, 6, 157, 14, (206, 226, 236, 230), 4)
+    save_rotations(c, "Aquarium")
+    return c
+
+
+def aquarium_frames(total=8):
+    for i in range(total):
+        c = Canvas(256, 128)
+        draw_tank_contents(c, i, total)
+        c.save(os.path.join(OUT, "AquariumLife_%d.png" % i))
+    print("  AquariumLife_0..%d.png  (256x128)" % (total - 1))
+
+
+# ---------------------------------------------------------------------------
+# 11. Skittles lane  (medieval, 1x5, rolled from the near end)
+# ---------------------------------------------------------------------------
+
+PIN_ROWS = [(78,), (64, 92), (50, 78, 106), (36, 64, 92, 120)]
+
+
+def draw_skittles(c, frame=None, total=6):
+    import math
+    p = None if frame is None else float(frame) / (total - 1)
+
+    c.rect(6, 8, 122, 632, DARK, 10)
+    c.rect(9, 11, 119, 629, (72, 50, 32, 255), 8)               # frame
+    c.rect(24, 16, 104, 624, (186, 148, 96, 255), 4)            # lane
+    for y in range(20, 620, 26):                                 # planks
+        c.line(26, y, 102, y, (168, 130, 82, 120), 1.6)
+    c.rect(12, 16, 24, 624, (54, 38, 24, 255), 3)               # gutters
+    c.rect(104, 16, 116, 624, (54, 38, 24, 255), 3)
+    c.rect(24, 16, 104, 150, (198, 164, 112, 255), 4)           # pin deck
+    c.line(26, 150, 102, 150, (120, 88, 54, 190), 2)
+    c.line(26, 566, 102, 566, (150, 60, 50, 220), 3)            # foul line
+
+    # Pins: standing, or scattered once the ball has reached them.
+    scattered = p is not None and p > 0.72
+    for row, xs in enumerate(PIN_ROWS):
+        py = 52 + row * 26
+        for k, px in enumerate(xs):
+            if scattered:
+                shove = (p - 0.72) / 0.28
+                ang = (row * 1.7 + k * 2.3)
+                px = px + math.cos(ang) * 26 * shove
+                py2 = py + math.sin(ang) * 20 * shove - 6 * shove
+                tilt = 5 * shove
+            else:
+                py2, tilt = py, 0
+            c.ellipse(px, py2, 7 + tilt, 9 - tilt * 0.4, DARK)
+            c.ellipse(px, py2, 5.5 + tilt, 7.5 - tilt * 0.4, (238, 232, 218, 255))
+            c.ellipse(px, py2 - 2, 3.4, 2.6, (196, 62, 54, 255))
+
+    # The ball, rolling up the lane.
+    if p is None:
+        bx, by = 64, 596
+    else:
+        by = 596 - min(1.0, p / 0.72) * 440
+        bx = 64 + 10 * math.sin(p * 5)
+    c.circle(bx, by, 13, DARK)
+    c.circle(bx, by, 11, (58, 62, 78, 255))
+    c.circle(bx - 3, by - 3, 3.4, (128, 134, 156, 255))
+    for k in range(3):                                           # finger holes
+        c.circle(bx - 3 + k * 3, by + 3, 1.6, (28, 30, 38, 255))
+    if p is not None and p > 0.05:
+        c.line(bx, by + 18, bx, min(600, by + 60), (255, 255, 255, 50), 10)
+
+
+def skittles_lane():
+    c = Canvas(128, 640)
+    draw_skittles(c, None)
+    save_rotations(c, "SkittlesLane")
+    return c
+
+
+def skittles_frames(total=6):
+    for i in range(total):
+        c = Canvas(128, 640)
+        draw_skittles(c, i, total)
+        c.save(os.path.join(OUT, "SkittlesLaneRoll_%d.png" % i))
+    print("  SkittlesLaneRoll_0..%d.png  (128x640)" % (total - 1))
+
+
+# ---------------------------------------------------------------------------
+# 12. Karaoke machine  (industrial, 1x1, a crowd gathers)
+# ---------------------------------------------------------------------------
+
+def karaoke_machine():
+    c = Canvas(128, 128)
+    c.rect(14, 14, 114, 116, DARK, 12)
+    c.rect(17, 17, 111, 113, (48, 44, 62, 255), 10)
+    c.rect(26, 24, 102, 66, (14, 16, 26, 255), 6)               # screen
+    c.frame(26, 24, 102, 66, (120, 130, 170, 140), 2, 6)
+    for k in range(5):                                           # idle lyric bars
+        c.rect(32, 32 + k * 7, 32 + (18 + (k * 13) % 44), 36 + k * 7,
+               (86, 132, 196, 200), 2)
+    for sx in (24, 88):                                          # speakers
+        c.circle(sx + 8, 90, 15, DARK)
+        c.circle(sx + 8, 90, 12.5, (34, 32, 44, 255))
+        c.ring(sx + 8, 90, 9, 7.5, (78, 74, 96, 255))
+        c.circle(sx + 8, 90, 4, (96, 92, 116, 255))
+    c.rect(54, 78, 74, 104, DARK, 5)                            # mic cradle
+    c.rect(57, 81, 71, 101, (62, 58, 76, 255), 4)
+    c.circle(64, 86, 6, (196, 198, 210, 255))
+    c.circle(64, 86, 4, (120, 124, 140, 255))
+    c.rect(58, 92, 70, 100, (40, 38, 50, 255), 3)
+    for k in range(3):
+        c.circle(61 + k * 3, 108, 2, (226, 182, 78, 255))
+    save_rotations(c, "KaraokeMachine")
+    return c
+
+
+def karaoke_frames(total=6):
+    import math
+    for i in range(total):
+        c = Canvas(128, 128)
+        p = float(i) / total
+
+        c.rect(26, 24, 102, 66, (14, 16, 26, 255), 6)           # screen redraw
+        for k in range(5):                                       # bouncing lyrics
+            lit = (i + k) % 5
+            width = 16 + ((k * 13 + i * 7) % 46)
+            col = (250, 226, 120, 235) if lit < 2 else (86, 132, 196, 210)
+            c.rect(32, 32 + k * 7, 32 + width, 36 + k * 7, col, 2)
+        bounce = 30 + 44 * ((p * 2) % 1.0)                        # bouncing ball
+        c.circle(bounce, 28, 3.2, (255, 244, 200, 240))
+
+        for sx in (24, 88):                                      # speaker pulse
+            pulse = 1.0 + 0.25 * math.sin(2 * math.pi * (p * 2 + (0 if sx < 50 else 0.5)))
+            c.ring(sx + 8, 90, 11 * pulse, 8.5 * pulse, (152, 146, 190, 180))
+            c.circle(sx + 8, 90, 4 * pulse, (206, 198, 246, 200))
+
+        for k in range(3):                                       # notes drifting off
+            t = (p + k / 3.0) % 1.0
+            nx = 64 + (k - 1) * 22 + 6 * math.sin(2 * math.pi * t)
+            ny = 80 - t * 58
+            a = int(210 * (1 - t))
+            c.circle(nx, ny, 3.4, (250, 232, 150, a))
+            c.rect(nx + 2, ny - 12, nx + 4, ny, (250, 232, 150, a), 1)
+        c.circle(64, 86, 3, (250, 120, 110, 180 + int(60 * math.sin(2 * math.pi * p))))
+        c.save(os.path.join(OUT, "KaraokeMachineSing_%d.png" % i))
+    print("  KaraokeMachineSing_0..%d.png  (128x128)" % (total - 1))
+
+
+# ---------------------------------------------------------------------------
+# 13. Gravball court  (ultra, 3x3, played from the edges)
+#
+# The play overlay is a small texture drawn over the middle of the court, so a
+# 3x3 building does not need 3x3 animation frames.
+# ---------------------------------------------------------------------------
+
+def gravball_court():
+    import math
+    c = Canvas(384, 384)
+    mid = 192
+
+    c.rect(10, 10, 374, 374, DARK, 22)
+    c.rect(16, 16, 368, 368, (26, 30, 46, 255), 18)             # court floor
+    c.frame(16, 16, 368, 368, (92, 214, 226, 70), 3, 18)
+    for k in range(1, 4):                                        # floor grid
+        c.line(16 + k * 88, 22, 16 + k * 88, 362, (72, 90, 120, 60), 2)
+        c.line(22, 16 + k * 88, 362, 16 + k * 88, (72, 90, 120, 60), 2)
+
+    c.ring(mid, mid, 96, 92, (104, 224, 232, 120))              # centre circle
+    c.ring(mid, mid, 34, 30, (104, 224, 232, 150))
+    c.line(22, mid, 362, mid, (104, 224, 232, 70), 3)
+
+    for gy in (54, 330):                                         # goal rings
+        c.ring(mid, gy, 40, 33, DARK)
+        c.ring(mid, gy, 38, 35, (126, 236, 240, 220))
+        c.ring(mid, gy, 33, 31, (70, 140, 168, 200))
+    for cx, cy in ((44, 44), (340, 44), (44, 340), (340, 340)):  # emitter posts
+        c.circle(cx, cy, 20, DARK)
+        c.circle(cx, cy, 16, (58, 66, 86, 255))
+        c.circle(cx, cy, 9, (140, 240, 244, 210))
+        c.circle(cx, cy, 4.5, (236, 252, 252, 240))
+    save_rotations(c, "GravballCourt")
+    return c
+
+
+def gravball_frames(total=6):
+    """Small overlay: the ball on its orbit, plus the goal flashing on a score."""
+    import math
+    for i in range(total):
+        c = Canvas(160, 160)
+        p = float(i) / total
+        mid = 80
+        a = 2 * math.pi * p
+        bx = mid + math.cos(a) * 44
+        by = mid + math.sin(a) * 30
+
+        for k in range(5):                                       # trail
+            ta = a - k * 0.26
+            tx = mid + math.cos(ta) * 44
+            ty = mid + math.sin(ta) * 30
+            c.circle(tx, ty, 7 - k, (150, 240, 246, int(110 - k * 20)))
+        c.circle(bx, by, 13, (140, 238, 244, 70))
+        c.circle(bx, by, 8.5, (232, 252, 252, 240))
+        c.circle(bx - 2, by - 2, 3, (255, 255, 255, 255))
+        if i % 3 == 0:                                           # score flash
+            c.ring(mid, 12, 26, 20, (236, 252, 252, 150))
+        c.save(os.path.join(OUT, "GravballPlay_%d.png" % i))
+    print("  GravballPlay_0..%d.png  (160x160)" % (total - 1))
+
+
+BUILDERS = {}
+
+
+def _register(name, fn):
+    BUILDERS[name] = fn
+
+
 def main():
+    import sys
+
     os.makedirs(OUT, exist_ok=True)
+    wanted = [a.lower() for a in sys.argv[1:]]
+    if wanted and wanted[0] in ("-h", "--help"):
+        print("usage: generate_textures.py [%s]" % " | ".join(sorted(BUILDERS)))
+        print("  no arguments redraws everything and rebuilds About/Preview.png")
+        return
+
+    unknown = [w for w in wanted if w not in BUILDERS]
+    if unknown:
+        print("unknown: %s\nknown: %s" % (", ".join(unknown), " ".join(sorted(BUILDERS))))
+        raise SystemExit(2)
+
     print("Writing textures to %s" % OUT)
     made = {}
-    made["KnuckleboneMat"] = knucklebone_mat()
-    made["ShadowLanternTheater"] = shadow_lantern_theater()
+    for name in (wanted or sorted(BUILDERS)):
+        result = BUILDERS[name]()
+        if isinstance(result, dict):
+            made.update(result)
+
+    if wanted:
+        print("Done (partial). Run Source/TextureGen/build_preview.py to refresh the preview.")
+        return
+
+    import preview
+    about = os.path.join(ROOT, "About")
+    os.makedirs(about, exist_ok=True)
+    preview.build({k: (v.pixels(), v.w, v.h) for k, v in made.items()},
+                  os.path.join(about, "Preview.png"))
+    print("Done.")
+
+
+def _build_knucklebone():
+    return {"KnuckleboneMat": knucklebone_mat()}
+
+
+def _build_shadowtheater():
+    canvas = shadow_lantern_theater()
     shadow_theater_frames()
+    return {"ShadowLanternTheater": canvas}
+
+
+def _build_pinball():
+    made = {}
     made["PinballClassic"] = pinball(
         "PinballClassic",
         cab=(178, 52, 48, 255), cab_dark=(126, 36, 34, 255), field=(28, 62, 96, 255),
@@ -776,22 +1186,81 @@ def main():
         cab=(74, 58, 112, 255), cab_dark=(48, 38, 78, 255), field=(22, 20, 38, 255),
         accent=(126, 232, 226, 255), accent2=(186, 138, 246, 255), glass=(30, 24, 56, 255),
         motif=motif_archotech)
-    made["CocktailArcade"] = cocktail_arcade()
-    cocktail_arcade_frames()
-    made["HologamePod"] = hologame_pod()
-    made["DreamloopHolotheater"] = dreamloop_holotheater()
-    made["DreamloopProjection"] = dreamloop_projection_frames()
-    made["VistaPanel"] = vista_panel()
-    made.update(("Vista" + k, v) for k, v in vista_panel_frames().items())
-    made["MassageChair"] = massage_chair()
-    massage_chair_frames()
+    pinball_play_frames()
+    return made
 
-    import preview
-    about = os.path.join(ROOT, "About")
-    os.makedirs(about, exist_ok=True)
-    preview.build({k: (v.pixels(), v.w, v.h) for k, v in made.items()},
-                  os.path.join(about, "Preview.png"))
-    print("Done.")
+
+def _build_cocktail():
+    canvas = cocktail_arcade()
+    cocktail_arcade_frames()
+    return {"CocktailArcade": canvas}
+
+
+def _build_hologamepod():
+    return {"HologamePod": hologame_pod()}
+
+
+def _build_holotheater():
+    canvas = dreamloop_holotheater()
+    sample = dreamloop_projection_frames()
+    return {"DreamloopHolotheater": canvas, "DreamloopProjection": sample}
+
+
+def _build_vistapanel():
+    made = {"VistaPanel": vista_panel()}
+    made.update(("Vista" + k, v) for k, v in vista_panel_frames().items())
+    return made
+
+
+def _build_massagechair():
+    canvas = massage_chair()
+    massage_chair_frames()
+    return {"MassageChair": canvas}
+
+
+def _build_soakingtub():
+    canvas = soaking_tub()
+    soaking_tub_frames()
+    return {"SoakingTub": canvas}
+
+
+def _build_skittles():
+    canvas = skittles_lane()
+    skittles_frames()
+    return {"SkittlesLane": canvas}
+
+
+def _build_karaoke():
+    canvas = karaoke_machine()
+    karaoke_frames()
+    return {"KaraokeMachine": canvas}
+
+
+def _build_gravball():
+    canvas = gravball_court()
+    gravball_frames()
+    return {"GravballCourt": canvas}
+
+
+def _build_aquarium():
+    canvas = aquarium()
+    aquarium_frames()
+    return {"Aquarium": canvas}
+
+
+_register("knucklebone", _build_knucklebone)
+_register("shadowtheater", _build_shadowtheater)
+_register("pinball", _build_pinball)
+_register("cocktail", _build_cocktail)
+_register("massagechair", _build_massagechair)
+_register("hologamepod", _build_hologamepod)
+_register("vistapanel", _build_vistapanel)
+_register("holotheater", _build_holotheater)
+_register("soakingtub", _build_soakingtub)
+_register("aquarium", _build_aquarium)
+_register("skittles", _build_skittles)
+_register("karaoke", _build_karaoke)
+_register("gravball", _build_gravball)
 
 
 if __name__ == "__main__":

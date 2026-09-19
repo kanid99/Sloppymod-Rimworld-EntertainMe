@@ -6,12 +6,12 @@ using Verse.AI;
 namespace EntertainingIdeas
 {
     /// <summary>
-    /// Sends a pawn to sit in the chair itself. The vanilla sit-adjacent giver
-    /// seats pawns in a *separate* chair beside the thing they are using, which
-    /// is wrong for furniture you get into, so this one targets the chair's own
-    /// cell.
+    /// Sends a pawn to sit in the building itself. The vanilla sit-adjacent
+    /// giver seats pawns in a *separate* chair beside the thing they are using,
+    /// which is wrong for furniture you get into, so this one targets the
+    /// building's own cell. Used by the massage chair and the soaking tub.
     /// </summary>
-    public class JoyGiver_UseMassageChair : JoyGiver
+    public class JoyGiver_SitInBuilding : JoyGiver
     {
         public override Job TryGiveJob(Pawn pawn)
         {
@@ -58,17 +58,23 @@ namespace EntertainingIdeas
                 return false;
             }
             CompPowerTrader power = thing.TryGetComp<CompPowerTrader>();
-            return power == null || power.PowerOn;
+            if (power != null && !power.PowerOn)
+            {
+                return false;
+            }
+            // A tub with a cold firebox is just a tub.
+            CompRefuelable fuel = thing.TryGetComp<CompRefuelable>();
+            return fuel == null || fuel.HasFuel;
         }
     }
 
     /// <summary>
-    /// Walk to the chair, settle into it, and soak up joy until the pawn has
-    /// had enough or something interrupts.
+    /// Walk to it, settle in, and soak up joy until the pawn has had enough or
+    /// something interrupts.
     /// </summary>
-    public class JobDriver_UseMassageChair : JobDriver
+    public class JobDriver_SitInBuilding : JobDriver
     {
-        private Thing Chair
+        private Thing Seat
         {
             get { return job.GetTarget(TargetIndex.A).Thing; }
         }
@@ -85,7 +91,7 @@ namespace EntertainingIdeas
             this.FailOnBurningImmobile(TargetIndex.A);
             AddFailCondition(delegate
             {
-                CompPowerTrader power = Chair == null ? null : Chair.TryGetComp<CompPowerTrader>();
+                CompPowerTrader power = Seat == null ? null : Seat.TryGetComp<CompPowerTrader>();
                 return power != null && !power.PowerOn;
             });
 
@@ -97,13 +103,13 @@ namespace EntertainingIdeas
             relax.handlingFacing = true;
             relax.tickAction = delegate
             {
-                // Face the way the chair does, so pawns sit in it rather than
-                // standing on it at some random angle.
-                if (Chair != null)
+                // Face the way the furniture does, so pawns sit in it rather
+                // than standing on it at some random angle.
+                if (Seat != null)
                 {
-                    pawn.rotationTracker.FaceCell(pawn.Position + Chair.Rotation.FacingCell);
+                    pawn.rotationTracker.FaceCell(pawn.Position + Seat.Rotation.FacingCell);
                 }
-                JoyUtility.JoyTickCheckEnd(pawn, JoyTickFullJoyAction.EndJob, 1f, Chair as Building);
+                JoyUtility.JoyTickCheckEnd(pawn, JoyTickFullJoyAction.EndJob, 1f, Seat as Building);
             };
             relax.socialMode = RandomSocialMode.Quiet;
             yield return relax;

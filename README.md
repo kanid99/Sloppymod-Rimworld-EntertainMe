@@ -1,6 +1,6 @@
 # Entertaining Ideas
 
-A RimWorld mod that adds eight recreation ideas, one for roughly each rung of
+A RimWorld mod that adds thirteen recreation ideas, one for roughly each rung of
 the tech ladder, so a colony always has something worth doing — from a hide mat
 full of knucklebones to a room-sized shared hallucination.
 
@@ -12,16 +12,21 @@ dependencies. Targets RimWorld 1.5 and 1.6.
 | Building | Tech | Recreation type | Research | Notes |
 |---|---|---|---|---|
 | Knucklebone mat | Neolithic | Cerebral | — | Sit-adjacent, no chair needed. The one cerebral game a tribe can build on day one. |
+| Soaking tub | Medieval | Solitary relaxation | — | Pawns get in. Wood-fired, warms the room, steams while lit. |
+| Skittles lane | Medieval | Dexterity | — | 1×5. Rolled from the near end; pins scatter in play. Trains shooting. |
 | Shadow lantern theater | Medieval | Social | — | 2×1, watched from 2–5 tiles by up to six colonists. The shadows walk on their own. |
 | Pinball machine | Industrial | Dexterity | Pinball engineering | 1×3 cabinet, player stands at the flipper end. |
 | Boomalope blitz pinball | Industrial | Dexterity | Pinball engineering | Chemfuel flash pots; rowdier and prettier, more power. |
 | Mech rampage pinball | Industrial | Dexterity | + Microelectronics basics | Solid-state scoring, highest joy of the wired tables. |
 | Archotech dreamtable | Spacer | Dexterity | Holographic entertainment | Projected ball, glows, absurdly expensive. |
 | Cocktail arcade table | Industrial | Dexterity | + Microelectronics basics | 1×1, seats two — put a chair on either side. Screen animates in play. |
+| Aquarium | Industrial | Solitary relaxation | Complex furniture + Electricity | 2×1. Fish swim whether or not anyone is watching. High beauty. |
+| Karaoke machine | Industrial | Social | Microelectronics basics | A crowd of up to five. Trains social. |
 | Massage chair | Industrial | Solitary relaxation | Complex furniture + Electricity | Pawns sit *in* it. Comfortable enough to use as an ordinary chair. |
 | Hologame pod | Spacer | Cerebral | Holographic entertainment | Trains intellectual. |
 | Vista panel | Spacer | — (outdoors need) | Holographic entertainment | 3×1 wall display. Follows the local clock and eases cabin fever for the room. |
 | Dreamloop holotheater | Ultra | Television | Dreamloop projection | 3×1. Projects onto a wall up to six tiles ahead. |
+| Gravball court | Ultra | Dexterity | Dreamloop projection | 3×3, played from the edges by up to four. Trains melee. |
 
 Three research projects chain off vanilla: **pinball engineering**
 (Electricity + Complex furniture) → **holographic entertainment**
@@ -41,7 +46,7 @@ classes only:
 | Sit at it | `JoyGiver_InteractBuildingSitAdjacent` | `JobDriver_SitFacingBuilding` | knucklebone mat, cocktail table |
 | Stand at its interaction cell | `JoyGiver_InteractBuildingInteractionCell` | `JobDriver_WatchBuilding` | pinball tables, hologame pod |
 | Stand back in a watch area | `JoyGiver_WatchBuilding` | `JobDriver_WatchBuilding` / `JobDriver_WatchTelevision` | shadow theater, holotheater |
-| Sit in the building itself | `JoyGiver_UseMassageChair` * | `JobDriver_UseMassageChair` * | massage chair |
+| Sit in the building itself | `JoyGiver_SitInBuilding` * | `JobDriver_SitInBuilding` * | massage chair, soaking tub |
 
 \* This mod's own, because no vanilla joy giver seats a pawn in the thing it is
 using — the sit-adjacent giver puts them in a *separate* chair beside it.
@@ -107,8 +112,19 @@ game installed. It targets 1.5 references and runs on 1.5 and 1.6.
 `validate.py` catches the failures that are otherwise silent until runtime: a
 recreation building no `JoyGiverDef` lists, a `texPath` with no file behind it, a
 `Graphic_Multi` missing a rotation, an animation comp whose frames are missing,
-XML naming a C# class the source does not define, and references to defs the mod
-never defines.
+XML naming a C# class the source does not define, references to defs the mod
+never defines, and a def declaring a comp its parent already declares — def
+inheritance *appends* list entries, so that quietly gives a building two power
+comps rather than replacing one.
+
+`generate_textures.py` takes builder names, so a tweak costs seconds instead of
+the five minutes a full redraw takes:
+
+```bash
+python3 Source/TextureGen/generate_textures.py aquarium karaoke
+python3 Source/TextureGen/build_preview.py     # then refresh the preview
+python3 Source/TextureGen/contact_sheet.py     # every texture on one sheet
+```
 
 The art is generated, not hand-drawn — `Source/TextureGen/` contains a small
 dependency-free PNG writer and the drawing code for each building, so the

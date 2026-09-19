@@ -156,13 +156,21 @@
       <joyKind>Gaming_Dexterity</joyKind>
       <paintable>true</paintable>
     </building>
+    <!-- Def inheritance APPENDS list entries, so anything a variant declares
+         for itself must not also live here, or the building ends up with two
+         of them. Power differs per table, so each table declares its own. -->
     <comps>
-      <li Class="CompProperties_Power">
-        <compClass>CompPowerTrader</compClass>
-        <shortCircuitInRain>true</shortCircuitInRain>
-        <basePowerConsumption>120</basePowerConsumption>
-      </li>
       <li Class="CompProperties_Flickable"/>
+      <li Class="EntertainingIdeas.CompProperties_AnimatedScreen">
+        <framePath>EntertainingIdeas/Buildings/PinballPlay</framePath>
+        <frameCount>8</frameCount>
+        <ticksPerFrame>6</ticksPerFrame>
+        <drawSize>(1,3)</drawSize>
+        <rotateWithBuilding>true</rotateWithBuilding>
+        <playJobs>
+          <li>EI_Play_Pinball</li>
+        </playJobs>
+      </li>
     </comps>
     <statBases>
       <Flammability>1.0</Flammability>
@@ -187,6 +195,13 @@
       <Steel>65</Steel>
       <ComponentIndustrial>3</ComponentIndustrial>
     </costList>
+    <comps>
+      <li Class="CompProperties_Power">
+        <compClass>CompPowerTrader</compClass>
+        <shortCircuitInRain>true</shortCircuitInRain>
+        <basePowerConsumption>120</basePowerConsumption>
+      </li>
+    </comps>
     <researchPrerequisites>
       <li>EI_PinballEngineering</li>
     </researchPrerequisites>
@@ -216,7 +231,6 @@
         <shortCircuitInRain>true</shortCircuitInRain>
         <basePowerConsumption>150</basePowerConsumption>
       </li>
-      <li Class="CompProperties_Flickable"/>
     </comps>
     <researchPrerequisites>
       <li>EI_PinballEngineering</li>
@@ -246,7 +260,6 @@
         <shortCircuitInRain>true</shortCircuitInRain>
         <basePowerConsumption>180</basePowerConsumption>
       </li>
-      <li Class="CompProperties_Flickable"/>
     </comps>
     <constructionSkillPrerequisite>8</constructionSkillPrerequisite>
     <researchPrerequisites>
@@ -279,7 +292,6 @@
         <shortCircuitInRain>true</shortCircuitInRain>
         <basePowerConsumption>200</basePowerConsumption>
       </li>
-      <li Class="CompProperties_Flickable"/>
       <li Class="CompProperties_Glower">
         <glowRadius>4</glowRadius>
         <glowColor>(120,228,226,0)</glowColor>
@@ -660,6 +672,342 @@
         <ticksPerFrame>10</ticksPerFrame>
         <drawSize>(3,1)</drawSize>
         <projectionRange>6</projectionRange>
+      </li>
+    </comps>
+    <researchPrerequisites>
+      <li>EI_DreamloopProjection</li>
+    </researchPrerequisites>
+  </ThingDef>
+
+  <!-- ===================== 9. Soaking tub (medieval) ====================== -->
+
+  <ThingDef ParentName="EI_JoyBuildingBase">
+    <defName>EI_SoakingTub</defName>
+    <label>soaking tub</label>
+    <description>A deep banded barrel with a small firebox slung underneath it. Fill it, light the box, and in half an hour there is enough hot water to put a person back together after a week of hauling rock.\n\nColonists get in rather than sit beside it, and it warms the room while it burns. Runs on wood.</description>
+    <graphicData>
+      <texPath>EntertainingIdeas/Buildings/SoakingTub</texPath>
+      <graphicClass>Graphic_Single</graphicClass>
+      <drawSize>(1.15,1.15)</drawSize>
+      <shadowData>
+        <volume>(0.8,0.4,0.8)</volume>
+      </shadowData>
+      <damageData>
+        <rect>(0.1,0.1,0.8,0.8)</rect>
+      </damageData>
+    </graphicData>
+    <rotatable>false</rotatable>
+    <tickerType>Normal</tickerType>
+    <fillPercent>0.45</fillPercent>
+    <pathCost>60</pathCost>
+    <statBases>
+      <MaxHitPoints>90</MaxHitPoints>
+      <WorkToBuild>4000</WorkToBuild>
+      <Mass>28</Mass>
+      <Beauty>6</Beauty>
+      <JoyGainFactor>1.15</JoyGainFactor>
+    </statBases>
+    <stuffCategories>
+      <li>Woody</li>
+      <li>Metallic</li>
+      <li>Stony</li>
+    </stuffCategories>
+    <costStuffCount>55</costStuffCount>
+    <costList>
+      <Steel>20</Steel>
+    </costList>
+    <building>
+      <joyKind>Meditative</joyKind>
+    </building>
+    <comps>
+      <li Class="CompProperties_Refuelable">
+        <fuelConsumptionRate>8.0</fuelConsumptionRate>
+        <fuelCapacity>20.0</fuelCapacity>
+        <fuelFilter>
+          <thingDefs>
+            <li>WoodLog</li>
+          </thingDefs>
+        </fuelFilter>
+        <initialFuelPercent>1</initialFuelPercent>
+      </li>
+      <li Class="CompProperties_HeatPusher">
+        <compClass>CompHeatPusherPowered</compClass>
+        <heatPerSecond>10</heatPerSecond>
+        <heatPushMaxTemperature>26</heatPushMaxTemperature>
+      </li>
+      <li Class="CompProperties_Glower">
+        <glowRadius>3</glowRadius>
+        <glowColor>(252,187,113,0)</glowColor>
+      </li>
+      <!-- Steam only while the firebox is lit; the comp skips a building whose
+           refuelable comp has run dry. -->
+      <li Class="EntertainingIdeas.CompProperties_AnimatedScreen">
+        <framePath>EntertainingIdeas/Buildings/SoakingTubSteam</framePath>
+        <frameCount>6</frameCount>
+        <ticksPerFrame>14</ticksPerFrame>
+        <drawSize>(1.15,1.15)</drawSize>
+        <requireUser>false</requireUser>
+      </li>
+    </comps>
+  </ThingDef>
+
+  <!-- ====================== 10. Aquarium (industrial) ===================== -->
+
+  <ThingDef ParentName="EI_JoyBuildingBase">
+    <defName>EI_Aquarium</defName>
+    <label>aquarium</label>
+    <description>Two hundred litres of filtered water, a pump, a hood lamp and whatever the last trade caravan was willing to part with. The fish do nothing useful whatsoever, which appears to be the point - people stand in front of it and come away calmer than they went in.</description>
+    <graphicData>
+      <texPath>EntertainingIdeas/Buildings/Aquarium</texPath>
+      <graphicClass>Graphic_Multi</graphicClass>
+      <drawSize>(2,1)</drawSize>
+      <shadowData>
+        <volume>(1.7,0.5,0.5)</volume>
+      </shadowData>
+    </graphicData>
+    <size>(2,1)</size>
+    <rotatable>true</rotatable>
+    <defaultPlacingRot>South</defaultPlacingRot>
+    <fillPercent>0.45</fillPercent>
+    <pathCost>55</pathCost>
+    <canOverlapZones>false</canOverlapZones>
+    <constructEffect>ConstructMetal</constructEffect>
+    <constructionSkillPrerequisite>6</constructionSkillPrerequisite>
+    <statBases>
+      <MaxHitPoints>110</MaxHitPoints>
+      <WorkToBuild>7000</WorkToBuild>
+      <Mass>40</Mass>
+      <Beauty>12</Beauty>
+      <JoyGainFactor>1.1</JoyGainFactor>
+    </statBases>
+    <costList>
+      <Steel>60</Steel>
+      <ComponentIndustrial>2</ComponentIndustrial>
+    </costList>
+    <building>
+      <joyKind>Meditative</joyKind>
+      <watchBuildingStandDistanceRange>
+        <min>1</min>
+        <max>3</max>
+      </watchBuildingStandDistanceRange>
+      <watchBuildingStandRectWidth>3</watchBuildingStandRectWidth>
+    </building>
+    <placeWorkers>
+      <li>PlaceWorker_WatchArea</li>
+    </placeWorkers>
+    <comps>
+      <li Class="CompProperties_Power">
+        <compClass>CompPowerTrader</compClass>
+        <shortCircuitInRain>true</shortCircuitInRain>
+        <basePowerConsumption>60</basePowerConsumption>
+      </li>
+      <li Class="CompProperties_Flickable"/>
+      <li Class="CompProperties_Glower">
+        <glowRadius>3</glowRadius>
+        <glowColor>(150,220,240,0)</glowColor>
+      </li>
+      <!-- The fish keep swimming whether or not anyone is watching. -->
+      <li Class="EntertainingIdeas.CompProperties_AnimatedScreen">
+        <framePath>EntertainingIdeas/Buildings/AquariumLife</framePath>
+        <frameCount>8</frameCount>
+        <ticksPerFrame>11</ticksPerFrame>
+        <drawSize>(2,1)</drawSize>
+        <rotateWithBuilding>true</rotateWithBuilding>
+        <requireUser>false</requireUser>
+      </li>
+    </comps>
+    <researchPrerequisites>
+      <li>ComplexFurniture</li>
+      <li>Electricity</li>
+    </researchPrerequisites>
+  </ThingDef>
+
+  <!-- ==================== 11. Skittles lane (medieval) ==================== -->
+
+  <ThingDef ParentName="EI_JoyBuildingBase">
+    <defName>EI_SkittlesLane</defName>
+    <label>skittles lane</label>
+    <description>Five tiles of planed board, a shallow gutter down each side, and nine turned pins standing at the far end. Roll the ball, knock down what you can, walk up and set them again. It eats floor space and it is worth it.\n\nThe thrower stands off the near end. Steady rolling trains shooting.</description>
+    <graphicData>
+      <texPath>EntertainingIdeas/Buildings/SkittlesLane</texPath>
+      <graphicClass>Graphic_Multi</graphicClass>
+      <drawSize>(1,5)</drawSize>
+      <shadowData>
+        <volume>(0.85,0.2,4.5)</volume>
+      </shadowData>
+    </graphicData>
+    <size>(1,5)</size>
+    <rotatable>true</rotatable>
+    <defaultPlacingRot>South</defaultPlacingRot>
+    <fillPercent>0.2</fillPercent>
+    <pathCost>22</pathCost>
+    <canOverlapZones>false</canOverlapZones>
+    <hasInteractionCell>true</hasInteractionCell>
+    <interactionCellOffset>(0,0,3)</interactionCellOffset>
+    <placeWorkers>
+      <li>PlaceWorker_PreventInteractionSpotOverlap</li>
+    </placeWorkers>
+    <statBases>
+      <MaxHitPoints>140</MaxHitPoints>
+      <WorkToBuild>5000</WorkToBuild>
+      <Mass>60</Mass>
+      <Beauty>4</Beauty>
+      <JoyGainFactor>1.15</JoyGainFactor>
+    </statBases>
+    <stuffCategories>
+      <li>Woody</li>
+      <li>Stony</li>
+    </stuffCategories>
+    <costStuffCount>70</costStuffCount>
+    <building>
+      <joyKind>Gaming_Dexterity</joyKind>
+    </building>
+    <comps>
+      <li Class="EntertainingIdeas.CompProperties_AnimatedScreen">
+        <framePath>EntertainingIdeas/Buildings/SkittlesLaneRoll</framePath>
+        <frameCount>6</frameCount>
+        <ticksPerFrame>13</ticksPerFrame>
+        <drawSize>(1,5)</drawSize>
+        <rotateWithBuilding>true</rotateWithBuilding>
+        <playJobs>
+          <li>EI_Play_Skittles</li>
+        </playJobs>
+      </li>
+    </comps>
+  </ThingDef>
+
+  <!-- ================== 12. Karaoke machine (industrial) ================== -->
+
+  <ThingDef ParentName="EI_JoyBuildingBase">
+    <defName>EI_KaraokeMachine</defName>
+    <label>karaoke machine</label>
+    <description>A screen, two speakers and a microphone on a short cord. It scrolls the words, it keeps the tune, and it is entirely indifferent to whether anyone can sing. A crowd gathers because the alternative is being the one holding the microphone.\n\nSeveral colonists can take part at once, and it is good practice at handling other people.</description>
+    <graphicData>
+      <texPath>EntertainingIdeas/Buildings/KaraokeMachine</texPath>
+      <graphicClass>Graphic_Multi</graphicClass>
+      <drawSize>(1.2,1.2)</drawSize>
+      <shadowData>
+        <volume>(0.7,0.5,0.6)</volume>
+      </shadowData>
+    </graphicData>
+    <rotatable>true</rotatable>
+    <defaultPlacingRot>South</defaultPlacingRot>
+    <fillPercent>0.45</fillPercent>
+    <pathCost>50</pathCost>
+    <constructEffect>ConstructMetal</constructEffect>
+    <constructionSkillPrerequisite>6</constructionSkillPrerequisite>
+    <statBases>
+      <MaxHitPoints>110</MaxHitPoints>
+      <WorkToBuild>8000</WorkToBuild>
+      <Mass>32</Mass>
+      <Beauty>3</Beauty>
+      <JoyGainFactor>1.25</JoyGainFactor>
+    </statBases>
+    <costList>
+      <Steel>50</Steel>
+      <ComponentIndustrial>3</ComponentIndustrial>
+    </costList>
+    <building>
+      <joyKind>Social</joyKind>
+      <paintable>true</paintable>
+      <watchBuildingStandDistanceRange>
+        <min>1</min>
+        <max>3</max>
+      </watchBuildingStandDistanceRange>
+      <watchBuildingStandRectWidth>4</watchBuildingStandRectWidth>
+    </building>
+    <placeWorkers>
+      <li>PlaceWorker_WatchArea</li>
+    </placeWorkers>
+    <comps>
+      <li Class="CompProperties_Power">
+        <compClass>CompPowerTrader</compClass>
+        <shortCircuitInRain>true</shortCircuitInRain>
+        <basePowerConsumption>120</basePowerConsumption>
+      </li>
+      <li Class="CompProperties_Flickable"/>
+      <!-- Singers stand back from it, so look further than the doorstep. -->
+      <li Class="EntertainingIdeas.CompProperties_AnimatedScreen">
+        <framePath>EntertainingIdeas/Buildings/KaraokeMachineSing</framePath>
+        <frameCount>6</frameCount>
+        <ticksPerFrame>9</ticksPerFrame>
+        <drawSize>(1.2,1.2)</drawSize>
+        <rotateWithBuilding>true</rotateWithBuilding>
+        <scanRadius>4</scanRadius>
+        <playJobs>
+          <li>EI_Sing_Karaoke</li>
+        </playJobs>
+      </li>
+    </comps>
+    <researchPrerequisites>
+      <li>MicroelectronicsBasics</li>
+    </researchPrerequisites>
+  </ThingDef>
+
+  <!-- ==================== 13. Gravball court (ultra) ====================== -->
+
+  <ThingDef ParentName="EI_JoyBuildingBase">
+    <defName>EI_GravballCourt</defName>
+    <label>gravball court</label>
+    <description>A plated floor with four field emitters at the corners, holding a ball in a lazy orbit somewhere above knee height. Players work the edges and try to put it through the far ring. The gravity is a suggestion rather than a rule, and so, after a while, is the score.\n\nSeveral colonists play at once. It is properly physical, and trains melee.</description>
+    <graphicData>
+      <texPath>EntertainingIdeas/Buildings/GravballCourt</texPath>
+      <graphicClass>Graphic_Multi</graphicClass>
+      <drawSize>(3,3)</drawSize>
+    </graphicData>
+    <size>(3,3)</size>
+    <rotatable>true</rotatable>
+    <defaultPlacingRot>South</defaultPlacingRot>
+    <fillPercent>0.2</fillPercent>
+    <pathCost>20</pathCost>
+    <canOverlapZones>false</canOverlapZones>
+    <constructEffect>ConstructMetal</constructEffect>
+    <constructionSkillPrerequisite>9</constructionSkillPrerequisite>
+    <statBases>
+      <MaxHitPoints>300</MaxHitPoints>
+      <WorkToBuild>30000</WorkToBuild>
+      <Mass>200</Mass>
+      <Beauty>16</Beauty>
+      <JoyGainFactor>1.5</JoyGainFactor>
+    </statBases>
+    <costList>
+      <Steel>200</Steel>
+      <Plasteel>60</Plasteel>
+      <ComponentSpacer>6</ComponentSpacer>
+    </costList>
+    <building>
+      <joyKind>Gaming_Dexterity</joyKind>
+      <watchBuildingStandDistanceRange>
+        <min>1</min>
+        <max>2</max>
+      </watchBuildingStandDistanceRange>
+      <watchBuildingStandRectWidth>5</watchBuildingStandRectWidth>
+    </building>
+    <placeWorkers>
+      <li>PlaceWorker_WatchArea</li>
+    </placeWorkers>
+    <comps>
+      <li Class="CompProperties_Power">
+        <compClass>CompPowerTrader</compClass>
+        <shortCircuitInRain>true</shortCircuitInRain>
+        <basePowerConsumption>400</basePowerConsumption>
+      </li>
+      <li Class="CompProperties_Flickable"/>
+      <li Class="CompProperties_Glower">
+        <glowRadius>6</glowRadius>
+        <glowColor>(130,238,244,0)</glowColor>
+      </li>
+      <!-- Small overlay over the middle of the court, so a 3x3 building does
+           not need 3x3 animation frames. -->
+      <li Class="EntertainingIdeas.CompProperties_AnimatedScreen">
+        <framePath>EntertainingIdeas/Buildings/GravballPlay</framePath>
+        <frameCount>6</frameCount>
+        <ticksPerFrame>7</ticksPerFrame>
+        <drawSize>(1.6,1.6)</drawSize>
+        <scanRadius>4</scanRadius>
+        <playJobs>
+          <li>EI_Play_Gravball</li>
+        </playJobs>
       </li>
     </comps>
     <researchPrerequisites>

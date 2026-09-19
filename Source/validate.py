@@ -8,6 +8,8 @@ Catches the mistakes that are silent until runtime:
   * a texPath with no matching file, or a Graphic_Multi missing a rotation
   * a jobDef/thingDef/research reference this mod makes but never defines
   * an animation comp whose frame textures are missing
+  * a def declaring a comp its parent also declares (def inheritance APPENDS
+    list entries, so that silently gives the building two of them)
   * XML naming a C# class this mod's source does not define, or naming one at
     all when the assembly has not been built
 
@@ -116,6 +118,25 @@ for folder, _, files in os.walk(DEFS):
                 for li in node.findall("li"):
                     if li.text.startswith("EI_") and li.text not in research_defs:
                         fail("undefined research prerequisite %s" % li.text)
+
+# --- comps declared by both a def and its parent chain ----------------------
+def comp_classes(node):
+    return [li.get("Class") for li in node.findall("./comps/li") if li.get("Class")]
+
+
+for name, node in thing_defs.items():
+    own = comp_classes(node)
+    parent = node.get("ParentName")
+    chain = []
+    while parent in named:
+        chain.append((parent, comp_classes(named[parent])))
+        parent = named[parent].get("ParentName")
+    for ancestor, inherited in chain:
+        clash = sorted(set(own) & set(inherited))
+        if clash:
+            fail("%s and its parent %s both declare %s - inheritance appends "
+                 "list entries, so the building would get two of each"
+                 % (name, ancestor, ", ".join(clash)))
 
 # --- C# classes named from XML, and their animation frames ------------------
 SRC = os.path.join(ROOT, "Source", "EntertainingIdeas")
