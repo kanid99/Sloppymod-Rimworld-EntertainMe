@@ -245,6 +245,7 @@ minutes, so the generator takes builder names:
 python3 Source/TextureGen/generate_textures.py aquarium karaoke   # seconds
 python3 Source/TextureGen/build_preview.py      # refresh About/Preview.png
 python3 Source/TextureGen/contact_sheet.py      # every texture on one sheet
+python3 Source/TextureGen/promo_art.py          # release-post graphics -> promo/
 ```
 
 They are honest placeholder sprites; swap in hand-drawn art any time by
