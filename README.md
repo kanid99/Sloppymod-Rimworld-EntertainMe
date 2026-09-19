@@ -22,7 +22,7 @@ each — see [Versions](#versions).
 | Archotech dreamtable | Spacer | Dexterity | Holographic entertainment | Projected ball, glows, absurdly expensive. |
 | Cocktail arcade table | Industrial | Dexterity | + Microelectronics basics | 1×1, seats two — put a chair on either side. Screen animates in play. |
 | Aquarium | Industrial | Solitary relaxation | Complex furniture + Electricity | 2×1. Fish swim whether or not anyone is watching. High beauty. |
-| Karaoke machine | Industrial | Social | Microelectronics basics | A crowd of up to five. Trains social. The room forms opinions — see below. |
+| Karaoke machine | Industrial | Social | Microelectronics basics | A crowd of up to five. Trains social; how well it goes down rides on the singer's *artistic* skill. |
 | Massage chair | Industrial | Solitary relaxation | Complex furniture + Electricity | Pawns sit *in* it. Comfortable enough to use as an ordinary chair. |
 | Hologame pod | Spacer | Cerebral | Holographic entertainment | Trains intellectual. |
 | Vista panel | Spacer | — (outdoors need) | Holographic entertainment | 3×1 wall display. Follows the local clock and eases cabin fever for the room. |
@@ -85,8 +85,8 @@ conditional on a building being in use:
   painted waterline gets the same read and works on 1.5 as well.
 - **`CompAudienceReaction`** gives everyone *else* in the room a memory while
   someone is performing. The singer enjoys themselves regardless; the audience
-  is a mixed bag, decided by the performer's social skill (a good singer wins
-  the room), each listener's opinion of them (friends are forgiving), and a
+  is a mixed bag, decided by the performer's artistic skill (whether they can
+  actually sing), each listener's opinion of them (friends are forgiving), and a
   taste value hashed from the listener's ID so the same colonist reacts the
   same way every time instead of flip-flopping. Deaf pawns are skipped.
 - **`CompOutdoorsSimulator`** tops up the outdoors need of everyone sharing the

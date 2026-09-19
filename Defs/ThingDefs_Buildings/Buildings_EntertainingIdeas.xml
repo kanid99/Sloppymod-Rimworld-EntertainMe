@@ -895,7 +895,7 @@
   <ThingDef ParentName="EI_JoyBuildingBase">
     <defName>EI_KaraokeMachine</defName>
     <label>karaoke machine</label>
-    <description>A screen, two speakers and a microphone on a short cord. It scrolls the words, it keeps the tune, and it is entirely indifferent to whether anyone can sing. A crowd gathers because the alternative is being the one holding the microphone.\n\nWhoever is singing enjoys themselves regardless. Everyone else in the room makes up their own mind: a genuinely good singer wins the room over, a bad one very much does not, friends are more forgiving than strangers, and some colonists were never going to enjoy this under any circumstances.</description>
+    <description>A screen, two speakers and a microphone on a short cord. It scrolls the words, it keeps the tune, and it is entirely indifferent to whether anyone can sing. A crowd gathers because the alternative is being the one holding the microphone.\n\nWhoever is singing enjoys themselves regardless. Everyone else in the room makes up their own mind: a colonist who can actually hold a tune wins the room over, one who cannot very much does not, friends are more forgiving than strangers, and some colonists were never going to enjoy this under any circumstances. Get your artists on the microphone.</description>
     <graphicData>
       <texPath>EntertainingIdeas/Buildings/KaraokeMachine</texPath>
       <graphicClass>Graphic_Multi</graphicClass>
@@ -963,8 +963,13 @@
         </userJobs>
         <goodThought>EI_EnjoyedKaraoke</goodThought>
         <badThought>EI_EnduredKaraoke</badThought>
-        <performanceSkill>Social</performanceSkill>
-        <neutralSkill>8</neutralSkill>
+        <!-- Whether the room enjoys it is a question of whether the singing is
+             any good, so it rides on artistic skill, the way playing an
+             instrument does. Neutral sits at 5 rather than the middle of the
+             range: most colonists are not artists, and pitching it higher
+             would mean almost every singer emptied the room. -->
+        <performanceSkill>Artistic</performanceSkill>
+        <neutralSkill>5</neutralSkill>
         <skillWeight>4</skillWeight>
         <opinionWeight>0.4</opinionWeight>
         <tasteSpread>25</tasteSpread>
