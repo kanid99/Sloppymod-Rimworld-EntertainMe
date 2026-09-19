@@ -10,6 +10,14 @@ Catches the mistakes that are silent until runtime:
   * an animation comp whose frame textures are missing
   * a def declaring a comp its parent also declares (def inheritance APPENDS
     list entries, so that silently gives the building two of them)
+  * a vanilla def name that does not exist - research, joy kinds, stuff, items
+    and so on - when pointed at a copy of the game's own defs:
+
+        RIMWORLD_CORE_DEFS=".../RimWorld/Data/Core/Defs" python3 Source/validate.py
+
+    Without that variable this check is skipped, since the game's files cannot
+    ship here. It is worth running before release: a research prerequisite that
+    does not resolve takes the whole building down with it.
   * XML naming a C# class this mod's source does not define, or naming one at
     all when the assembly has not been built
 
@@ -188,6 +196,71 @@ if our_classes_used and len(built) < len(ASSEMBLIES):
     fail("XML names C# classes but these assemblies are missing: %s - run "
          "Source/build.sh (defs naming a missing class will not load)"
          % ", ".join(missing))
+
+# --- vanilla def names, when the game's own defs are available -------------
+CORE_DEFS = os.environ.get("RIMWORLD_CORE_DEFS")
+# XML tags whose value names a def the base game owns.
+VANILLA_REFS = {
+    "researchPrerequisites", "designationCategory", "thingCategories",
+    "stuffCategories", "joyKind", "joySkill", "performanceSkill",
+    "performerSkill", "taleOnCompletion", "requiredCapacities", "minifiedDef",
+    "workType", "constructEffect",
+}
+
+if CORE_DEFS:
+    if not os.path.isdir(CORE_DEFS):
+        fail("RIMWORLD_CORE_DEFS is not a directory: %s" % CORE_DEFS)
+    else:
+        core_names = set()
+        for folder, _, files in os.walk(CORE_DEFS):
+            for filename in files:
+                if not filename.endswith(".xml"):
+                    continue
+                try:
+                    core_root = ET.parse(os.path.join(folder, filename)).getroot()
+                except ET.ParseError:
+                    continue
+                for node in core_root.iter():
+                    if node.tag.endswith("Def") and len(node):
+                        name = node.findtext("defName")
+                        if name:
+                            core_names.add(name)
+
+        checked_refs = 0
+        for folder, _, files in os.walk(ROOT):
+            if os.path.basename(folder) in (".git", "Source", "promo", "docs"):
+                continue
+            for filename in files:
+                if not filename.endswith(".xml") or filename == "LoadFolders.xml":
+                    continue
+                path = os.path.join(folder, filename)
+                try:
+                    root = ET.parse(path).getroot()
+                except ET.ParseError:
+                    continue
+                for node in root.iter():
+                    values = []
+                    if node.tag in VANILLA_REFS:
+                        values = ([li.text for li in node.findall("li")] if len(node)
+                                  else ([node.text] if node.text else []))
+                    elif node.tag == "costList":
+                        values = [child.tag for child in node]
+                    for value in values:
+                        if not value:
+                            continue
+                        value = value.strip()
+                        # our own defs, and defs owned by a mod we only patch
+                        if value.startswith("EI_") or value in ("Hydrotherapy", "MF_ModernFurniture"):
+                            continue
+                        checked_refs += 1
+                        if value not in core_names:
+                            fail("%s names '%s' (<%s>), which is not a def in %s"
+                                 % (filename, value, node.tag, CORE_DEFS))
+        print("%d vanilla def references checked against %s"
+              % (checked_refs, os.path.basename(CORE_DEFS.rstrip("/"))))
+else:
+    print("vanilla def names not checked (set RIMWORLD_CORE_DEFS to a copy of "
+          "the game's Defs folder to enable)")
 
 print("%d C# classes referenced from XML, %d/%d version assemblies built"
       % (len(our_classes_used), len(built), len(ASSEMBLIES)))

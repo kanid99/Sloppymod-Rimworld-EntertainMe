@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Patch>
+
+  <!-- Optional compatibility. Inert unless Vanilla Furniture Expanded is loaded.
+
+       VFE gates recreation two ways. Anything with a screen in it goes behind
+       vanilla's television research - its arcade machine and industrial
+       computer on TubeTelevision, its modern computer and spacer radio on
+       FlatscreenTelevision - which is exactly where this mod already puts its
+       own screens, so those need no patching.
+
+       Powered luxury furniture is different: VFE puts its piano, roulette table
+       and lounger behind its own MF_ModernFurniture. The three pieces here of
+       that same kind follow them, so a colony running VFE does not get this
+       mod's armchair-tier comforts noticeably earlier than VFE's own. -->
+
+  <Operation Class="PatchOperationFindMod">
+    <mods>
+      <li>Vanilla Furniture Expanded</li>
+    </mods>
+    <match Class="PatchOperationSequence">
+      <operations>
+
+        <li Class="PatchOperationReplace">
+          <xpath>/Defs/ThingDef[defName="EI_MassageChair"]/researchPrerequisites</xpath>
+          <value>
+            <researchPrerequisites>
+              <li>MF_ModernFurniture</li>
+              <li>Electricity</li>
+            </researchPrerequisites>
+          </value>
+        </li>
+
+        <li Class="PatchOperationReplace">
+          <xpath>/Defs/ThingDef[defName="EI_Aquarium"]/researchPrerequisites</xpath>
+          <value>
+            <researchPrerequisites>
+              <li>MF_ModernFurniture</li>
+              <li>Electricity</li>
+            </researchPrerequisites>
+          </value>
+        </li>
+
+        <li Class="PatchOperationReplace">
+          <xpath>/Defs/ThingDef[defName="EI_SoakingTubElectric"]/researchPrerequisites</xpath>
+          <value>
+            <researchPrerequisites>
+              <li>MF_ModernFurniture</li>
+              <li>Electricity</li>
+            </researchPrerequisites>
+          </value>
+        </li>
+
+      </operations>
+    </match>
+  </Operation>
+
+</Patch>

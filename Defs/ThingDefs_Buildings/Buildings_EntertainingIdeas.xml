@@ -686,8 +686,7 @@
       </li>
     </comps>
     <researchPrerequisites>
-      <li>Fabrication</li>
-      <li>FlatscreenTelevision</li>
+      <li>AdvancedFabrication</li>
     </researchPrerequisites>
   </ThingDef>
 
@@ -1162,8 +1161,7 @@
       </li>
     </comps>
     <researchPrerequisites>
-      <li>Fabrication</li>
-      <li>MicroelectronicsBasics</li>
+      <li>AdvancedFabrication</li>
     </researchPrerequisites>
   </ThingDef>
 

@@ -51,14 +51,17 @@ session.
 | Archotech dreamtable | 1×3 | Dexterity | 200W | Fabrication + Microelectronics |
 | Hologame pod | 1×1 | Cerebral | 250W | Fabrication |
 | Vista panel | 3×1 | *(outdoors need)* | 150W | Flatscreen television |
-| Dreamloop holotheater | 3×1 | Television | 500W | Fabrication + Flatscreen television |
-| Gravball court | 3×3 | Dexterity | 400W | Fabrication + Microelectronics |
+| Dreamloop holotheater | 3×1 | Television | 500W | Advanced fabrication |
+| Gravball court | 3×3 | Dexterity | 400W | Advanced fabrication |
 
 **No new research.** Everything gates on projects the game already has —
 Electricity for the first pinball tables, Tube television for the arcade
 cabinet, Microelectronics and Flatscreen television for the screens, Fabrication
-for the spacer and ultra builds — so the tree gains seventeen buildings and not
-one extra node. Everything lands in the Recreation tab of the architect menu.
+for the spacer builds and Advanced fabrication for the ultra pair — so the tree
+gains seventeen buildings and not one extra node. These are the same gates
+Vanilla Furniture Expanded uses for equivalent things: its arcade machine and
+industrial computer sit on Tube television, its modern computer and spacer radio
+on Flatscreen television. Everything lands in the Recreation tab of the architect menu.
 
 ## What the code does
 
@@ -155,6 +158,13 @@ it:
   running a parallel one — a soak then counts as the same kind of recreation as
   its hot tub and sauna.
 
+`Patches/VanillaFurnitureExpanded.xml` is inert unless **Vanilla Furniture
+Expanded** is loaded. With it, the massage chair, aquarium and heated tub move
+from Complex furniture to VFE's own `MF_ModernFurniture`, which is where VFE
+puts its piano, roulette table and lounger — so this mod's armchair-tier
+comforts do not arrive noticeably earlier than VFE's equivalents. The screens
+need no patch: both mods already gate those on vanilla's television research.
+
 The tubs stay worth building alongside DBH's hot tub, which is 2×2, needs 500W
 *and* plumbing, and does not heat the room. Ours are 1×1, need neither pipes nor
 (for the wood-fired one) power or research, and push heat — a tribe can have a
@@ -238,6 +248,18 @@ python3 Source/TextureGen/generate_textures.py  # redraw everything (~5 min)
 `build.sh` and `check_api.sh` need a C# compiler (`mono-devel` provides `mcs`)
 and pull RimWorld's reference assemblies from NuGet, so both can run without a
 copy of the game installed.
+
+Point `validate.py` at a copy of the game's own defs and it will also confirm
+every vanilla def name the mod uses actually exists — research, joy kinds, stuff
+categories, items, capacities:
+
+```bash
+RIMWORLD_CORE_DEFS="/path/to/RimWorld/Data/Core/Defs" python3 Source/validate.py
+```
+
+That is worth running before a release: a research prerequisite that does not
+resolve takes the whole building down with it. All 157 references check out
+against 1.6 Core.
 
 `validate.py` catches the failures that are otherwise silent until runtime: a
 recreation building no `JoyGiverDef` lists, a `texPath` with no file behind it, a
