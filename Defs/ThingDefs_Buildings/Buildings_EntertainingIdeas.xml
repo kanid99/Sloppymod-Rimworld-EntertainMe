@@ -4,6 +4,11 @@
   <!-- ============================ Shared base ============================ -->
 
   <ThingDef Name="EI_JoyBuildingBase" ParentName="BuildingBase" Abstract="True">
+    <!-- Stated rather than inherited. Every animation in this mod is drawn from
+         ThingComp.PostDraw, which only runs for things drawn in real time; if a
+         future version changed BuildingBase's default, every overlay here would
+         silently stop moving. -->
+    <drawerType>MapMeshAndRealTime</drawerType>
     <altitudeLayer>Building</altitudeLayer>
     <passability>PassThroughOnly</passability>
     <socialPropernessMatters>true</socialPropernessMatters>

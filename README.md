@@ -197,6 +197,15 @@ About are shared.
 Everything else checks out on both: every class the XML names, and every vanilla
 def field it sets, verified against both versions' reference assemblies.
 
+1.6's rendering rework does not reach this mod. That work was on the *pawn*
+pipeline — render trees, keyframes, animation workers — which nothing here
+touches: the animations are building overlays drawn from `ThingComp.PostDraw`
+via `Graphic.Draw`. The one place the two meet is the soaking tub's waterline,
+which has to land above the pawn layer, and `AltitudeLayer.MoteOverhead` still
+sits above `AltitudeLayer.Pawn` in both versions. The shared building base also
+states `drawerType` explicitly rather than inheriting it, since a comp's
+`PostDraw` only runs for things drawn in real time.
+
 ## Layout
 
 ```
