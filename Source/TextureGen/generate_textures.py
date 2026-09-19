@@ -817,7 +817,7 @@ def draw_tub_water(c, frame=None, total=6):
             c.ring(64, 62, r, r - 2, (186, 232, 236, alpha))
 
 
-def soaking_tub():
+def soaking_tub(name="SoakingTub", electric=False):
     c = Canvas(128, 128)
     c.circle(64, 62, 48, DARK)
     c.circle(64, 62, 45, (112, 78, 48, 255))                    # staves
@@ -826,14 +826,27 @@ def soaking_tub():
         a = k / 14.0 * 2 * math.pi
         c.line(64 + math.cos(a) * 37, 62 + math.sin(a) * 37,
                64 + math.cos(a) * 46, 62 + math.sin(a) * 46, (74, 48, 28, 255), 5)
-    c.ring(64, 62, 45, 41, (146, 150, 158, 255))                # iron band
+    band = (150, 162, 178, 255) if electric else (146, 150, 158, 255)
+    c.ring(64, 62, 45, 41, band)                                # hoop
     c.ring(64, 62, 40, 38, DARK)
     draw_tub_water(c, None)
-    c.rect(44, 104, 84, 124, DARK, 6)                           # firebox
-    c.rect(47, 107, 81, 121, (52, 44, 40, 255), 5)
-    c.circle(64, 114, 6, (226, 120, 52, 235))
-    c.circle(64, 114, 3, (255, 196, 110, 255))
-    save_single(c, "SoakingTub")
+
+    if electric:
+        import math
+        for k in range(10):                                     # heating element
+            a = k / 10.0 * 2 * math.pi
+            c.line(64 + math.cos(a) * 26, 62 + math.sin(a) * 26,
+                   64 + math.cos(a) * 33, 62 + math.sin(a) * 33, (206, 132, 96, 150), 3)
+        c.rect(40, 104, 88, 124, DARK, 6)                       # control box
+        c.rect(43, 107, 85, 121, (62, 66, 78, 255), 5)
+        for k, col in enumerate(((120, 226, 140, 255), (236, 196, 78, 255), (130, 190, 240, 255))):
+            c.circle(53 + k * 11, 114, 3.2, col)
+    else:
+        c.rect(44, 104, 84, 124, DARK, 6)                       # firebox
+        c.rect(47, 107, 81, 121, (52, 44, 40, 255), 5)
+        c.circle(64, 114, 6, (226, 120, 52, 235))
+        c.circle(64, 114, 3, (255, 196, 110, 255))
+    save_single(c, name)
     return c
 
 
@@ -885,9 +898,6 @@ def soaking_tub_frames(total=6):
             sy = 58 + math.sin(a) * drift * 0.8
             c.ellipse(sx, sy, 9 + t * 9, 7 + t * 7, (240, 248, 250, int(110 * (1 - t))))
         c.circle(64, 60, 16 + 10 * p, (240, 248, 250, int(55 * (1 - p))))
-        glow = 200 + int(45 * math.sin(2 * math.pi * p))
-        c.circle(64, 114, 6, (226, 120, 52, min(255, glow)))
-        c.circle(64, 114, 3, (255, 206, 120, 255))
         c.save(os.path.join(OUT, "SoakingTubSteam_%d.png" % i))
     print("  SoakingTubSteam_0..%d.png  (128x128)" % (total - 1))
 
@@ -1255,9 +1265,10 @@ def _build_massagechair():
 
 def _build_soakingtub():
     canvas = soaking_tub()
+    electric = soaking_tub("SoakingTubElectric", electric=True)
     soaking_tub_water_frames()
     soaking_tub_frames()
-    return {"SoakingTub": canvas}
+    return {"SoakingTub": canvas, "SoakingTubElectric": electric}
 
 
 def _build_skittles():

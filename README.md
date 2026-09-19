@@ -1,6 +1,6 @@
 # Entertaining Ideas
 
-A RimWorld mod that adds **thirteen recreation ideas — sixteen buildings** — one
+A RimWorld mod that adds **thirteen recreation ideas — seventeen buildings** — one
 for roughly each rung of the tech ladder, so a colony always has something worth
 doing. A tribe gets a hide mat full of knucklebones on day one; an archotech
 lounge gets a room-sized shared hallucination.
@@ -16,7 +16,7 @@ for each — see [Versions](#versions).
 | Building | Size | Recreation | Notes |
 |---|---|---|---|
 | Knucklebone mat | 1×1 | Cerebral | Sit-adjacent, no chair needed. The one thinking game a tribe can build on day one. |
-| Soaking tub | 1×1 | Solitary relaxation | Colonists get *in*. Wood-fired, warms the room, steams while lit, and hides its occupant below the waterline. |
+| Soaking tub | 1×1 | Solitary relaxation | Colonists get *in*. Burns wood (8/day), warms the room, steams while lit, and hides its occupant below the waterline. |
 | Skittles lane | 1×7 | Dexterity | Nine pins in a diamond; rolled from the near end. Pins scatter when the ball lands. Trains shooting. |
 | Shadow lantern theater | 2×1 | Social | Watched from 2–5 tiles by up to six colonists. The shadows walk on their own — the drum turns on the lamp's draught. |
 
@@ -31,11 +31,17 @@ for each — see [Versions](#versions).
 | Massage chair | 1×1 | Solitary relaxation | 90W | Complex furniture + Electricity |
 | Aquarium | 2×1 | Solitary relaxation | 60W | Complex furniture + Electricity |
 | Karaoke machine | 1×1 | Social | 120W | Microelectronics basics |
+| Heated soaking tub | 1×1 | Solitary relaxation | 200W | Complex furniture + Electricity |
 
 All four pinball tables share one cabinet frame and one animation; they differ in
 cost, power, beauty and how much joy they give. The cocktail table seats two —
-put a chair on either side. The massage chair is comfortable enough to double as
-an ordinary chair.
+put a chair on either side.
+
+The heated tub is the wood-fired one with the firebox swapped for an element: no
+hauling and no ash, but a standing draw on the grid. The massage chair needs
+power to massage anyone, and without it is simply a very comfortable chair —
+colonists will still sit in it to eat and talk, they just will not book a
+session.
 
 ### Spacer and ultra
 
@@ -89,8 +95,9 @@ replace going outside.
 sit-adjacent giver puts a pawn in a *separate* chair next to the thing — so
 `JoyGiver_SitInBuilding` / `JobDriver_SitInBuilding` walk a pawn onto the
 building's own cell and keep them there gaining joy. Used by the massage chair
-and the soaking tub, and it treats an unfuelled or unpowered building as
-unusable.
+and both tubs, and it treats an unfuelled or unpowered building as unusable —
+which is what makes the massage chair fall back to being an ordinary chair when
+the power is out.
 
 **The tub hides its occupant.** RimWorld 1.6 does have a real swimming pose, but
 it swaps the pawn to a dedicated swimming graphic gated on `Pawn.Swimming` —
@@ -120,6 +127,23 @@ A `JobDef` carries only one `joySkill`, so the comp also hands the performer
 experience in a second skill: the job trains social, the comp adds artistic, and
 a turn at the microphone builds both.
 
+## Optional mod compatibility
+
+`Patches/DubsBadHygiene.xml` is inert unless **Dubs Bad Hygiene** is loaded. With
+it:
+
+- The **aquarium** joins DBH's plumbing network (`CompProperties_Pipe` in Sewage
+  mode, the same way DBH declares its own water appliances), so the tank is
+  piped in rather than filled from nowhere.
+- Both **tubs** move to DBH's `Hydrotherapy` recreation category instead of
+  running a parallel one, so a soak counts as the same kind of recreation as its
+  hot tub and sauna.
+
+The tubs stay worth building alongside DBH's hot tub, which is 2×2, needs 500W
+*and* plumbing, and does not heat the room. Ours are 1×1, need neither pipes nor
+(for the wood-fired one) power or research, and push heat — a tribe can have a
+hot soak on day one.
+
 ## How recreation is wired
 
 A `<joyKind>` on a ThingDef is only a label — it does not make pawns use the
@@ -132,7 +156,7 @@ and `validate.py` fails if one is not.
 | Sit beside it | `JoyGiver_InteractBuildingSitAdjacent` | `JobDriver_SitFacingBuilding` | knucklebone mat, cocktail table |
 | Stand at its interaction cell | `JoyGiver_InteractBuildingInteractionCell` | `JobDriver_WatchBuilding` | pinball tables, hologame pod, skittles lane |
 | Stand back in a watch area | `JoyGiver_WatchBuilding` | `JobDriver_WatchBuilding` / `JobDriver_WatchTelevision` | shadow theater, aquarium, karaoke, gravball, holotheater |
-| Sit in the building itself | `JoyGiver_SitInBuilding` \* | `JobDriver_SitInBuilding` \* | massage chair, soaking tub |
+| Sit in the building itself | `JoyGiver_SitInBuilding` \* | `JobDriver_SitInBuilding` \* | massage chair, both tubs |
 
 \* This mod's own; everything else is a vanilla class.
 
@@ -167,6 +191,7 @@ LoadFolders.xml      sends each game version to its own assembly
 1.5/Assemblies/      built against 1.5 references
 1.6/Assemblies/      the same sources built against 1.6 references
 Defs/                ThingDefs, JobDefs, JoyGiverDefs, ResearchProjectDefs, ThoughtDefs
+Patches/             optional compatibility, applied only if that mod is loaded
 Textures/            EntertainingIdeas/Buildings/*.png
 Source/              tooling and code, not loaded by the game directly
   EntertainingIdeas/ the C# described above
@@ -198,7 +223,7 @@ inheritance *appends* list entries, so that quietly gives a building two power
 comps rather than replacing one.
 
 The art is generated, not hand-drawn: `Source/TextureGen/` holds a small
-dependency-free PNG writer and the drawing code for each building, so the 171
+dependency-free PNG writer and the drawing code for each building, so the
 textures are reproducible and easy to restyle. A full redraw takes about five
 minutes, so the generator takes builder names:
 

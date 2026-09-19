@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Patch>
+
+  <!-- Optional compatibility. Inert unless Dubs Bad Hygiene is loaded:
+       PatchOperationFindMod checks by mod name and skips the whole block
+       otherwise, so nobody else pays for this file. -->
+
+  <Operation Class="PatchOperationFindMod">
+    <mods>
+      <li>Dubs Bad Hygiene</li>
+    </mods>
+    <match Class="PatchOperationSequence">
+      <operations>
+
+        <!-- Plumb the aquarium in. DBH runs water and waste on one network,
+             which its own water appliances join with CompProperties_Pipe in
+             Sewage mode - its washing machine and hot tub are both declared
+             exactly this way. With this, the tank joins that network and shows
+             on the plumbing overlay instead of being water from nowhere. -->
+        <li Class="PatchOperationAdd">
+          <xpath>/Defs/ThingDef[defName="EI_Aquarium"]/comps</xpath>
+          <value>
+            <li Class="DubsBadHygiene.CompProperties_Pipe">
+              <mode>Sewage</mode>
+            </li>
+          </value>
+        </li>
+
+        <!-- Hand the tubs over to DBH's hydrotherapy category rather than
+             running a parallel one. Without DBH they are ordinary solitary
+             relaxation; with it, a soak counts as the same kind of recreation
+             as its hot tub and sauna, so the two mods stack instead of
+             splitting the need between two categories. The joy kind lives in
+             three places - the building's label, the job and the giver - and
+             all three have to agree. -->
+        <li Class="PatchOperationReplace">
+          <xpath>/Defs/ThingDef[defName="EI_SoakingTub"]/building/joyKind</xpath>
+          <value><joyKind>Hydrotherapy</joyKind></value>
+        </li>
+        <li Class="PatchOperationReplace">
+          <xpath>/Defs/ThingDef[defName="EI_SoakingTubElectric"]/building/joyKind</xpath>
+          <value><joyKind>Hydrotherapy</joyKind></value>
+        </li>
+        <li Class="PatchOperationReplace">
+          <xpath>/Defs/JobDef[defName="EI_UseSoakingTub"]/joyKind</xpath>
+          <value><joyKind>Hydrotherapy</joyKind></value>
+        </li>
+        <li Class="PatchOperationReplace">
+          <xpath>/Defs/JoyGiverDef[defName="EI_UseSoakingTub"]/joyKind</xpath>
+          <value><joyKind>Hydrotherapy</joyKind></value>
+        </li>
+
+      </operations>
+    </match>
+  </Operation>
+
+</Patch>

@@ -119,6 +119,7 @@
     <baseChance>2.5</baseChance>
     <thingDefs>
       <li>EI_SoakingTub</li>
+      <li>EI_SoakingTubElectric</li>
     </thingDefs>
     <jobDef>EI_UseSoakingTub</jobDef>
     <joyKind>Meditative</joyKind>

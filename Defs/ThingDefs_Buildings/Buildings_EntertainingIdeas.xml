@@ -375,7 +375,7 @@
   <ThingDef ParentName="EI_JoyBuildingBase">
     <defName>EI_MassageChair</defName>
     <label>massage chair</label>
-    <description>A heavy reclining chair stuffed with rollers, cams and a small motor that works its way up and down the occupant's spine. It is not subtle and it is not quiet, but twenty minutes in one takes the edge off a week of hauling.\n\nColonists sit in it rather than beside it. Doubles as an ordinary, very comfortable chair when nobody is using it properly.</description>
+    <description>A heavy reclining chair stuffed with rollers, cams and a small motor that works its way up and down the occupant's spine. It is not subtle and it is not quiet, but twenty minutes in one takes the edge off a week of hauling.\n\nColonists get in rather than sit beside it. With the power off, or switched off, nobody will use it for recreation - but it is still a chair, and a very comfortable one, so colonists will happily sit in it to eat or talk.</description>
     <graphicData>
       <texPath>EntertainingIdeas/Buildings/MassageChair</texPath>
       <graphicClass>Graphic_Multi</graphicClass>
@@ -763,6 +763,87 @@
         <drawOverPawns>true</drawOverPawns>
       </li>
     </comps>
+  </ThingDef>
+
+  <!-- ============== 9b. Heated soaking tub (industrial) ================== -->
+
+  <ThingDef ParentName="EI_JoyBuildingBase">
+    <defName>EI_SoakingTubElectric</defName>
+    <label>heated soaking tub</label>
+    <description>The same barrel with the firebox taken off and an element dropped in, so it holds temperature instead of drifting cold the moment somebody forgets to feed it. No hauling, no ash, no smoke - just a standing draw on the grid whether anyone is in it or not.\n\nColonists get in rather than sit beside it, and it warms the room while it runs.</description>
+    <graphicData>
+      <texPath>EntertainingIdeas/Buildings/SoakingTubElectric</texPath>
+      <graphicClass>Graphic_Single</graphicClass>
+      <drawSize>(1.15,1.15)</drawSize>
+      <shadowData>
+        <volume>(0.8,0.4,0.8)</volume>
+      </shadowData>
+      <damageData>
+        <rect>(0.1,0.1,0.8,0.8)</rect>
+      </damageData>
+    </graphicData>
+    <rotatable>false</rotatable>
+    <tickerType>Normal</tickerType>
+    <fillPercent>0.45</fillPercent>
+    <pathCost>60</pathCost>
+    <constructEffect>ConstructMetal</constructEffect>
+    <constructionSkillPrerequisite>5</constructionSkillPrerequisite>
+    <statBases>
+      <MaxHitPoints>110</MaxHitPoints>
+      <WorkToBuild>6000</WorkToBuild>
+      <Mass>34</Mass>
+      <Beauty>6</Beauty>
+      <JoyGainFactor>1.2</JoyGainFactor>
+    </statBases>
+    <stuffCategories>
+      <li>Woody</li>
+      <li>Metallic</li>
+      <li>Stony</li>
+    </stuffCategories>
+    <costStuffCount>55</costStuffCount>
+    <costList>
+      <Steel>45</Steel>
+      <ComponentIndustrial>2</ComponentIndustrial>
+    </costList>
+    <building>
+      <joyKind>Meditative</joyKind>
+    </building>
+    <comps>
+      <li Class="CompProperties_Power">
+        <compClass>CompPowerTrader</compClass>
+        <shortCircuitInRain>true</shortCircuitInRain>
+        <basePowerConsumption>200</basePowerConsumption>
+      </li>
+      <li Class="CompProperties_Flickable"/>
+      <!-- Powered variant: stops pushing heat when the power does. -->
+      <li Class="CompProperties_HeatPusher">
+        <compClass>CompHeatPusherPowered</compClass>
+        <heatPerSecond>10</heatPerSecond>
+        <heatPushMaxTemperature>26</heatPushMaxTemperature>
+      </li>
+      <!-- Same waterline and steam strips as the wood-fired tub; the comp
+           gates them on power here instead of on fuel. -->
+      <li Class="EntertainingIdeas.CompProperties_AnimatedScreen">
+        <framePath>EntertainingIdeas/Buildings/SoakingTubWater</framePath>
+        <frameCount>6</frameCount>
+        <ticksPerFrame>16</ticksPerFrame>
+        <drawSize>(1.15,1.15)</drawSize>
+        <requireUser>false</requireUser>
+        <drawOverPawns>true</drawOverPawns>
+      </li>
+      <li Class="EntertainingIdeas.CompProperties_AnimatedScreen">
+        <framePath>EntertainingIdeas/Buildings/SoakingTubSteam</framePath>
+        <frameCount>6</frameCount>
+        <ticksPerFrame>14</ticksPerFrame>
+        <drawSize>(1.15,1.15)</drawSize>
+        <requireUser>false</requireUser>
+        <drawOverPawns>true</drawOverPawns>
+      </li>
+    </comps>
+    <researchPrerequisites>
+      <li>ComplexFurniture</li>
+      <li>Electricity</li>
+    </researchPrerequisites>
   </ThingDef>
 
   <!-- ====================== 10. Aquarium (industrial) ===================== -->
