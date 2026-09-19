@@ -1,0 +1,465 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Defs>
+
+  <!-- ============================ Shared base ============================ -->
+
+  <ThingDef Name="EI_JoyBuildingBase" ParentName="BuildingBase" Abstract="True">
+    <altitudeLayer>Building</altitudeLayer>
+    <passability>PassThroughOnly</passability>
+    <socialPropernessMatters>true</socialPropernessMatters>
+    <drawPlaceWorkersWhileSelected>true</drawPlaceWorkersWhileSelected>
+    <minifiedDef>MinifiedThing</minifiedDef>
+    <thingCategories>
+      <li>BuildingsJoy</li>
+    </thingCategories>
+    <designationCategory>Joy</designationCategory>
+    <statBases>
+      <Flammability>1.0</Flammability>
+    </statBases>
+  </ThingDef>
+
+  <!-- ===================== 1. Knucklebones (neolithic) ==================== -->
+
+  <ThingDef ParentName="EI_JoyBuildingBase">
+    <defName>EI_KnuckleboneMat</defName>
+    <label>knucklebone mat</label>
+    <description>A pegged-out hide scattered with polished animal knuckles and a handful of wager stones. Players take turns casting the bones, calling the count, and losing tomorrow's meat ration to someone with better luck. It asks nothing of a colony's technology - only somewhere dry to sit - which makes it the one thinking game a tribe can raise on its first day.</description>
+    <graphicData>
+      <texPath>EntertainingIdeas/Buildings/KnuckleboneMat</texPath>
+      <graphicClass>Graphic_Single</graphicClass>
+      <drawSize>(1.15,1.15)</drawSize>
+      <damageData>
+        <rect>(0.08,0.08,0.84,0.84)</rect>
+      </damageData>
+    </graphicData>
+    <rotatable>false</rotatable>
+    <fillPercent>0.15</fillPercent>
+    <pathCost>14</pathCost>
+    <statBases>
+      <MaxHitPoints>60</MaxHitPoints>
+      <WorkToBuild>900</WorkToBuild>
+      <Mass>3</Mass>
+      <Beauty>2</Beauty>
+      <JoyGainFactor>0.85</JoyGainFactor>
+    </statBases>
+    <stuffCategories>
+      <li>Leathery</li>
+      <li>Fabric</li>
+      <li>Woody</li>
+    </stuffCategories>
+    <costStuffCount>25</costStuffCount>
+    <building>
+      <joyKind>Gaming_Cerebral</joyKind>
+    </building>
+  </ThingDef>
+
+  <!-- ======================= 2. Dartboard (medieval) ====================== -->
+
+  <ThingDef ParentName="EI_JoyBuildingBase">
+    <defName>EI_Dartboard</defName>
+    <label>dartboard</label>
+    <description>A tight-packed bristle board on a timber backing, with a throwing line scuffed into the floor a few paces back. Players stand off and throw; the arguing is half the game. Cheap, quiet, and it sharpens the eye - steady hours at the oche train shooting.\n\nNeeds a clear run of floor in front of it.</description>
+    <graphicData>
+      <texPath>EntertainingIdeas/Buildings/Dartboard</texPath>
+      <graphicClass>Graphic_Multi</graphicClass>
+      <drawSize>(1.1,1.1)</drawSize>
+      <shadowData>
+        <volume>(0.6,0.4,0.25)</volume>
+        <offset>(0,0,-0.15)</offset>
+      </shadowData>
+      <damageData>
+        <rectN>(0.12,0.1,0.76,0.8)</rectN>
+        <rectS>(0.12,0.1,0.76,0.8)</rectS>
+        <rectE>(0.12,0.1,0.76,0.8)</rectE>
+        <rectW>(0.12,0.1,0.76,0.8)</rectW>
+      </damageData>
+    </graphicData>
+    <rotatable>true</rotatable>
+    <defaultPlacingRot>South</defaultPlacingRot>
+    <fillPercent>0.25</fillPercent>
+    <pathCost>30</pathCost>
+    <statBases>
+      <MaxHitPoints>90</MaxHitPoints>
+      <WorkToBuild>2200</WorkToBuild>
+      <Mass>6</Mass>
+      <Beauty>3</Beauty>
+      <JoyGainFactor>1.0</JoyGainFactor>
+    </statBases>
+    <stuffCategories>
+      <li>Woody</li>
+      <li>Metallic</li>
+      <li>Stony</li>
+    </stuffCategories>
+    <costStuffCount>30</costStuffCount>
+    <building>
+      <joyKind>Gaming_Dexterity</joyKind>
+      <watchBuildingStandDistanceRange>
+        <min>3</min>
+        <max>5</max>
+      </watchBuildingStandDistanceRange>
+      <watchBuildingStandRectWidth>3</watchBuildingStandRectWidth>
+    </building>
+    <placeWorkers>
+      <li>PlaceWorker_WatchArea</li>
+    </placeWorkers>
+  </ThingDef>
+
+  <!-- =================== 3. Pinball machines (industrial) ================= -->
+
+  <ThingDef Name="EI_PinballMachineBase" ParentName="EI_JoyBuildingBase" Abstract="True">
+    <graphicData>
+      <graphicClass>Graphic_Multi</graphicClass>
+      <shaderType>CutoutComplex</shaderType>
+      <drawSize>(1,3)</drawSize>
+      <shadowData>
+        <volume>(0.75,0.5,2.6)</volume>
+      </shadowData>
+      <damageData>
+        <rectN>(0.1,0.02,0.8,0.96)</rectN>
+        <rectS>(0.1,0.02,0.8,0.96)</rectS>
+        <rectE>(0.02,0.1,0.96,0.8)</rectE>
+        <rectW>(0.02,0.1,0.96,0.8)</rectW>
+      </damageData>
+    </graphicData>
+    <size>(1,3)</size>
+    <altitudeLayer>BuildingOnTop</altitudeLayer>
+    <rotatable>true</rotatable>
+    <defaultPlacingRot>South</defaultPlacingRot>
+    <fillPercent>0.5</fillPercent>
+    <pathCost>48</pathCost>
+    <canOverlapZones>false</canOverlapZones>
+    <!-- The cabinet runs three tiles deep; the player stands off the near end,
+         at the flippers. Offsets are written north-facing and rotate with the
+         building, so a south-facing machine puts its player one tile south. -->
+    <hasInteractionCell>true</hasInteractionCell>
+    <interactionCellOffset>(0,0,2)</interactionCellOffset>
+    <placeWorkers>
+      <li>PlaceWorker_PreventInteractionSpotOverlap</li>
+    </placeWorkers>
+    <constructEffect>ConstructMetal</constructEffect>
+    <constructionSkillPrerequisite>6</constructionSkillPrerequisite>
+    <building>
+      <joyKind>Gaming_Dexterity</joyKind>
+      <paintable>true</paintable>
+    </building>
+    <comps>
+      <li Class="CompProperties_Power">
+        <compClass>CompPowerTrader</compClass>
+        <shortCircuitInRain>true</shortCircuitInRain>
+        <basePowerConsumption>120</basePowerConsumption>
+      </li>
+      <li Class="CompProperties_Flickable"/>
+    </comps>
+    <statBases>
+      <Flammability>1.0</Flammability>
+      <Mass>90</Mass>
+    </statBases>
+  </ThingDef>
+
+  <ThingDef ParentName="EI_PinballMachineBase">
+    <defName>EI_PinballMachine</defName>
+    <label>pinball machine</label>
+    <description>A solenoid-and-relay amusement table: one steel ball, two flippers, and a slab of glass between the player and a playfield of bumpers that whack the ball back the moment it touches them. The scoring reels clatter loudly enough to be heard three rooms away, which is either charm or grounds for a formal complaint, depending on who you ask.\n\nRewards a steady hand and good timing - regular play trains shooting.</description>
+    <graphicData>
+      <texPath>EntertainingIdeas/Buildings/PinballClassic</texPath>
+    </graphicData>
+    <statBases>
+      <MaxHitPoints>140</MaxHitPoints>
+      <WorkToBuild>9000</WorkToBuild>
+      <Beauty>6</Beauty>
+      <JoyGainFactor>1.25</JoyGainFactor>
+    </statBases>
+    <costList>
+      <Steel>65</Steel>
+      <ComponentIndustrial>3</ComponentIndustrial>
+    </costList>
+    <researchPrerequisites>
+      <li>EI_PinballEngineering</li>
+    </researchPrerequisites>
+  </ThingDef>
+
+  <ThingDef ParentName="EI_PinballMachineBase">
+    <defName>EI_PinballMachineBoomalope</defName>
+    <label>boomalope blitz pinball</label>
+    <description>The same cabinet, rebuilt around a herd-chase theme and a pair of chemfuel flash pots that cough a gout of harmless flame over the backglass on a jackpot. The art is a lurid green boomalope going up like a dropped lamp. Colonists who have actually watched a boomalope go up find this hilarious, horrifying, or both.\n\nThe flash pots draw extra power and make it a rowdier, more memorable table than the standard build.</description>
+    <graphicData>
+      <texPath>EntertainingIdeas/Buildings/PinballBoomalope</texPath>
+    </graphicData>
+    <statBases>
+      <MaxHitPoints>140</MaxHitPoints>
+      <WorkToBuild>11000</WorkToBuild>
+      <Beauty>9</Beauty>
+      <JoyGainFactor>1.35</JoyGainFactor>
+    </statBases>
+    <costList>
+      <Steel>70</Steel>
+      <ComponentIndustrial>4</ComponentIndustrial>
+      <Chemfuel>25</Chemfuel>
+    </costList>
+    <comps>
+      <li Class="CompProperties_Power">
+        <compClass>CompPowerTrader</compClass>
+        <shortCircuitInRain>true</shortCircuitInRain>
+        <basePowerConsumption>150</basePowerConsumption>
+      </li>
+      <li Class="CompProperties_Flickable"/>
+    </comps>
+    <researchPrerequisites>
+      <li>EI_PinballEngineering</li>
+    </researchPrerequisites>
+  </ThingDef>
+
+  <ThingDef ParentName="EI_PinballMachineBase">
+    <defName>EI_PinballMachineMechRampage</defName>
+    <label>mech rampage pinball</label>
+    <description>A solid-state table with a microchip scoring brain, a ramp shaped like a downed centipede, and a voice chip that barks threats in mechanoid cant. Tighter shots, harsher tilt sensor, far more satisfying to beat.\n\nThe electronics hold a running high-score table, and colonists will absolutely fight over it.</description>
+    <graphicData>
+      <texPath>EntertainingIdeas/Buildings/PinballMechRampage</texPath>
+    </graphicData>
+    <statBases>
+      <MaxHitPoints>160</MaxHitPoints>
+      <WorkToBuild>14000</WorkToBuild>
+      <Beauty>7</Beauty>
+      <JoyGainFactor>1.4</JoyGainFactor>
+    </statBases>
+    <costList>
+      <Steel>90</Steel>
+      <ComponentIndustrial>6</ComponentIndustrial>
+    </costList>
+    <comps>
+      <li Class="CompProperties_Power">
+        <compClass>CompPowerTrader</compClass>
+        <shortCircuitInRain>true</shortCircuitInRain>
+        <basePowerConsumption>180</basePowerConsumption>
+      </li>
+      <li Class="CompProperties_Flickable"/>
+    </comps>
+    <constructionSkillPrerequisite>8</constructionSkillPrerequisite>
+    <researchPrerequisites>
+      <li>EI_PinballEngineering</li>
+      <li>MicroelectronicsBasics</li>
+    </researchPrerequisites>
+  </ThingDef>
+
+  <ThingDef ParentName="EI_PinballMachineBase">
+    <defName>EI_PinballMachineArchotech</defName>
+    <label>archotech dreamtable</label>
+    <description>A glitterworld pinball cabinet with no ball in it. The table reads the player's hands a half-second before they move and projects a ball that was always going to be exactly where they swing - so every player, however clumsy, walks away convinced they are extraordinary at pinball.\n\nIt is a very expensive, very beautiful lie, and nobody who plays it wants it corrected.</description>
+    <graphicData>
+      <texPath>EntertainingIdeas/Buildings/PinballArchotech</texPath>
+    </graphicData>
+    <statBases>
+      <MaxHitPoints>180</MaxHitPoints>
+      <WorkToBuild>22000</WorkToBuild>
+      <Beauty>14</Beauty>
+      <JoyGainFactor>1.55</JoyGainFactor>
+    </statBases>
+    <costList>
+      <Plasteel>40</Plasteel>
+      <ComponentSpacer>3</ComponentSpacer>
+      <Gold>20</Gold>
+    </costList>
+    <comps>
+      <li Class="CompProperties_Power">
+        <compClass>CompPowerTrader</compClass>
+        <shortCircuitInRain>true</shortCircuitInRain>
+        <basePowerConsumption>200</basePowerConsumption>
+      </li>
+      <li Class="CompProperties_Flickable"/>
+      <li Class="CompProperties_Glower">
+        <glowRadius>4</glowRadius>
+        <glowColor>(120,228,226,0)</glowColor>
+      </li>
+    </comps>
+    <constructionSkillPrerequisite>8</constructionSkillPrerequisite>
+    <researchPrerequisites>
+      <li>EI_HolographicEntertainment</li>
+    </researchPrerequisites>
+  </ThingDef>
+
+  <!-- ============== 6. Cocktail arcade table (industrial) ================ -->
+
+  <ThingDef ParentName="EI_JoyBuildingBase">
+    <defName>EI_CocktailArcadeTable</defName>
+    <label>cocktail arcade table</label>
+    <description>A sit-down arcade cabinet with the screen lying face up under a sheet of glass and a joystick at each of two seats. One player runs a little yellow eater around a maze, hoovering pellets while four ghosts hunt them down; the other heckles from across the table and waits their turn. The picture flips between turns so both seats play it the right way up.\n\nSeats two - set a chair on either side. Quick reflexes help, and the ribbing that comes with them is half the point.</description>
+    <graphicData>
+      <texPath>EntertainingIdeas/Buildings/CocktailArcade</texPath>
+      <graphicClass>Graphic_Single</graphicClass>
+      <drawSize>(1.15,1.15)</drawSize>
+      <shadowData>
+        <volume>(0.8,0.35,0.8)</volume>
+      </shadowData>
+      <damageData>
+        <rect>(0.08,0.08,0.84,0.84)</rect>
+      </damageData>
+    </graphicData>
+    <rotatable>false</rotatable>
+    <fillPercent>0.4</fillPercent>
+    <pathCost>50</pathCost>
+    <constructEffect>ConstructMetal</constructEffect>
+    <constructionSkillPrerequisite>7</constructionSkillPrerequisite>
+    <statBases>
+      <MaxHitPoints>120</MaxHitPoints>
+      <WorkToBuild>11000</WorkToBuild>
+      <Mass>35</Mass>
+      <Beauty>5</Beauty>
+      <JoyGainFactor>1.3</JoyGainFactor>
+    </statBases>
+    <costList>
+      <Steel>55</Steel>
+      <ComponentIndustrial>4</ComponentIndustrial>
+    </costList>
+    <building>
+      <joyKind>Gaming_Dexterity</joyKind>
+      <paintable>true</paintable>
+    </building>
+    <comps>
+      <li Class="CompProperties_Power">
+        <compClass>CompPowerTrader</compClass>
+        <shortCircuitInRain>true</shortCircuitInRain>
+        <basePowerConsumption>100</basePowerConsumption>
+      </li>
+      <li Class="CompProperties_Flickable"/>
+      <li Class="CompProperties_Glower">
+        <glowRadius>3</glowRadius>
+        <glowColor>(120,150,240,0)</glowColor>
+      </li>
+    </comps>
+    <researchPrerequisites>
+      <li>EI_PinballEngineering</li>
+      <li>MicroelectronicsBasics</li>
+    </researchPrerequisites>
+  </ThingDef>
+
+  <!-- ===================== 4. Hologame pod (spacer) ======================= -->
+
+  <ThingDef ParentName="EI_JoyBuildingBase">
+    <defName>EI_HologamePod</defName>
+    <label>hologame pod</label>
+    <description>A waist-high emitter well that throws a board of light above itself and lets one player push the pieces around with their hands. It ships with a few thousand strategy games and generates more when those run out, each one tuned to sit just past the edge of the player's ability.\n\nLosing to it is good for you, apparently. It trains intellectual skill.</description>
+    <graphicData>
+      <texPath>EntertainingIdeas/Buildings/HologamePod</texPath>
+      <graphicClass>Graphic_Multi</graphicClass>
+      <shaderType>CutoutComplex</shaderType>
+      <drawSize>(1.9,1.9)</drawSize>
+      <shadowData>
+        <volume>(0.85,0.3,0.85)</volume>
+      </shadowData>
+      <damageData>
+        <rectN>(0.1,0.1,0.8,0.8)</rectN>
+        <rectS>(0.1,0.1,0.8,0.8)</rectS>
+        <rectE>(0.1,0.1,0.8,0.8)</rectE>
+        <rectW>(0.1,0.1,0.8,0.8)</rectW>
+      </damageData>
+    </graphicData>
+    <uiIconScale>0.55</uiIconScale>
+    <rotatable>true</rotatable>
+    <defaultPlacingRot>South</defaultPlacingRot>
+    <fillPercent>0.4</fillPercent>
+    <pathCost>42</pathCost>
+    <hasInteractionCell>true</hasInteractionCell>
+    <interactionCellOffset>(0,0,1)</interactionCellOffset>
+    <placeWorkers>
+      <li>PlaceWorker_PreventInteractionSpotOverlap</li>
+    </placeWorkers>
+    <constructEffect>ConstructMetal</constructEffect>
+    <constructionSkillPrerequisite>8</constructionSkillPrerequisite>
+    <statBases>
+      <MaxHitPoints>150</MaxHitPoints>
+      <WorkToBuild>18000</WorkToBuild>
+      <Mass>45</Mass>
+      <Beauty>10</Beauty>
+      <JoyGainFactor>1.45</JoyGainFactor>
+    </statBases>
+    <costList>
+      <Steel>100</Steel>
+      <ComponentIndustrial>6</ComponentIndustrial>
+      <ComponentSpacer>2</ComponentSpacer>
+    </costList>
+    <building>
+      <joyKind>Gaming_Cerebral</joyKind>
+    </building>
+    <comps>
+      <li Class="CompProperties_Power">
+        <compClass>CompPowerTrader</compClass>
+        <shortCircuitInRain>true</shortCircuitInRain>
+        <basePowerConsumption>250</basePowerConsumption>
+      </li>
+      <li Class="CompProperties_Flickable"/>
+      <li Class="CompProperties_Glower">
+        <glowRadius>5</glowRadius>
+        <glowColor>(110,220,230,0)</glowColor>
+      </li>
+    </comps>
+    <researchPrerequisites>
+      <li>EI_HolographicEntertainment</li>
+    </researchPrerequisites>
+  </ThingDef>
+
+  <!-- ================ 5. Dreamloop holotheater (ultratech) =============== -->
+
+  <ThingDef ParentName="EI_JoyBuildingBase">
+    <defName>EI_DreamloopHolotheater</defName>
+    <label>dreamloop holotheater</label>
+    <description>A bank of five emitters that fills the room in front of it with a shared waking dream - not a picture on a wall, but weather, crowds, and coastline standing in the open floor. Everyone watching gets the same dream, which is why the arguments afterwards are so specific.\n\nA whole room can watch at once, including people lying in bed nearby. It is enormously entertaining and enormously expensive to run.</description>
+    <graphicData>
+      <texPath>EntertainingIdeas/Buildings/DreamloopHolotheater</texPath>
+      <graphicClass>Graphic_Multi</graphicClass>
+      <shaderType>CutoutComplex</shaderType>
+      <drawSize>(3,1)</drawSize>
+      <shadowData>
+        <volume>(2.6,0.5,0.4)</volume>
+        <offset>(0,0,0.1)</offset>
+      </shadowData>
+    </graphicData>
+    <size>(3,1)</size>
+    <rotatable>true</rotatable>
+    <defaultPlacingRot>South</defaultPlacingRot>
+    <fillPercent>0.35</fillPercent>
+    <pathCost>70</pathCost>
+    <canOverlapZones>false</canOverlapZones>
+    <constructEffect>ConstructMetal</constructEffect>
+    <constructionSkillPrerequisite>9</constructionSkillPrerequisite>
+    <statBases>
+      <MaxHitPoints>200</MaxHitPoints>
+      <WorkToBuild>42000</WorkToBuild>
+      <Mass>120</Mass>
+      <Beauty>20</Beauty>
+      <JoyGainFactor>1.7</JoyGainFactor>
+    </statBases>
+    <costList>
+      <Steel>150</Steel>
+      <Plasteel>80</Plasteel>
+      <ComponentSpacer>8</ComponentSpacer>
+      <Gold>30</Gold>
+    </costList>
+    <building>
+      <joyKind>Television</joyKind>
+      <watchBuildingStandDistanceRange>
+        <min>3</min>
+        <max>7</max>
+      </watchBuildingStandDistanceRange>
+      <watchBuildingStandRectWidth>7</watchBuildingStandRectWidth>
+    </building>
+    <placeWorkers>
+      <li>PlaceWorker_WatchArea</li>
+    </placeWorkers>
+    <comps>
+      <li Class="CompProperties_Power">
+        <compClass>CompPowerTrader</compClass>
+        <shortCircuitInRain>true</shortCircuitInRain>
+        <basePowerConsumption>500</basePowerConsumption>
+      </li>
+      <li Class="CompProperties_Flickable"/>
+      <li Class="CompProperties_Glower">
+        <glowRadius>8</glowRadius>
+        <glowColor>(170,140,240,0)</glowColor>
+      </li>
+    </comps>
+    <researchPrerequisites>
+      <li>EI_DreamloopProjection</li>
+    </researchPrerequisites>
+  </ThingDef>
+
+</Defs>

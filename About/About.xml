@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ModMetaData>
+  <name>Entertaining Ideas</name>
+  <author>kanid99</author>
+  <packageId>kanid99.entertainingideas</packageId>
+  <supportedVersions>
+    <li>1.5</li>
+    <li>1.6</li>
+  </supportedVersions>
+  <description>Six new recreation ideas, spread across the tech ladder, so a colony has something worth doing whether it is chewing pemmican in a hide tent or running an archotech lounge.
+
+- Knucklebone mat (neolithic) - the thinking game a tribe can build on day one. Cast bones, argue, gamble.
+- Dartboard (medieval) - stand off at the oche and throw. Trains shooting.
+- Pinball machines (industrial and up) - four themed tables on one 1x3 cabinet frame: the standard machine, the chemfuel-flashpot boomalope blitz, the solid-state mech rampage, and the archotech dreamtable that projects a ball you cannot miss.
+- Cocktail arcade table (industrial) - a face-up screen under glass with a joystick at each of two seats. Put a chair on either side.
+- Hologame pod (spacer) - a board of light that tunes itself just past your ability. Trains intellectual.
+- Dreamloop holotheater (ultratech) - a shared waking dream a whole room can sit in, bedridden colonists included.
+
+Pure XML: no Harmony, no assemblies, no dependencies. Safe to add to a running save; removing it leaves the usual missing-def warnings for anything already built.
+</description>
+</ModMetaData>

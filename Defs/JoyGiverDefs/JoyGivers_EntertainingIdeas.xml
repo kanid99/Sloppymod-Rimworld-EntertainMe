@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Defs>
+
+  <!-- A building's <joyKind> is only a label. Pawns will never touch a
+       recreation building unless a JoyGiverDef names it in <thingDefs>, so
+       every building this mod adds is listed below exactly once. -->
+
+  <JoyGiverDef>
+    <defName>EI_Play_Knucklebones</defName>
+    <giverClass>JoyGiver_InteractBuildingSitAdjacent</giverClass>
+    <baseChance>2</baseChance>
+    <requireChair>false</requireChair>
+    <thingDefs>
+      <li>EI_KnuckleboneMat</li>
+    </thingDefs>
+    <jobDef>EI_Play_Knucklebones</jobDef>
+    <joyKind>Gaming_Cerebral</joyKind>
+    <requiredCapacities>
+      <li>Sight</li>
+      <li>Manipulation</li>
+    </requiredCapacities>
+  </JoyGiverDef>
+
+  <JoyGiverDef>
+    <defName>EI_Play_Darts</defName>
+    <giverClass>JoyGiver_WatchBuilding</giverClass>
+    <baseChance>3</baseChance>
+    <desireSit>false</desireSit>
+    <thingDefs>
+      <li>EI_Dartboard</li>
+    </thingDefs>
+    <jobDef>EI_Play_Darts</jobDef>
+    <joyKind>Gaming_Dexterity</joyKind>
+    <requiredCapacities>
+      <li>Sight</li>
+      <li>Manipulation</li>
+    </requiredCapacities>
+  </JoyGiverDef>
+
+  <JoyGiverDef>
+    <defName>EI_Play_Pinball</defName>
+    <giverClass>JoyGiver_InteractBuildingInteractionCell</giverClass>
+    <baseChance>3.5</baseChance>
+    <desireSit>false</desireSit>
+    <thingDefs>
+      <li>EI_PinballMachine</li>
+      <li>EI_PinballMachineBoomalope</li>
+      <li>EI_PinballMachineMechRampage</li>
+      <li>EI_PinballMachineArchotech</li>
+    </thingDefs>
+    <jobDef>EI_Play_Pinball</jobDef>
+    <joyKind>Gaming_Dexterity</joyKind>
+    <requiredCapacities>
+      <li>Sight</li>
+      <li>Manipulation</li>
+    </requiredCapacities>
+  </JoyGiverDef>
+
+  <!-- Two seats: pawns need a chair adjacent to the table, as with chess. -->
+  <JoyGiverDef>
+    <defName>EI_Play_CocktailArcade</defName>
+    <giverClass>JoyGiver_InteractBuildingSitAdjacent</giverClass>
+    <baseChance>3.5</baseChance>
+    <requireChair>true</requireChair>
+    <thingDefs>
+      <li>EI_CocktailArcadeTable</li>
+    </thingDefs>
+    <jobDef>EI_Play_CocktailArcade</jobDef>
+    <joyKind>Gaming_Dexterity</joyKind>
+    <requiredCapacities>
+      <li>Sight</li>
+      <li>Manipulation</li>
+    </requiredCapacities>
+  </JoyGiverDef>
+
+  <JoyGiverDef>
+    <defName>EI_Play_Hologame</defName>
+    <giverClass>JoyGiver_InteractBuildingInteractionCell</giverClass>
+    <baseChance>3</baseChance>
+    <desireSit>false</desireSit>
+    <thingDefs>
+      <li>EI_HologamePod</li>
+    </thingDefs>
+    <jobDef>EI_Play_Hologame</jobDef>
+    <joyKind>Gaming_Cerebral</joyKind>
+    <requiredCapacities>
+      <li>Sight</li>
+      <li>Manipulation</li>
+    </requiredCapacities>
+  </JoyGiverDef>
+
+  <JoyGiverDef>
+    <defName>EI_Watch_Dreamloop</defName>
+    <giverClass>JoyGiver_WatchBuilding</giverClass>
+    <baseChance>3.5</baseChance>
+    <canDoWhileInBed>true</canDoWhileInBed>
+    <thingDefs>
+      <li>EI_DreamloopHolotheater</li>
+    </thingDefs>
+    <jobDef>EI_Watch_Dreamloop</jobDef>
+    <joyKind>Television</joyKind>
+    <requiredCapacities>
+      <li>Sight</li>
+    </requiredCapacities>
+  </JoyGiverDef>
+
+</Defs>

@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Defs>
+
+  <!-- Drivers are vanilla: JobDriver_SitFacingBuilding for sit-down games,
+       JobDriver_WatchBuilding for anything played standing at an interaction
+       cell or from a watch spot, JobDriver_WatchTelevision for screen-likes
+       (it stops the session when the power cuts out). No assembly required. -->
+
+  <JobDef>
+    <defName>EI_Play_Knucklebones</defName>
+    <driverClass>JobDriver_SitFacingBuilding</driverClass>
+    <reportString>playing knucklebones.</reportString>
+    <joyDuration>4000</joyDuration>
+    <joyMaxParticipants>3</joyMaxParticipants>
+    <joySkill>Intellectual</joySkill>
+    <joyXpPerTick>0.0015</joyXpPerTick>
+    <joyKind>Gaming_Cerebral</joyKind>
+    <taleOnCompletion>PlayedGame</taleOnCompletion>
+    <allowOpportunisticPrefix>true</allowOpportunisticPrefix>
+  </JobDef>
+
+  <JobDef>
+    <defName>EI_Play_Darts</defName>
+    <driverClass>JobDriver_WatchBuilding</driverClass>
+    <reportString>throwing darts.</reportString>
+    <joyDuration>4000</joyDuration>
+    <joyMaxParticipants>3</joyMaxParticipants>
+    <joySkill>Shooting</joySkill>
+    <joyXpPerTick>0.004</joyXpPerTick>
+    <joyKind>Gaming_Dexterity</joyKind>
+    <taleOnCompletion>PlayedGame</taleOnCompletion>
+    <allowOpportunisticPrefix>true</allowOpportunisticPrefix>
+  </JobDef>
+
+  <JobDef>
+    <defName>EI_Play_Pinball</defName>
+    <driverClass>JobDriver_WatchBuilding</driverClass>
+    <reportString>playing pinball.</reportString>
+    <joyDuration>4000</joyDuration>
+    <joyMaxParticipants>1</joyMaxParticipants>
+    <joySkill>Shooting</joySkill>
+    <joyXpPerTick>0.0035</joyXpPerTick>
+    <joyKind>Gaming_Dexterity</joyKind>
+    <taleOnCompletion>PlayedGame</taleOnCompletion>
+    <allowOpportunisticPrefix>true</allowOpportunisticPrefix>
+  </JobDef>
+
+  <JobDef>
+    <defName>EI_Play_CocktailArcade</defName>
+    <driverClass>JobDriver_SitFacingBuilding</driverClass>
+    <reportString>playing an arcade game.</reportString>
+    <joyDuration>4000</joyDuration>
+    <joyMaxParticipants>2</joyMaxParticipants>
+    <joySkill>Shooting</joySkill>
+    <joyXpPerTick>0.002</joyXpPerTick>
+    <joyKind>Gaming_Dexterity</joyKind>
+    <taleOnCompletion>PlayedGame</taleOnCompletion>
+    <allowOpportunisticPrefix>true</allowOpportunisticPrefix>
+  </JobDef>
+
+  <JobDef>
+    <defName>EI_Play_Hologame</defName>
+    <driverClass>JobDriver_WatchBuilding</driverClass>
+    <reportString>playing a hologame.</reportString>
+    <joyDuration>4000</joyDuration>
+    <joyMaxParticipants>1</joyMaxParticipants>
+    <joySkill>Intellectual</joySkill>
+    <joyXpPerTick>0.004</joyXpPerTick>
+    <joyKind>Gaming_Cerebral</joyKind>
+    <taleOnCompletion>PlayedGame</taleOnCompletion>
+    <allowOpportunisticPrefix>true</allowOpportunisticPrefix>
+  </JobDef>
+
+  <JobDef>
+    <defName>EI_Watch_Dreamloop</defName>
+    <driverClass>JobDriver_WatchTelevision</driverClass>
+    <reportString>watching a dreamloop.</reportString>
+    <joyDuration>4000</joyDuration>
+    <joyMaxParticipants>8</joyMaxParticipants>
+    <joyKind>Television</joyKind>
+    <allowOpportunisticPrefix>true</allowOpportunisticPrefix>
+  </JobDef>
+
+</Defs>
