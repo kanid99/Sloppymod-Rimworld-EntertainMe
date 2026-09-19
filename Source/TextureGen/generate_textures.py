@@ -84,50 +84,101 @@ def knucklebone_mat():
 
 
 # ---------------------------------------------------------------------------
-# 2. Dartboard  (medieval, 1x1, rotatable)
+# 2. Shadow lantern theater  (medieval, 2x1, watched by a crowd)
+#
+# Frames redraw the whole building rather than just the cloth, so the figures
+# can walk off the edge of the screen without spilling onto the woodwork.
 # ---------------------------------------------------------------------------
-def dartboard():
-    c = Canvas(128, 128)
-    cx, cy = 64, 60
 
-    # Timber backing board.
-    c.rect(18, 14, 110, 106, DARK, 6)
-    c.rect(21, 17, 107, 103, (104, 74, 48, 255), 5)
-    for x in range(26, 106, 13):
-        c.line(x, 18, x, 102, (88, 62, 40, 190), 1.6)
+CLOTH = (26, 44, 230, 112)        # lit screen area
 
-    c.circle(cx, cy, 43, DARK)
-    c.circle(cx, cy, 40, (24, 22, 24, 255))
 
-    cream, black = (232, 216, 178, 255), (32, 30, 32, 255)
-    red, green = (176, 44, 42, 255), (44, 126, 66, 255)
-    for i in range(20):
-        a0, a1 = i * 18, (i + 1) * 18
-        base = cream if i % 2 == 0 else black
-        c.wedge(cx, cy, 38, 24, a0, a1, base)
-        c.wedge(cx, cy, 24, 8, a0, a1, base)
-        c.wedge(cx, cy, 40, 38, a0, a1, red if i % 2 == 0 else green)   # doubles
-        c.wedge(cx, cy, 25, 23, a0, a1, red if i % 2 == 0 else green)   # trebles
-    c.circle(cx, cy, 8, green)
-    c.circle(cx, cy, 4, red)
-    c.ring(cx, cy, 40, 38.2, (14, 13, 14, 120))
+def shadow_figure(c, kind, x, base_y, scale, col):
+    """Silhouettes cast on the cloth, drawn only where they overlap it."""
+    import math
+    x0, y0, x1, y1 = CLOTH
+    if x < x0 - 30 or x > x1 + 30:
+        return
 
-    # Three darts, flights toward the player (south).
-    for dx, dy, fx, fy, col in ((-9, -6, -26, 18, (214, 76, 62, 255)),
-                                (6, -12, 22, 12, (76, 152, 206, 255)),
-                                (11, 7, 30, 30, (232, 198, 78, 255))):
-        c.line(cx + dx, cy + dy, cx + fx, cy + fy, DARK, 6)
-        c.line(cx + dx, cy + dy, cx + fx, cy + fy, (198, 198, 206, 255), 3.4)
-        c.poly([(cx + fx, cy + fy), (cx + fx - 7, cy + fy + 3),
-                (cx + fx - 2, cy + fy + 10), (cx + fx + 5, cy + fy + 6)], DARK)
-        c.poly([(cx + fx, cy + fy + 1), (cx + fx - 5, cy + fy + 3.5),
-                (cx + fx - 2, cy + fy + 8), (cx + fx + 3.5, cy + fy + 5)], col)
+    def body(px, py, rx, ry):
+        left, right = max(px - rx, x0 + 1), min(px + rx, x1 - 1)
+        if right <= left:
+            return
+        c.ellipse((left + right) / 2.0, py, (right - left) / 2.0, ry, col)
 
-    # Floor stand legs.
-    c.rect(48, 104, 80, 114, DARK, 3)
-    c.rect(50, 106, 78, 112, (86, 60, 38, 255), 2)
-    save_rotations(c, "Dartboard")
+    if kind == "horse":
+        body(x, base_y - 14 * scale, 15 * scale, 7 * scale)
+        for i, dx in enumerate((-10, -4, 5, 11)):
+            sway = math.sin(x * 0.12 + i) * 2.5 * scale
+            c.line(x + dx * scale, base_y - 10 * scale,
+                   x + dx * scale + sway, base_y, col, 3 * scale)
+        c.line(x + 12 * scale, base_y - 18 * scale,
+               x + 20 * scale, base_y - 26 * scale, col, 5 * scale)      # neck
+        body(x + 22 * scale, base_y - 28 * scale, 6 * scale, 4 * scale)  # head
+        c.line(x - 15 * scale, base_y - 18 * scale,
+               x - 22 * scale, base_y - 24 * scale, col, 3 * scale)      # tail
+    elif kind == "rider":
+        body(x, base_y - 30 * scale, 5 * scale, 7 * scale)
+        body(x, base_y - 40 * scale, 4 * scale, 4 * scale)
+        c.line(x, base_y - 32 * scale, x + 9 * scale, base_y - 36 * scale, col, 3 * scale)
+    else:  # bird
+        c.line(x - 9 * scale, base_y, x, base_y - 5 * scale, col, 3 * scale)
+        c.line(x, base_y - 5 * scale, x + 9 * scale, base_y, col, 3 * scale)
+        body(x, base_y - 4 * scale, 3 * scale, 2 * scale)
+
+
+def draw_shadow_theater(c, frame=None, total=10):
+    import math
+    x0, y0, x1, y1 = CLOTH
+    step = 0 if frame is None else frame
+    p = 0.0 if frame is None else float(frame) / total
+
+    c.rect(4, 14, 252, 122, DARK, 10)                       # outer frame
+    c.rect(7, 17, 249, 119, (104, 74, 46, 255), 8)
+
+    flicker = 0 if frame is None else int(10 * math.sin(2 * math.pi * p * 3))
+    cloth = (243 + flicker // 3, 222 + flicker // 2, 172 + flicker, 255)
+    c.rect(x0, y0, x1, y1, (168, 140, 96, 255), 5)          # cloth, in its frame
+    c.rect(x0 + 2, y0 + 2, x1 - 2, y1 - 2, cloth, 4)
+    for gy in range(y0 + 4, y1 - 2, 6):                     # weave
+        c.line(x0 + 3, gy, x1 - 3, gy, (214, 190, 142, 90), 1.6)
+
+    # The procession: a horse and rider with birds above, walking right.
+    shadow = (38, 26, 20, 235)
+    travel = (x1 - x0) + 56
+    lead = x0 - 26 + travel * p
+    shadow_figure(c, "horse", lead, y1 - 8, 1.0, shadow)
+    shadow_figure(c, "rider", lead + 4, y1 - 8, 1.0, shadow)
+    shadow_figure(c, "horse", lead - 62, y1 - 8, 0.75, shadow)
+    for k in range(2):
+        bx = x0 - 20 + travel * ((p + 0.4 + k * 0.25) % 1.0)
+        shadow_figure(c, "bird", bx, y0 + 22 + 5 * math.sin(2 * math.pi * (p * 2 + k)), 1.0, shadow)
+
+    # Lantern housing behind the cloth, and the timber that holds it all up.
+    c.rect(96, 6, 160, 30, DARK, 8)
+    c.rect(100, 9, 156, 27, (74, 52, 34, 255), 6)
+    lamp = (255, 214, 130, 200 + (0 if frame is None else int(40 * math.sin(2 * math.pi * p * 3))))
+    c.circle(128, 18, 8, (255, 232, 176, min(255, lamp[3])))
+    c.circle(128, 18, 13, (255, 206, 120, 70))
+    for px in (14, 242):                                    # posts
+        c.rect(px - 6, 14, px + 6, 122, DARK, 5)
+        c.rect(px - 4, 16, px + 4, 120, (86, 60, 38, 255), 4)
+    c.rect(20, 118, 236, 126, DARK, 4)                      # foot rail
+
+
+def shadow_lantern_theater():
+    c = Canvas(256, 128)
+    draw_shadow_theater(c, None)
+    save_rotations(c, "ShadowLanternTheater")
     return c
+
+
+def shadow_theater_frames(total=10):
+    for i in range(total):
+        c = Canvas(256, 128)
+        draw_shadow_theater(c, i, total)
+        c.save(os.path.join(OUT, "ShadowLanternTheaterPlay_%d.png" % i))
+    print("  ShadowLanternTheaterPlay_0..%d.png  (256x128)" % (total - 1))
 
 
 # ---------------------------------------------------------------------------
@@ -335,7 +386,101 @@ def dreamloop_holotheater():
 
 # ---------------------------------------------------------------------------
 # 6. Cocktail arcade table  (industrial, 1x1, two seats)
+#
+# The screen is drawn by one function so the static cabinet texture and the
+# animation frames can never drift apart. Frame None means attract mode: a full
+# maze with the eater parked, which is what the cabinet shows when nobody is on
+# it. The animated frames are screen-only overlays on a transparent canvas,
+# drawn over the cabinet at the same draw size by CompAnimatedScreen.
 # ---------------------------------------------------------------------------
+
+SCREEN = (30, 30, 130, 130)       # glass bounds inside the bezel
+RING = (46, 46, 114, 114)         # corridor the eater and ghosts run
+MAZE = (70, 104, 226, 255)
+SCREEN_BG = (10, 10, 16, 255)
+PELLETS = 24
+
+
+def ring_point(p):
+    """Position and heading a fraction p clockwise around the corridor."""
+    x0, y0, x1, y1 = RING
+    w, h = x1 - x0, y1 - y0
+    d = (p % 1.0) * 2 * (w + h)
+    if d < w:
+        return x0 + d, y0, 1, 0
+    d -= w
+    if d < h:
+        return x1, y0 + d, 0, 1
+    d -= h
+    if d < w:
+        return x1 - d, y1, -1, 0
+    return x0, y1 - (d - w), 0, -1
+
+
+def draw_ghost(c, gx, gy, col, dx, dy, wobble):
+    import math
+    c.ellipse(gx, gy - 2, 9, 9, col)
+    c.rect(gx - 9, gy - 2, gx + 9, gy + 7, col)
+    for i in range(3):                                  # skirt, alternating
+        off = 3 if (i + wobble) % 2 else 0
+        c.circle(gx - 6 + i * 6, gy + 7 - off, 3, col)
+    for i in (-1, 1):                                   # eyes track heading
+        ex, ey = gx + i * 4, gy - 3
+        c.circle(ex, ey, 3.2, (246, 246, 252, 255))
+        c.circle(ex + dx * 1.4, ey + dy * 1.4, 1.7, (36, 44, 120, 255))
+
+
+def draw_arcade_screen(c, frame=None, total=16):
+    import math
+    x0, y0, x1, y1 = SCREEN
+    c.rect(x0, y0, x1, y1, SCREEN_BG, 8)
+
+    # Maze: outer wall, four blocks, and the ghost pen in the middle.
+    c.frame(37, 37, 123, 123, MAZE, 2.5, 5)
+    c.frame(48, 48, 78, 68, MAZE, 2.5, 3)
+    c.frame(84, 48, 112, 68, MAZE, 2.5, 3)
+    c.frame(48, 92, 78, 112, MAZE, 2.5, 3)
+    c.frame(84, 92, 112, 112, MAZE, 2.5, 3)
+    c.rect(72, 74, 90, 86, MAZE, 3)
+    c.rect(75, 77, 87, 83, SCREEN_BG, 2)
+
+    p = 0.0 if frame is None else float(frame) / total
+    step = frame if frame is not None else 0
+
+    # Pellets vanish behind the eater and come back at the top of each lap.
+    for k in range(PELLETS):
+        pk = float(k) / PELLETS
+        if frame is not None and pk <= p:
+            continue
+        px, py, _, _ = ring_point(pk)
+        c.circle(px, py, 2.2, (248, 236, 198, 255))
+
+    # Power pellets in the corners, blinking the way the real ones do.
+    if frame is None or (step // 2) % 2 == 0:
+        for corner in (0.0, 0.25, 0.5, 0.75):
+            if frame is not None and corner <= p:
+                continue
+            px, py, _, _ = ring_point(corner + 0.0001)
+            c.circle(px, py, 4.6, (250, 228, 160, 255))
+
+    # Two ghosts chasing around the same corridor, a third waiting in the pen.
+    for lead, col in ((0.30, (226, 74, 70, 255)), (0.58, (238, 150, 196, 255))):
+        gx, gy, gdx, gdy = ring_point(p + lead)
+        draw_ghost(c, gx, gy, col, gdx, gdy, step)
+    draw_ghost(c, 81, 78, (124, 196, 232, 255), 0, 1, step + 1)
+
+    # The eater, mouth chomping open and shut as it goes.
+    ex, ey, edx, edy = ring_point(p)
+    c.circle(ex, ey, 10, (246, 214, 62, 255))
+    mouth = (45, 26, 6, 26)[step % 4] if frame is not None else 38
+    if mouth > 2:
+        heading = math.degrees(math.atan2(-edy, edx))
+        c.wedge(ex, ey, 11, 0, heading - mouth, heading + mouth, SCREEN_BG)
+
+    # Bezel last, so an overlay frame lands exactly on the cabinet's own glass.
+    c.frame(x0, y0, x1, y1, (86, 92, 118, 220), 2.5, 8)
+
+
 def cocktail_arcade():
     c = Canvas(160, 160)
     cx = cy = 80
@@ -345,41 +490,7 @@ def cocktail_arcade():
     c.rect(20, 20, 140, 140, (34, 32, 40, 255), 14)
     c.frame(20, 20, 140, 140, (150, 146, 168, 70), 2, 14)
 
-    # Glass screen, face up.
-    c.rect(30, 30, 130, 130, (10, 10, 16, 255), 8)
-    c.frame(30, 30, 130, 130, (86, 92, 118, 220), 2.5, 8)
-
-    maze = (70, 104, 226, 255)
-    c.frame(37, 37, 123, 123, maze, 2.5, 5)                # maze walls
-    c.frame(48, 48, 78, 68, maze, 2.5, 3)
-    c.frame(84, 48, 112, 68, maze, 2.5, 3)
-    c.frame(48, 92, 78, 112, maze, 2.5, 3)
-    c.frame(84, 92, 112, 112, maze, 2.5, 3)
-    c.rect(72, 74, 90, 86, maze, 3)                        # ghost pen
-    c.rect(75, 77, 87, 83, (10, 10, 16, 255), 2)
-
-    for x in range(43, 122, 11):                           # pellets
-        for y in (42, 118):
-            c.circle(x, y, 2.2, (248, 236, 198, 255))
-    for y in range(53, 112, 11):
-        for x in (42, 118):
-            c.circle(x, y, 2.2, (248, 236, 198, 255))
-    for px, py in ((42, 42), (118, 42), (42, 118), (118, 118)):
-        c.circle(px, py, 4.6, (250, 228, 160, 255))        # power pellets
-
-    # The muncher, mouth open toward the pellets.
-    c.circle(58, 80, 11, (246, 214, 62, 255))
-    c.poly([(58, 80), (70, 73), (70, 87)], (10, 10, 16, 255))
-
-    # Two ghosts.
-    for gx, gy, col in ((96, 62, (226, 74, 70, 255)), (104, 96, (238, 150, 196, 255))):
-        c.ellipse(gx, gy - 2, 9, 9, col)
-        c.rect(gx - 9, gy - 2, gx + 9, gy + 7, col)
-        for i in range(3):
-            c.circle(gx - 6 + i * 6, gy + 7, 3, col)
-        for i in (-1, 1):
-            c.circle(gx + i * 4, gy - 3, 3.2, (246, 246, 252, 255))
-            c.circle(gx + i * 4 + i, gy - 3, 1.6, (36, 44, 120, 255))
+    draw_arcade_screen(c, None)                            # attract mode
 
     # Control clusters on the two seating sides (north and south).
     for sy in (24, 136):
@@ -394,12 +505,256 @@ def cocktail_arcade():
     return c
 
 
+def cocktail_arcade_frames(total=16):
+    """Screen-only overlays; CompAnimatedScreen cycles them while in use."""
+    for i in range(total):
+        c = Canvas(160, 160)
+        draw_arcade_screen(c, i, total)
+        c.save(os.path.join(OUT, "CocktailArcadeScreen_%d.png" % i))
+    print("  CocktailArcadeScreen_0..%d.png  (160x160)" % (total - 1))
+
+
+# ---------------------------------------------------------------------------
+# 7. Massage chair  (industrial, 1x1, pawn sits in it)
+#
+# The animation frames stay clear of the middle of the seat: a pawn using the
+# chair is drawn on top of it, so only the armrests and the air around the
+# chair are actually visible while it is running.
+# ---------------------------------------------------------------------------
+def massage_chair():
+    c = Canvas(128, 128)
+    leather = (128, 46, 44, 255)
+    leather_dark = (96, 32, 32, 255)
+    frame_col = (66, 68, 78, 255)
+
+    c.rect(22, 16, 106, 118, DARK, 14)                  # chassis
+    c.rect(25, 19, 103, 115, frame_col, 12)
+
+    c.rect(30, 20, 98, 62, DARK, 12)                    # backrest
+    c.rect(33, 23, 95, 60, leather, 10)
+    c.rect(38, 26, 90, 40, leather_dark, 8)             # headrest panel
+    for y in range(30, 58, 7):                          # upholstery seams
+        c.line(36, y, 92, y, (72, 24, 24, 160), 2)
+
+    c.rect(32, 58, 96, 96, DARK, 10)                    # seat
+    c.rect(35, 60, 93, 94, leather, 8)
+    for y in range(68, 92, 8):
+        c.line(40, y, 88, y, (72, 24, 24, 140), 2)
+
+    c.rect(38, 96, 90, 116, DARK, 9)                    # footrest
+    c.rect(41, 98, 87, 114, leather_dark, 7)
+
+    for ax in (22, 92):                                 # armrests
+        c.rect(ax, 56, ax + 14, 100, DARK, 7)
+        c.rect(ax + 2, 58, ax + 12, 98, leather_dark, 6)
+    c.rect(94, 62, 104, 80, (28, 28, 34, 255), 4)       # control pad
+    for i in range(3):
+        c.circle(99, 67 + i * 6, 2.2, (236, 176, 64, 255))
+    save_rotations(c, "MassageChair")
+    return c
+
+
+def massage_chair_frames(total=8):
+    """Roller sweep up the backrest, vibration arcs, pulsing control light."""
+    import math
+    for i in range(total):
+        c = Canvas(128, 128)
+        phase = float(i) / total
+
+        # Rollers travelling up the backrest, wrapping at the top.
+        for roller in (0.0, 0.5):
+            t = (phase + roller) % 1.0
+            y = 58 - t * 32
+            glow = int(150 * math.sin(math.pi * t) + 40)
+            c.rect(37, y - 3, 91, y + 3, (255, 214, 150, max(0, min(220, glow))), 3)
+
+        # Vibration arcs off the armrests, where a seated pawn will not hide them.
+        for side, sx in ((-1, 26), (1, 102)):
+            for ring in range(3):
+                t = (phase + ring / 3.0) % 1.0
+                r = 5 + t * 13
+                alpha = int(150 * (1.0 - t))
+                if alpha > 6:
+                    c.wedge(sx, 78, r, r - 2.2, 90 + side * 30, 90 + side * 150,
+                            (250, 222, 180, alpha))
+
+        # Control pad light pulsing through its three lamps.
+        lamp = i % 3
+        c.circle(99, 67 + lamp * 6, 3.4, (255, 214, 120, 235))
+        c.circle(99, 67 + lamp * 6, 5.6, (255, 196, 96, 70))
+        c.save(os.path.join(OUT, "MassageChairRollers_%d.png" % i))
+    print("  MassageChairRollers_0..%d.png  (128x128)" % (total - 1))
+
+
+# ---------------------------------------------------------------------------
+# Dreamloop wall projection  (drawn onto a wall by CompWallProjection)
+# ---------------------------------------------------------------------------
+def dreamloop_projection_frames(total=12):
+    sample = None
+    """A moving picture, 3 cells wide, thrown onto whatever wall is in front."""
+    import math
+    for i in range(total):
+        c = Canvas(384, 128)
+        p = float(i) / total
+
+        c.rect(6, 8, 378, 120, (150, 124, 226, 60), 10)        # spill
+        c.rect(12, 14, 372, 114, (46, 34, 84, 205), 8)          # picture
+        for band in range(5):                                    # sky
+            y0 = 16 + band * 9
+            a = 150 - band * 22 + int(18 * math.sin(2 * math.pi * (p + band * 0.1)))
+            c.rect(14, y0, 370, y0 + 9, (128, 110, 214, max(30, a)), 0)
+
+        sun_x = 80 + 224 * ((p + 0.15) % 1.0)                    # drifting sun
+        c.circle(sun_x, 48, 13, (250, 238, 210, 200))
+        c.circle(sun_x, 48, 20, (250, 232, 200, 60))
+
+        c.poly([(12, 88), (90, 62), (150, 84), (220, 58), (300, 86), (372, 66),
+                (372, 114), (12, 114)], (28, 20, 54, 230))       # hills
+        c.rect(14, 86, 370, 90, (196, 176, 250, 120), 0)         # horizon glow
+
+        for k in range(3):                                        # drifting flyers
+            fx = 20 + ((p * 1.6 + k * 0.33) % 1.0) * 344
+            fy = 36 + 7 * math.sin(2 * math.pi * (p * 2 + k))
+            c.line(fx - 6, fy, fx, fy - 3, (232, 226, 255, 190), 2)
+            c.line(fx, fy - 3, fx + 6, fy, (232, 226, 255, 190), 2)
+
+        sweep = 14 + ((p * 2) % 1.0) * 100                        # scanline sweep
+        c.rect(14, sweep, 370, sweep + 5, (226, 216, 255, 55), 0)
+        for y in range(16, 114, 4):                               # fine scanlines
+            c.rect(14, y, 370, y + 1, (16, 10, 32, 55), 0)
+
+        c.frame(12, 14, 372, 114, (208, 194, 255, 120), 2, 8)
+        c.save(os.path.join(OUT, "DreamloopProjection_%d.png" % i))
+        if i == 3:
+            sample = c
+    print("  DreamloopProjection_0..%d.png  (384x128)" % (total - 1))
+    return sample
+
+
+# ---------------------------------------------------------------------------
+# 8. Vista panel  (spacer, 3x1 wall display)
+#
+# Four scenes on the same frame, picked by the local clock: night, dawn,
+# daylight, dusk. The base texture is the panel switched off.
+# ---------------------------------------------------------------------------
+
+VISTA_SKY = {
+    "Dawn": dict(top=(86, 102, 170), bottom=(250, 178, 132), body=(255, 228, 176),
+                 body_x=0.24, body_y=0.66, hills=(44, 42, 70), glow=(255, 206, 150),
+                 stars=0, birds=2),
+    "Day": dict(top=(96, 158, 226), bottom=(186, 220, 246), body=(255, 252, 226),
+                body_x=0.58, body_y=0.24, hills=(50, 84, 62), glow=(255, 250, 220),
+                stars=0, birds=3),
+    "Dusk": dict(top=(68, 62, 124), bottom=(244, 138, 88), body=(255, 186, 116),
+                 body_x=0.78, body_y=0.68, hills=(38, 34, 56), glow=(255, 176, 110),
+                 stars=0, birds=1),
+    "Night": dict(top=(12, 16, 40), bottom=(34, 44, 86), body=(228, 234, 248),
+                  body_x=0.68, body_y=0.28, hills=(16, 18, 36), glow=(190, 206, 246),
+                  stars=34, birds=0),
+}
+
+
+def vista_bezel(c):
+    c.rect(2, 4, 382, 124, DARK, 10)
+    c.rect(5, 7, 379, 121, (78, 82, 94, 255), 8)
+    c.frame(5, 7, 379, 121, (146, 152, 170, 90), 2, 8)
+    c.rect(12, 14, 372, 114, (10, 12, 20, 255), 5)          # glass
+
+
+def draw_vista_scene(c, name, frame, total):
+    import math
+    sky = VISTA_SKY[name]
+    x0, y0, x1, y1 = 12, 14, 372, 114
+    p = float(frame) / total
+
+    vista_bezel(c)
+
+    # Sky, blended top to horizon in bands.
+    bands = 18
+    for b in range(bands):
+        t = b / float(bands - 1)
+        col = tuple(int(sky["top"][k] + (sky["bottom"][k] - sky["top"][k]) * t) for k in range(3))
+        c.rect(x0, y0 + t * 68, x1, y0 + (b + 1) * 68.0 / bands + 1, col + (255,), 0)
+
+    if sky["stars"]:
+        for k in range(sky["stars"]):
+            sx = x0 + 6 + (k * 61) % (x1 - x0 - 12)
+            sy = y0 + 4 + (k * 37) % 56
+            twinkle = 120 + int(120 * math.sin(2 * math.pi * (p * 2 + k * 0.17)))
+            c.circle(sx, sy, 1.5, (240, 244, 255, max(40, min(255, twinkle))))
+
+    # Sun or moon, drifting a little across the loop so the view is never still.
+    bx = x0 + (x1 - x0) * (sky["body_x"] + 0.03 * math.sin(2 * math.pi * p))
+    by = y0 + 82 * sky["body_y"]
+    c.circle(bx, by, 22, sky["glow"] + (45,))
+    c.circle(bx, by, 13, sky["body"] + (255,))
+    if name == "Night":
+        c.circle(bx + 5, by - 4, 11, (34, 44, 86, 255))     # crescent bite
+
+    # Clouds drifting left to right, wrapping off the edges.
+    cloud_col = (250, 250, 255, 150) if name == "Day" else (255, 214, 190, 120)
+    if name == "Night":
+        cloud_col = (120, 132, 180, 90)
+    for k in range(3):
+        cx = x0 - 40 + ((p + k * 0.34) % 1.0) * (x1 - x0 + 80)
+        cy = y0 + 18 + k * 13
+        for dx, dy, r in ((-16, 2, 8), (-4, -2, 11), (10, 2, 8), (20, 3, 6)):
+            c.ellipse(cx + dx, cy + dy, r, r * 0.62, cloud_col)
+
+    # Birds, a long way off.
+    for k in range(sky["birds"]):
+        fx = x0 + 20 + ((p * 0.8 + k * 0.3) % 1.0) * (x1 - x0 - 40)
+        fy = y0 + 30 + 6 * math.sin(2 * math.pi * (p * 2 + k))
+        c.line(fx - 5, fy, fx, fy - 2.5, (40, 40, 56, 190), 1.8)
+        c.line(fx, fy - 2.5, fx + 5, fy, (40, 40, 56, 190), 1.8)
+
+    # Land: a far ridge and a near one, so there is some depth to look at.
+    far = tuple(min(255, v + 26) for v in sky["hills"])
+    c.poly([(x0, 92), (70, 74), (130, 88), (210, 70), (280, 86), (340, 76), (x1, 88),
+            (x1, y1), (x0, y1)], far + (255,))
+    c.poly([(x0, 100), (60, 88), (120, 101), (200, 86), (270, 100), (330, 92), (x1, 102),
+            (x1, y1), (x0, y1)], sky["hills"] + (255,))
+    c.rect(x0, 106, x1, y1, tuple(max(0, v - 8) for v in sky["hills"]) + (255,), 0)
+
+    # Scanlines and a faint sheen, to keep it reading as a screen.
+    for y in range(y0, y1, 4):
+        c.rect(x0, y, x1, y + 1, (8, 10, 18, 40), 0)
+    c.rect(x0, y0, x1, y0 + 14, (255, 255, 255, 18), 0)
+    c.frame(12, 14, 372, 114, (150, 160, 190, 90), 1.5, 5)
+
+
+def vista_panel():
+    """Panel with nothing on it: what you see when the power is out."""
+    c = Canvas(384, 128)
+    vista_bezel(c)
+    c.rect(16, 18, 368, 110, (22, 26, 36, 255), 4)
+    c.rect(16, 18, 368, 52, (255, 255, 255, 10), 4)
+    for i in range(3):
+        c.circle(28 + i * 12, 118, 2.6, (54, 58, 70, 255))
+    save_rotations(c, "VistaPanel")
+    return c
+
+
+def vista_panel_frames(total=6):
+    made = {}
+    for name in ("Dawn", "Day", "Dusk", "Night"):
+        for i in range(total):
+            c = Canvas(384, 128)
+            draw_vista_scene(c, name, i, total)
+            c.save(os.path.join(OUT, "VistaPanel%s_%d.png" % (name, i)))
+            if i == 0:
+                made[name] = c
+        print("  VistaPanel%s_0..%d.png  (384x128)" % (name, total - 1))
+    return made
+
+
 def main():
     os.makedirs(OUT, exist_ok=True)
     print("Writing textures to %s" % OUT)
     made = {}
     made["KnuckleboneMat"] = knucklebone_mat()
-    made["Dartboard"] = dartboard()
+    made["ShadowLanternTheater"] = shadow_lantern_theater()
+    shadow_theater_frames()
     made["PinballClassic"] = pinball(
         "PinballClassic",
         cab=(178, 52, 48, 255), cab_dark=(126, 36, 34, 255), field=(28, 62, 96, 255),
@@ -421,8 +776,14 @@ def main():
         accent=(126, 232, 226, 255), accent2=(186, 138, 246, 255), glass=(30, 24, 56, 255),
         motif=motif_archotech)
     made["CocktailArcade"] = cocktail_arcade()
+    cocktail_arcade_frames()
     made["HologamePod"] = hologame_pod()
     made["DreamloopHolotheater"] = dreamloop_holotheater()
+    made["DreamloopProjection"] = dreamloop_projection_frames()
+    made["VistaPanel"] = vista_panel()
+    made.update(("Vista" + k, v) for k, v in vista_panel_frames().items())
+    made["MassageChair"] = massage_chair()
+    massage_chair_frames()
 
     import preview
     about = os.path.join(ROOT, "About")

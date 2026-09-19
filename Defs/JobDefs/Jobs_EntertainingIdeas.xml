@@ -20,15 +20,12 @@
   </JobDef>
 
   <JobDef>
-    <defName>EI_Play_Darts</defName>
+    <defName>EI_Watch_ShadowTheater</defName>
     <driverClass>JobDriver_WatchBuilding</driverClass>
-    <reportString>throwing darts.</reportString>
-    <joyDuration>4000</joyDuration>
-    <joyMaxParticipants>3</joyMaxParticipants>
-    <joySkill>Shooting</joySkill>
-    <joyXpPerTick>0.004</joyXpPerTick>
-    <joyKind>Gaming_Dexterity</joyKind>
-    <taleOnCompletion>PlayedGame</taleOnCompletion>
+    <reportString>watching the shadow play.</reportString>
+    <joyDuration>3500</joyDuration>
+    <joyMaxParticipants>6</joyMaxParticipants>
+    <joyKind>Social</joyKind>
     <allowOpportunisticPrefix>true</allowOpportunisticPrefix>
   </JobDef>
 
@@ -68,6 +65,18 @@
     <joyXpPerTick>0.004</joyXpPerTick>
     <joyKind>Gaming_Cerebral</joyKind>
     <taleOnCompletion>PlayedGame</taleOnCompletion>
+    <allowOpportunisticPrefix>true</allowOpportunisticPrefix>
+  </JobDef>
+
+  <!-- Custom driver: the pawn sits in the chair itself, which no vanilla
+       joy driver does. Defined in Source/EntertainingIdeas/MassageChair.cs. -->
+  <JobDef>
+    <defName>EI_UseMassageChair</defName>
+    <driverClass>EntertainingIdeas.JobDriver_UseMassageChair</driverClass>
+    <reportString>relaxing in a massage chair.</reportString>
+    <joyDuration>3000</joyDuration>
+    <joyMaxParticipants>1</joyMaxParticipants>
+    <joyKind>Meditative</joyKind>
     <allowOpportunisticPrefix>true</allowOpportunisticPrefix>
   </JobDef>
 

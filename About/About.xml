@@ -7,15 +7,16 @@
     <li>1.5</li>
     <li>1.6</li>
   </supportedVersions>
-  <description>Six new recreation ideas, spread across the tech ladder, so a colony has something worth doing whether it is chewing pemmican in a hide tent or running an archotech lounge.
+  <description>Eight new recreation ideas, spread across the tech ladder, so a colony has something worth doing whether it is chewing pemmican in a hide tent or running an archotech lounge.
 
 - Knucklebone mat (neolithic) - the thinking game a tribe can build on day one. Cast bones, argue, gamble.
-- Dartboard (medieval) - stand off at the oche and throw. Trains shooting.
+- Shadow lantern theater (medieval) - a lamp, a linen screen, and a drum the flame turns by itself. The shadows walk whether or not anyone is watching, and a whole room can sit and watch them.
 - Pinball machines (industrial and up) - four themed tables on one 1x3 cabinet frame: the standard machine, the chemfuel-flashpot boomalope blitz, the solid-state mech rampage, and the archotech dreamtable that projects a ball you cannot miss.
-- Cocktail arcade table (industrial) - a face-up screen under glass with a joystick at each of two seats. Put a chair on either side.
+- Cocktail arcade table (industrial) - a face-up screen under glass with a joystick at each of two seats. The maze game runs while someone is playing it.
+- Massage chair (industrial) - colonists sit in it, not beside it. Rollers work up the backrest while it runs.
 - Hologame pod (spacer) - a board of light that tunes itself just past your ability. Trains intellectual.
-- Dreamloop holotheater (ultratech) - a shared waking dream a whole room can sit in, bedridden colonists included.
+- Vista panel (spacer) - a 3x1 wall display showing somewhere with a horizon in it, running on the local clock: grey dawn, daylight, a long sunset, then stars. It lights the room to match, and colonists in that room hold off cabin fever for longer.
+- Dreamloop holotheater (ultratech) - point it at a wall within six tiles and it throws a moving picture onto that wall. A whole room can watch, bedridden colonists included.
 
-Pure XML: no Harmony, no assemblies, no dependencies. Safe to add to a running save; removing it leaves the usual missing-def warnings for anything already built.
-</description>
+Includes a small assembly for the animated screens, the wall projection, the sit-in massage chair and the vista panel. No Harmony and no mod dependencies.</description>
 </ModMetaData>

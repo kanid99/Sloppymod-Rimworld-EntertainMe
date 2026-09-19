@@ -22,18 +22,16 @@
   </JoyGiverDef>
 
   <JoyGiverDef>
-    <defName>EI_Play_Darts</defName>
+    <defName>EI_Watch_ShadowTheater</defName>
     <giverClass>JoyGiver_WatchBuilding</giverClass>
     <baseChance>3</baseChance>
-    <desireSit>false</desireSit>
     <thingDefs>
-      <li>EI_Dartboard</li>
+      <li>EI_ShadowLanternTheater</li>
     </thingDefs>
-    <jobDef>EI_Play_Darts</jobDef>
-    <joyKind>Gaming_Dexterity</joyKind>
+    <jobDef>EI_Watch_ShadowTheater</jobDef>
+    <joyKind>Social</joyKind>
     <requiredCapacities>
       <li>Sight</li>
-      <li>Manipulation</li>
     </requiredCapacities>
   </JoyGiverDef>
 
@@ -87,6 +85,17 @@
       <li>Sight</li>
       <li>Manipulation</li>
     </requiredCapacities>
+  </JoyGiverDef>
+
+  <JoyGiverDef>
+    <defName>EI_UseMassageChair</defName>
+    <giverClass>EntertainingIdeas.JoyGiver_UseMassageChair</giverClass>
+    <baseChance>3</baseChance>
+    <thingDefs>
+      <li>EI_MassageChair</li>
+    </thingDefs>
+    <jobDef>EI_UseMassageChair</jobDef>
+    <joyKind>Meditative</joyKind>
   </JoyGiverDef>
 
   <JoyGiverDef>

@@ -7,6 +7,9 @@ Catches the mistakes that are silent until runtime:
     (a joyKind on a ThingDef is only a label)
   * a texPath with no matching file, or a Graphic_Multi missing a rotation
   * a jobDef/thingDef/research reference this mod makes but never defines
+  * an animation comp whose frame textures are missing
+  * XML naming a C# class this mod's source does not define, or naming one at
+    all when the assembly has not been built
 
 Usage: python3 Source/validate.py
 """
@@ -114,6 +117,55 @@ for folder, _, files in os.walk(DEFS):
                     if li.text.startswith("EI_") and li.text not in research_defs:
                         fail("undefined research prerequisite %s" % li.text)
 
+# --- C# classes named from XML, and their animation frames ------------------
+SRC = os.path.join(ROOT, "Source", "EntertainingIdeas")
+ASSEMBLY = os.path.join(ROOT, "Assemblies", "EntertainingIdeas.dll")
+
+source_classes = set()
+if os.path.isdir(SRC):
+    for filename in os.listdir(SRC):
+        if filename.endswith(".cs"):
+            with open(os.path.join(SRC, filename)) as handle:
+                for line in handle:
+                    stripped = line.strip()
+                    if stripped.startswith("public class ") or stripped.startswith("public abstract class "):
+                        source_classes.add(stripped.split("class ", 1)[1].split()[0].split(":")[0])
+
+our_classes_used = set()
+for folder, _, files in os.walk(DEFS):
+    for filename in files:
+        if not filename.endswith(".xml"):
+            continue
+        root = ET.parse(os.path.join(folder, filename)).getroot()
+        for node in root.iter():
+            for value in [node.get("Class"), node.text]:
+                if value and value.strip().startswith("EntertainingIdeas."):
+                    our_classes_used.add(value.strip().split(".", 1)[1])
+        # Every frame strip referenced anywhere must be complete on disk.
+        for node in root.iter():
+            frame_path = node.findtext("framePath")
+            if not frame_path:
+                continue
+            count_text = node.findtext("frameCount")
+            count = int(count_text) if count_text else 0
+            if count < 1:
+                fail("%s: frameCount must be at least 1" % frame_path)
+                continue
+            missing = [i for i in range(count)
+                       if not os.path.isfile(os.path.join(TEX, frame_path.replace("/", os.sep)) + "_%d.png" % i)]
+            if missing:
+                fail("%s: missing frame textures %s"
+                     % (frame_path, ", ".join(str(i) for i in missing)))
+
+for klass in sorted(our_classes_used):
+    if klass not in source_classes:
+        fail("XML names EntertainingIdeas.%s but no C# source defines it" % klass)
+if our_classes_used and not os.path.isfile(ASSEMBLY):
+    fail("XML names C# classes but Assemblies/EntertainingIdeas.dll is missing "
+         "- run Source/build.sh (defs naming a missing class will not load)")
+
+print("%d C# classes referenced from XML, assembly %s"
+      % (len(our_classes_used), "present" if os.path.isfile(ASSEMBLY) else "MISSING"))
 print("%d ThingDefs, %d JoyGiverDefs, %d JobDefs, %d ResearchProjectDefs"
       % (len(thing_defs), len(joy_givers), len(job_defs), len(research_defs)))
 if problems:

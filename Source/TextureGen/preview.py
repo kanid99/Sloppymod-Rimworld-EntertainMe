@@ -25,8 +25,11 @@ FONT = {
     "T": "#####|..#..|..#..|..#..|..#..|..#..|..#..",
     "U": "#...#|#...#|#...#|#...#|#...#|#...#|.###.",
     "V": "#...#|#...#|#...#|#...#|#...#|.#.#.|..#..",
+    "0": ".###.|#...#|#..##|#.#.#|##..#|#...#|.###.",
+    "1": "..#..|.##..|..#..|..#..|..#..|..#..|#####",
     "5": "#####|#....|####.|....#|....#|#...#|.###.",
     "6": ".###.|#....|#....|####.|#...#|#...#|.###.",
+    "7": "#####|....#|...#.|..#..|..#..|..#..|..#..",
     "9": ".###.|#...#|#...#|.####|....#|#...#|.###.",
     "-": ".....|.....|.....|#####|.....|.....|.....",
     " ": ".....|.....|.....|.....|.....|.....|.....",
@@ -66,7 +69,7 @@ def blit(canvas, src, sw, sh, dx, dy, scale):
 
 def build(sprites, out_path):
     """sprites: dict name -> (pixels, w, h) produced by generate_textures."""
-    W, H = 640, 400
+    W, H = 640, 450
     c = Canvas(W, H, ss=1)
 
     c.rect(0, 0, W, H, (30, 33, 41, 255))
@@ -79,25 +82,30 @@ def build(sprites, out_path):
     text(c, title, (W - text_width(title, 4)) / 2, 20, 4, (240, 236, 228, 255))
     sub = "NEOLITHIC TO ARCHOTECH"
     text(c, sub, (W - text_width(sub, 2)) / 2, 58, 2, (178, 186, 202, 255))
-    tag = "6 IDEAS - 9 BUILDINGS"
+    tag = "7 IDEAS - 10 BUILDINGS"
     text(c, tag, (W - text_width(tag, 2)) / 2, 76, 2, (232, 198, 78, 255))
 
-    row = ["KnuckleboneMat", "Dartboard", "CocktailArcade", "HologamePod"]
+    row = ["KnuckleboneMat", "ShadowLanternTheater", "CocktailArcade",
+           "MassageChair", "HologamePod"]
     slot = W / len(row)
     for i, name in enumerate(row):
         px, sw, sh = sprites[name]
-        scale = 96.0 / sw
+        scale = 92.0 / sw
         blit(c, px, sw, sh, i * slot + (slot - sw * scale) / 2, 112, scale)
 
     for i, name in enumerate(["PinballClassic", "PinballBoomalope",
                               "PinballMechRampage", "PinballArchotech"]):
         px, sw, sh = sprites[name]
-        scale = 142.0 / sh
-        blit(c, px, sw, sh, 34 + i * 74, 232, scale)
+        scale = 220.0 / sh
+        blit(c, px, sw, sh, 26 + i * 76, 216, scale)
 
+    # The holotheater and the picture it throws on a wall in front of it.
     px, sw, sh = sprites["DreamloopHolotheater"]
-    scale = 296.0 / sw
-    blit(c, px, sw, sh, 330, 268, scale)
+    scale = 268.0 / sw
+    blit(c, px, sw, sh, 344, 232, scale)
+    px, sw, sh = sprites["DreamloopProjection"]
+    scale = 268.0 / sw
+    blit(c, px, sw, sh, 344, 340, scale)
 
     c.save(out_path)
     print("  Preview.png  (%dx%d)" % (W, H))

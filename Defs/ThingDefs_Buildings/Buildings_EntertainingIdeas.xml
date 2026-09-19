@@ -53,55 +53,69 @@
     </building>
   </ThingDef>
 
-  <!-- ======================= 2. Dartboard (medieval) ====================== -->
+  <!-- ============== 2. Shadow lantern theater (medieval) ================= -->
 
   <ThingDef ParentName="EI_JoyBuildingBase">
-    <defName>EI_Dartboard</defName>
-    <label>dartboard</label>
-    <description>A tight-packed bristle board on a timber backing, with a throwing line scuffed into the floor a few paces back. Players stand off and throw; the arguing is half the game. Cheap, quiet, and it sharpens the eye - steady hours at the oche train shooting.\n\nNeeds a clear run of floor in front of it.</description>
+    <defName>EI_ShadowLanternTheater</defName>
+    <label>shadow lantern theater</label>
+    <description>A stretched linen screen with a lamp behind it and a vaned drum that the flame's own heat keeps slowly turning. Painted panels ride the drum and their shadows walk across the cloth: a horse, a rider, geese going over. Nobody has to work it and nobody has to be clever at it. People drift in, sit down, and watch a procession that has been going round for hours.\n\nA whole room can watch at once. Wants a few tiles of clear floor in front of it.</description>
     <graphicData>
-      <texPath>EntertainingIdeas/Buildings/Dartboard</texPath>
+      <texPath>EntertainingIdeas/Buildings/ShadowLanternTheater</texPath>
       <graphicClass>Graphic_Multi</graphicClass>
-      <drawSize>(1.1,1.1)</drawSize>
+      <drawSize>(2,1)</drawSize>
       <shadowData>
-        <volume>(0.6,0.4,0.25)</volume>
-        <offset>(0,0,-0.15)</offset>
+        <volume>(1.7,0.5,0.5)</volume>
       </shadowData>
-      <damageData>
-        <rectN>(0.12,0.1,0.76,0.8)</rectN>
-        <rectS>(0.12,0.1,0.76,0.8)</rectS>
-        <rectE>(0.12,0.1,0.76,0.8)</rectE>
-        <rectW>(0.12,0.1,0.76,0.8)</rectW>
-      </damageData>
     </graphicData>
+    <size>(2,1)</size>
     <rotatable>true</rotatable>
     <defaultPlacingRot>South</defaultPlacingRot>
-    <fillPercent>0.25</fillPercent>
-    <pathCost>30</pathCost>
+    <fillPercent>0.35</fillPercent>
+    <pathCost>45</pathCost>
+    <canOverlapZones>false</canOverlapZones>
     <statBases>
       <MaxHitPoints>90</MaxHitPoints>
-      <WorkToBuild>2200</WorkToBuild>
-      <Mass>6</Mass>
-      <Beauty>3</Beauty>
-      <JoyGainFactor>1.0</JoyGainFactor>
+      <WorkToBuild>3500</WorkToBuild>
+      <Mass>12</Mass>
+      <Beauty>8</Beauty>
+      <JoyGainFactor>1.1</JoyGainFactor>
     </statBases>
     <stuffCategories>
       <li>Woody</li>
       <li>Metallic</li>
       <li>Stony</li>
     </stuffCategories>
-    <costStuffCount>30</costStuffCount>
+    <costStuffCount>40</costStuffCount>
+    <costList>
+      <Cloth>30</Cloth>
+    </costList>
     <building>
-      <joyKind>Gaming_Dexterity</joyKind>
+      <joyKind>Social</joyKind>
       <watchBuildingStandDistanceRange>
-        <min>3</min>
+        <min>2</min>
         <max>5</max>
       </watchBuildingStandDistanceRange>
-      <watchBuildingStandRectWidth>3</watchBuildingStandRectWidth>
+      <watchBuildingStandRectWidth>5</watchBuildingStandRectWidth>
     </building>
     <placeWorkers>
       <li>PlaceWorker_WatchArea</li>
     </placeWorkers>
+    <comps>
+      <li Class="CompProperties_Glower">
+        <glowRadius>4</glowRadius>
+        <glowColor>(252,187,113,0)</glowColor>
+      </li>
+      <!-- The drum turns on the lamp's draught, so the shadows walk whether or
+           not anyone is watching. -->
+      <li Class="EntertainingIdeas.CompProperties_AnimatedScreen">
+        <framePath>EntertainingIdeas/Buildings/ShadowLanternTheaterPlay</framePath>
+        <frameCount>10</frameCount>
+        <ticksPerFrame>9</ticksPerFrame>
+        <drawSize>(2,1)</drawSize>
+        <rotateWithBuilding>true</rotateWithBuilding>
+        <requireUser>false</requireUser>
+      </li>
+    </comps>
   </ThingDef>
 
   <!-- =================== 3. Pinball machines (industrial) ================= -->
@@ -325,10 +339,92 @@
         <glowRadius>3</glowRadius>
         <glowColor>(120,150,240,0)</glowColor>
       </li>
+      <!-- Runs the screen animation while someone is actually playing, and
+           only while the table has power. 16 frames at 8 ticks each is one
+           lap of the maze every ~2 seconds at normal speed. -->
+      <li Class="EntertainingIdeas.CompProperties_AnimatedScreen">
+        <framePath>EntertainingIdeas/Buildings/CocktailArcadeScreen</framePath>
+        <frameCount>16</frameCount>
+        <ticksPerFrame>8</ticksPerFrame>
+        <drawSize>(1.15,1.15)</drawSize>
+        <playJobs>
+          <li>EI_Play_CocktailArcade</li>
+        </playJobs>
+      </li>
     </comps>
     <researchPrerequisites>
       <li>EI_PinballEngineering</li>
       <li>MicroelectronicsBasics</li>
+    </researchPrerequisites>
+  </ThingDef>
+
+  <!-- ==================== 7. Massage chair (industrial) ================== -->
+
+  <ThingDef ParentName="EI_JoyBuildingBase">
+    <defName>EI_MassageChair</defName>
+    <label>massage chair</label>
+    <description>A heavy reclining chair stuffed with rollers, cams and a small motor that works its way up and down the occupant's spine. It is not subtle and it is not quiet, but twenty minutes in one takes the edge off a week of hauling.\n\nColonists sit in it rather than beside it. Doubles as an ordinary, very comfortable chair when nobody is using it properly.</description>
+    <graphicData>
+      <texPath>EntertainingIdeas/Buildings/MassageChair</texPath>
+      <graphicClass>Graphic_Multi</graphicClass>
+      <drawSize>(1.15,1.15)</drawSize>
+      <shadowData>
+        <volume>(0.7,0.4,0.75)</volume>
+      </shadowData>
+      <damageData>
+        <rectN>(0.15,0.1,0.7,0.82)</rectN>
+        <rectS>(0.15,0.1,0.7,0.82)</rectS>
+        <rectE>(0.1,0.15,0.82,0.7)</rectE>
+        <rectW>(0.1,0.15,0.82,0.7)</rectW>
+      </damageData>
+    </graphicData>
+    <rotatable>true</rotatable>
+    <defaultPlacingRot>South</defaultPlacingRot>
+    <fillPercent>0.4</fillPercent>
+    <pathCost>60</pathCost>
+    <constructEffect>ConstructMetal</constructEffect>
+    <constructionSkillPrerequisite>5</constructionSkillPrerequisite>
+    <statBases>
+      <MaxHitPoints>110</MaxHitPoints>
+      <WorkToBuild>7000</WorkToBuild>
+      <Mass>30</Mass>
+      <Beauty>6</Beauty>
+      <Comfort>0.85</Comfort>
+      <JoyGainFactor>1.2</JoyGainFactor>
+    </statBases>
+    <costList>
+      <Steel>45</Steel>
+      <Cloth>40</Cloth>
+      <ComponentIndustrial>2</ComponentIndustrial>
+    </costList>
+    <building>
+      <joyKind>Meditative</joyKind>
+      <isSittable>true</isSittable>
+      <paintable>true</paintable>
+    </building>
+    <comps>
+      <li Class="CompProperties_Power">
+        <compClass>CompPowerTrader</compClass>
+        <shortCircuitInRain>true</shortCircuitInRain>
+        <basePowerConsumption>90</basePowerConsumption>
+      </li>
+      <li Class="CompProperties_Flickable"/>
+      <!-- Rollers and vibration, drawn around the edges of the chair: a pawn
+           sitting in it covers the middle. -->
+      <li Class="EntertainingIdeas.CompProperties_AnimatedScreen">
+        <framePath>EntertainingIdeas/Buildings/MassageChairRollers</framePath>
+        <frameCount>8</frameCount>
+        <ticksPerFrame>7</ticksPerFrame>
+        <drawSize>(1.15,1.15)</drawSize>
+        <rotateWithBuilding>true</rotateWithBuilding>
+        <playJobs>
+          <li>EI_UseMassageChair</li>
+        </playJobs>
+      </li>
+    </comps>
+    <researchPrerequisites>
+      <li>ComplexFurniture</li>
+      <li>Electricity</li>
     </researchPrerequisites>
   </ThingDef>
 
@@ -397,6 +493,105 @@
     </researchPrerequisites>
   </ThingDef>
 
+  <!-- ==================== 8. Vista panel (spacer) ======================== -->
+
+  <ThingDef ParentName="EI_JoyBuildingBase">
+    <defName>EI_VistaPanel</defName>
+    <label>vista panel</label>
+    <description>A wall-length display showing somewhere with a horizon in it. The feed runs on the local clock - grey dawn, open daylight, a long sunset, then stars - and the panel throws enough light into the room to cast the right colour of shadow at the right hour.\n\nIt is not a window and nobody is fooled for long, but a room with one in it stops feeling quite so much like a hole in the ground. Colonists in the same room hold off cabin fever for longer, though it will never do the job of actually going outside.</description>
+    <graphicData>
+      <texPath>EntertainingIdeas/Buildings/VistaPanel</texPath>
+      <graphicClass>Graphic_Multi</graphicClass>
+      <drawSize>(3,1)</drawSize>
+      <shadowData>
+        <volume>(2.6,0.4,0.3)</volume>
+        <offset>(0,0,0.1)</offset>
+      </shadowData>
+    </graphicData>
+    <size>(3,1)</size>
+    <tickerType>Rare</tickerType>
+    <rotatable>true</rotatable>
+    <defaultPlacingRot>South</defaultPlacingRot>
+    <fillPercent>0.3</fillPercent>
+    <pathCost>60</pathCost>
+    <canOverlapZones>false</canOverlapZones>
+    <constructEffect>ConstructMetal</constructEffect>
+    <constructionSkillPrerequisite>8</constructionSkillPrerequisite>
+    <statBases>
+      <MaxHitPoints>160</MaxHitPoints>
+      <WorkToBuild>16000</WorkToBuild>
+      <Mass>45</Mass>
+      <Beauty>14</Beauty>
+    </statBases>
+    <costList>
+      <Steel>120</Steel>
+      <ComponentIndustrial>8</ComponentIndustrial>
+      <ComponentSpacer>2</ComponentSpacer>
+    </costList>
+    <comps>
+      <li Class="CompProperties_Power">
+        <compClass>CompPowerTrader</compClass>
+        <shortCircuitInRain>true</shortCircuitInRain>
+        <basePowerConsumption>150</basePowerConsumption>
+      </li>
+      <li Class="CompProperties_Flickable"/>
+      <!-- Colour is overwritten at runtime to match whatever is on screen. -->
+      <li Class="CompProperties_Glower">
+        <glowRadius>7</glowRadius>
+        <glowColor>(250,245,225,0)</glowColor>
+      </li>
+      <li Class="EntertainingIdeas.CompProperties_DayCycleDisplay">
+        <ticksPerFrame>14</ticksPerFrame>
+        <drawSize>(3,1)</drawSize>
+        <phases>
+          <li>
+            <label>a night sky</label>
+            <startDayPercent>0</startDayPercent>
+            <framePath>EntertainingIdeas/Buildings/VistaPanelNight</framePath>
+            <frameCount>6</frameCount>
+            <glowColor>(96,124,200,0)</glowColor>
+          </li>
+          <li>
+            <label>a grey dawn</label>
+            <startDayPercent>0.2</startDayPercent>
+            <framePath>EntertainingIdeas/Buildings/VistaPanelDawn</framePath>
+            <frameCount>6</frameCount>
+            <glowColor>(250,196,146,0)</glowColor>
+          </li>
+          <li>
+            <label>open daylight</label>
+            <startDayPercent>0.3</startDayPercent>
+            <framePath>EntertainingIdeas/Buildings/VistaPanelDay</framePath>
+            <frameCount>6</frameCount>
+            <glowColor>(250,245,225,0)</glowColor>
+          </li>
+          <li>
+            <label>a long sunset</label>
+            <startDayPercent>0.7</startDayPercent>
+            <framePath>EntertainingIdeas/Buildings/VistaPanelDusk</framePath>
+            <frameCount>6</frameCount>
+            <glowColor>(250,172,112,0)</glowColor>
+          </li>
+          <li>
+            <label>a night sky</label>
+            <startDayPercent>0.8</startDayPercent>
+            <framePath>EntertainingIdeas/Buildings/VistaPanelNight</framePath>
+            <frameCount>6</frameCount>
+            <glowColor>(96,124,200,0)</glowColor>
+          </li>
+        </phases>
+      </li>
+      <!-- Tops the outdoors need up to a ceiling well short of full. -->
+      <li Class="EntertainingIdeas.CompProperties_OutdoorsSimulator">
+        <maxNeedLevel>0.35</maxNeedLevel>
+        <gainPerPulse>0.018</gainPerPulse>
+      </li>
+    </comps>
+    <researchPrerequisites>
+      <li>EI_HolographicEntertainment</li>
+    </researchPrerequisites>
+  </ThingDef>
+
   <!-- ================ 5. Dreamloop holotheater (ultratech) =============== -->
 
   <ThingDef ParentName="EI_JoyBuildingBase">
@@ -455,6 +650,16 @@
       <li Class="CompProperties_Glower">
         <glowRadius>8</glowRadius>
         <glowColor>(170,140,240,0)</glowColor>
+      </li>
+      <!-- Looks for a wall up to six tiles straight ahead and throws the
+           stream onto it. Nothing in range means no picture, so face it at
+           a wall to get the big screen. -->
+      <li Class="EntertainingIdeas.CompProperties_WallProjection">
+        <framePath>EntertainingIdeas/Buildings/DreamloopProjection</framePath>
+        <frameCount>12</frameCount>
+        <ticksPerFrame>10</ticksPerFrame>
+        <drawSize>(3,1)</drawSize>
+        <projectionRange>6</projectionRange>
       </li>
     </comps>
     <researchPrerequisites>
