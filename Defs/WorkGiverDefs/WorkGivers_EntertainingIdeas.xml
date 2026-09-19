@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Defs>
+
+  <!-- Carrying water to a tub that is not plumbed in. Filed under hauling,
+       below the usual hauling work so it never competes with moving food or
+       ammunition, and it never appears for a tub Dubs Bad Hygiene has piped. -->
+
+  <JobDef>
+    <defName>EI_FillWaterBasin</defName>
+    <driverClass>EntertainingIdeas.JobDriver_FillWaterBasin</driverClass>
+    <reportString>filling TargetA.</reportString>
+  </JobDef>
+
+  <WorkGiverDef>
+    <defName>EI_FillWaterBasin</defName>
+    <label>fill tubs</label>
+    <giverClass>EntertainingIdeas.WorkGiver_FillWaterBasin</giverClass>
+    <workType>Hauling</workType>
+    <priorityInType>30</priorityInType>
+    <verb>fill</verb>
+    <gerund>filling</gerund>
+    <requiredCapacities>
+      <li>Manipulation</li>
+    </requiredCapacities>
+  </WorkGiverDef>
+
+</Defs>

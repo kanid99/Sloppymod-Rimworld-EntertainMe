@@ -744,6 +744,12 @@
            read-only and comes from the terrain underfoot, so a building on a
            normal floor cannot invoke it. This waterline gets the same read and
            works on 1.5 too. -->
+      <!-- Holds one soak. A colonist carries water out to it when it runs
+           dry; with Dubs Bad Hygiene installed and a pipe run to it, it fills
+           itself instead. -->
+      <li Class="EntertainingIdeas.CompProperties_WaterBasin">
+        <fillWorkTicks>240</fillWorkTicks>
+      </li>
       <li Class="EntertainingIdeas.CompProperties_AnimatedScreen">
         <framePath>EntertainingIdeas/Buildings/SoakingTubWater</framePath>
         <frameCount>6</frameCount>
@@ -770,7 +776,7 @@
   <ThingDef ParentName="EI_JoyBuildingBase">
     <defName>EI_SoakingTubElectric</defName>
     <label>heated soaking tub</label>
-    <description>The same barrel with the firebox taken off and an element dropped in, so it holds temperature instead of drifting cold the moment somebody forgets to feed it. No hauling, no ash, no smoke - just a standing draw on the grid whether anyone is in it or not.\n\nColonists get in rather than sit beside it, and it warms the room while it runs.</description>
+    <description>The same barrel with the firebox taken off and an element dropped in, so it holds temperature instead of drifting cold the moment somebody forgets to feed it. No logs, no ash, no smoke - just a standing draw on the grid whether anyone is in it or not.\n\nColonists get in rather than sit beside it, and it warms the room while it runs. It still holds only one soak, so the water is carried out by hand between uses unless it has been plumbed in.</description>
     <graphicData>
       <texPath>EntertainingIdeas/Buildings/SoakingTubElectric</texPath>
       <graphicClass>Graphic_Single</graphicClass>
@@ -823,6 +829,12 @@
       </li>
       <!-- Same waterline and steam strips as the wood-fired tub; the comp
            gates them on power here instead of on fuel. -->
+      <!-- Holds one soak. A colonist carries water out to it when it runs
+           dry; with Dubs Bad Hygiene installed and a pipe run to it, it fills
+           itself instead. -->
+      <li Class="EntertainingIdeas.CompProperties_WaterBasin">
+        <fillWorkTicks>240</fillWorkTicks>
+      </li>
       <li Class="EntertainingIdeas.CompProperties_AnimatedScreen">
         <framePath>EntertainingIdeas/Buildings/SoakingTubWater</framePath>
         <frameCount>6</frameCount>

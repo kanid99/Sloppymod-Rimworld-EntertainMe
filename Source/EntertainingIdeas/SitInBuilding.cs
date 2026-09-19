@@ -64,7 +64,13 @@ namespace EntertainingIdeas
             }
             // A tub with a cold firebox is just a tub.
             CompRefuelable fuel = thing.TryGetComp<CompRefuelable>();
-            return fuel == null || fuel.HasFuel;
+            if (fuel != null && !fuel.HasFuel)
+            {
+                return false;
+            }
+            // A tub nobody has filled is just a barrel.
+            CompWaterBasin basin = thing.TryGetComp<CompWaterBasin>();
+            return basin == null || basin.HasWater;
         }
     }
 
@@ -98,6 +104,18 @@ namespace EntertainingIdeas
             yield return Toils_Goto.GotoThing(TargetIndex.A, PathEndMode.OnCell);
 
             Toil relax = new Toil();
+            relax.initAction = delegate
+            {
+                // One soak per filling, unless the tub is plumbed.
+                if (Seat != null)
+                {
+                    CompWaterBasin basin = Seat.TryGetComp<CompWaterBasin>();
+                    if (basin != null)
+                    {
+                        basin.Drain();
+                    }
+                }
+            };
             relax.defaultCompleteMode = ToilCompleteMode.Delay;
             relax.defaultDuration = job.def.joyDuration;
             relax.handlingFacing = true;

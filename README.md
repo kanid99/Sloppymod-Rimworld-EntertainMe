@@ -16,7 +16,7 @@ for each — see [Versions](#versions).
 | Building | Size | Recreation | Notes |
 |---|---|---|---|
 | Knucklebone mat | 1×1 | Cerebral | Sit-adjacent, no chair needed. The one thinking game a tribe can build on day one. |
-| Soaking tub | 1×1 | Solitary relaxation | Colonists get *in*. Burns wood (8/day), warms the room, steams while lit, and hides its occupant below the waterline. |
+| Soaking tub | 1×1 | Solitary relaxation | Colonists get *in*. Burns wood (8/day), warms the room, steams while lit, and hides its occupant below the waterline. Holds one soak — see [water](#water). |
 | Skittles lane | 1×7 | Dexterity | Nine pins in a diamond; rolled from the near end. Pins scatter when the ball lands. Trains shooting. |
 | Shadow lantern theater | 2×1 | Social | Watched from 2–5 tiles by up to six colonists. The shadows walk on their own — the drum turns on the lamp's draught. |
 
@@ -127,6 +127,19 @@ A `JobDef` carries only one `joySkill`, so the comp also hands the performer
 experience in a second skill: the job trains social, the comp adds artistic, and
 a turn at the microphone builds both.
 
+## Water
+
+A tub holds **one soak**. When it runs dry a colonist carries more out to it —
+a hauling job, a few seconds' work, and it never queues for a tub that is
+already full. Both tubs start full when built, so the first soak costs nothing.
+
+Plumb a tub in and it fills itself instead. That needs **Dubs Bad Hygiene**: the
+patch below gives both tubs its pipe comp, and `CompWaterBasin` reads the
+attached plumbing network to see whether there is actually water in it — a tub
+on a dry or disconnected network reports as much rather than quietly working.
+DBH is reached entirely by reflection, so this assembly never references it and
+behaves normally without it.
+
 ## Optional mod compatibility
 
 `Patches/DubsBadHygiene.xml` is inert unless **Dubs Bad Hygiene** is loaded. With
@@ -135,9 +148,10 @@ it:
 - The **aquarium** joins DBH's plumbing network (`CompProperties_Pipe` in Sewage
   mode, the same way DBH declares its own water appliances), so the tank is
   piped in rather than filled from nowhere.
-- Both **tubs** move to DBH's `Hydrotherapy` recreation category instead of
-  running a parallel one, so a soak counts as the same kind of recreation as its
-  hot tub and sauna.
+- Both **tubs** get the same pipe comp, so they can be plumbed instead of
+  hand-filled, and move to DBH's `Hydrotherapy` recreation category instead of
+  running a parallel one — a soak then counts as the same kind of recreation as
+  its hot tub and sauna.
 
 The tubs stay worth building alongside DBH's hot tub, which is 2×2, needs 500W
 *and* plumbing, and does not heat the room. Ours are 1×1, need neither pipes nor

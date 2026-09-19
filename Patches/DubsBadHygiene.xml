@@ -26,6 +26,27 @@
           </value>
         </li>
 
+        <!-- Plumb the tubs in as well. Without this they hold a single soak
+             and a colonist carries water out between uses; on a pipe run they
+             fill themselves, and the mod's water comp reads DBH's plumbing
+             network to tell whether there is actually water in it. -->
+        <li Class="PatchOperationAdd">
+          <xpath>/Defs/ThingDef[defName="EI_SoakingTub"]/comps</xpath>
+          <value>
+            <li Class="DubsBadHygiene.CompProperties_Pipe">
+              <mode>Sewage</mode>
+            </li>
+          </value>
+        </li>
+        <li Class="PatchOperationAdd">
+          <xpath>/Defs/ThingDef[defName="EI_SoakingTubElectric"]/comps</xpath>
+          <value>
+            <li Class="DubsBadHygiene.CompProperties_Pipe">
+              <mode>Sewage</mode>
+            </li>
+          </value>
+        </li>
+
         <!-- Hand the tubs over to DBH's hydrotherapy category rather than
              running a parallel one. Without DBH they are ordinary solitary
              relaxation; with it, a soak counts as the same kind of recreation
