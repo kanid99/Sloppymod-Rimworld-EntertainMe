@@ -149,7 +149,8 @@ def draw_shadow_theater(c, frame=None, total=10):
     lead = x0 - 26 + travel * p
     shadow_figure(c, "horse", lead, y1 - 8, 1.0, shadow)
     shadow_figure(c, "rider", lead + 4, y1 - 8, 1.0, shadow)
-    shadow_figure(c, "horse", lead - 62, y1 - 8, 0.75, shadow)
+    trailing = x0 - 26 + travel * ((p + 0.5) % 1.0)
+    shadow_figure(c, "horse", trailing, y1 - 6, 0.75, shadow)
     for k in range(2):
         bx = x0 - 20 + travel * ((p + 0.4 + k * 0.25) % 1.0)
         shadow_figure(c, "bird", bx, y0 + 22 + 5 * math.sin(2 * math.pi * (p * 2 + k)), 1.0, shadow)

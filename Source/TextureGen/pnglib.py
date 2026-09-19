@@ -210,9 +210,72 @@ def rotate(pixels, width, height, turns):
         nw, nh = height, width
         for y in range(height):
             for x in range(width):
-                nx, ny = nh - 1 - y, x
+                # Rotating clockwise, a source row becomes a destination
+                # column: the flip is against the NEW width, which is the old
+                # height. Using the new height here silently works for square
+                # images and mangles every other shape.
+                nx, ny = nw - 1 - y, x
                 si = (y * width + x) * 4
                 di = (ny * nw + nx) * 4
                 out[di:di + 4] = pixels[si:si + 4]
         pixels, width, height = out, nw, nh
     return pixels, width, height
+
+
+def read_png(path):
+    """Read an 8-bit RGBA PNG back into (pixels, width, height).
+
+    Only the shape this library writes is supported: colour type 6, depth 8,
+    no interlacing. All five scanline filters are handled anyway, in case a
+    file is ever replaced with hand-drawn art from another tool.
+    """
+    data = open(path, "rb").read()
+    if data[:8] != b"\x89PNG\r\n\x1a\n":
+        raise ValueError("%s is not a PNG" % path)
+
+    pos, idat, width, height = 8, [], None, None
+    while pos < len(data):
+        length = struct.unpack(">I", data[pos:pos + 4])[0]
+        tag = data[pos + 4:pos + 8]
+        chunk = data[pos + 8:pos + 8 + length]
+        if tag == b"IHDR":
+            width, height, depth, ctype, _, _, interlace = struct.unpack(">IIBBBBB", chunk)
+            if depth != 8 or ctype != 6 or interlace:
+                raise ValueError("%s: need 8-bit RGBA, non-interlaced" % path)
+        elif tag == b"IDAT":
+            idat.append(chunk)
+        elif tag == b"IEND":
+            break
+        pos += 12 + length
+
+    raw = zlib.decompress(b"".join(idat))
+    stride = width * 4
+    out = bytearray(stride * height)
+    prev = bytearray(stride)
+    p = 0
+    for y in range(height):
+        filt = raw[p]
+        p += 1
+        line = bytearray(raw[p:p + stride])
+        p += stride
+        if filt == 1:
+            for i in range(4, stride):
+                line[i] = (line[i] + line[i - 4]) & 255
+        elif filt == 2:
+            for i in range(stride):
+                line[i] = (line[i] + prev[i]) & 255
+        elif filt == 3:
+            for i in range(stride):
+                left = line[i - 4] if i >= 4 else 0
+                line[i] = (line[i] + ((left + prev[i]) >> 1)) & 255
+        elif filt == 4:
+            for i in range(stride):
+                left = line[i - 4] if i >= 4 else 0
+                up = prev[i]
+                corner = prev[i - 4] if i >= 4 else 0
+                pa, pb, pc = abs(up - corner), abs(left - corner), abs(left + up - 2 * corner)
+                pred = left if (pa <= pb and pa <= pc) else (up if pb <= pc else corner)
+                line[i] = (line[i] + pred) & 255
+        out[y * stride:(y + 1) * stride] = line
+        prev = line
+    return bytes(out), width, height
