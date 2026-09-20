@@ -116,6 +116,21 @@ namespace EntertainingIdeas
                     }
                 }
             };
+            // A soak is worth more than the recreation when Dubs Bad Hygiene is
+            // installed: it washes, and the colonist has an opinion about the
+            // water temperature. Paid on the way out, however the job ended, so
+            // an interrupted soak still counts for the part they got.
+            relax.AddFinishAction(delegate
+            {
+                if (Seat != null)
+                {
+                    CompBathing bathing = Seat.TryGetComp<CompBathing>();
+                    if (bathing != null)
+                    {
+                        bathing.OnBathed(pawn);
+                    }
+                }
+            });
             relax.defaultCompleteMode = ToilCompleteMode.Delay;
             relax.defaultDuration = job.def.joyDuration;
             relax.handlingFacing = true;

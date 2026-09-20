@@ -965,24 +965,6 @@ def soaking_tub_water_frames(total=6):
     print("  SoakingTubWater_0..%d.png  (128x128)" % (total - 1))
 
 
-def soaking_tub_frames(total=6):
-    """Steam only - drawn over the waterline, and only while the box is lit."""
-    import math
-    for i in range(total):
-        c = Canvas(128, 128)
-        p = float(i) / total
-        for k in range(6):
-            t = (p + k / 6.0) % 1.0
-            a = k / 6.0 * 2 * math.pi
-            drift = 6 + t * 30
-            sx = 64 + math.cos(a) * drift
-            sy = 58 + math.sin(a) * drift * 0.8
-            c.ellipse(sx, sy, 9 + t * 9, 7 + t * 7, (240, 248, 250, int(110 * (1 - t))))
-        c.circle(64, 60, 16 + 10 * p, (240, 248, 250, int(55 * (1 - p))))
-        c.save(os.path.join(OUT, "SoakingTubSteam_%d.png" % i))
-    print("  SoakingTubSteam_0..%d.png  (128x128)" % (total - 1))
-
-
 # ---------------------------------------------------------------------------
 # 10. Aquarium  (industrial, 2x1, something to watch)
 # ---------------------------------------------------------------------------
@@ -1079,13 +1061,10 @@ def draw_tank_contents(c, frame=None, total=8):
         c.circle(rx, ry, rr, (92, 96, 104, 255))
         c.circle(rx - rr * 0.3, ry - rr * 0.3, rr * 0.5, (118, 122, 130, 255))
 
-    # Fish, with a soft shadow on the gravel below them.
-    school = ((0.00, 15, (240, 156, 60)), (0.38, 13, (226, 96, 96)), (0.71, 11, (244, 214, 96)))
-    for phase, length, col in school:
-        fx, fy, ang = _swim_point(p, phase, x0, y0, x1, y1)
-        wig = 0.5 * math.sin(2 * math.pi * (p * 4 + phase * 3))
-        draw_fish_from_above(c, fx + 2.5, fy + 3.5, ang, length, (14, 40, 60, 90), wig)
-        draw_fish_from_above(c, fx, fy, ang, length, col + (255,), wig)
+    # No fish here. A frame strip can only move them in whole steps, which is
+    # what made them stutter; CompSwimmingFish draws them every rendered frame
+    # instead. What is left in this strip - swaying planting, drifting caustics
+    # - moves slowly enough that stepping is invisible.
 
     # Caustics and surface glare drifting across the top.
     for k in range(6):
@@ -1098,6 +1077,25 @@ def draw_tank_contents(c, frame=None, total=8):
                    (170, 226, 240, 34), 2.4)
     c.rect(x0, y0, x1, y0 + 10, (226, 246, 252, 30), 4)
 
+
+
+def aquarium_fish_sprites():
+    """One sprite per kind of fish, drawn nose-east so the comp can rotate it
+    to whatever heading the fish is swimming."""
+    kinds = [
+        ("AquariumFish_0", 54, (240, 156, 60)),
+        ("AquariumFish_1", 46, (226, 96, 96)),
+        ("AquariumFish_2", 38, (244, 214, 96)),
+        ("AquariumFish_3", 42, (118, 186, 232)),
+    ]
+    for name, length, col in kinds:
+        c = Canvas(64, 64)
+        # A soft shadow baked in slightly off-centre: it travels with the fish
+        # and sells the gap between it and the gravel.
+        draw_fish_from_above(c, 32 + 2.0, 32 + 2.8, 0.0, length, (14, 40, 60, 80))
+        draw_fish_from_above(c, 32, 32, 0.0, length, col + (255,))
+        c.save(os.path.join(OUT, "%s.png" % name))
+    print("  AquariumFish_0..3.png  (64x64)")
 
 def aquarium():
     c = Canvas(256, 128)
@@ -1806,7 +1804,6 @@ def _build_soakingtub():
     canvas = soaking_tub()
     electric = soaking_tub("SoakingTubElectric", electric=True)
     soaking_tub_water_frames()
-    soaking_tub_frames()
     return {"SoakingTub": canvas, "SoakingTubElectric": electric}
 
 
@@ -1837,6 +1834,7 @@ def _build_gravball():
 def _build_aquarium():
     canvas = aquarium()
     aquarium_frames()
+    aquarium_fish_sprites()
     return {"Aquarium": canvas}
 
 

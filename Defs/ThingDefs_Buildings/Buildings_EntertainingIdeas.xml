@@ -529,17 +529,20 @@
   <ThingDef ParentName="EI_JoyBuildingBase">
     <defName>EI_VistaPanel</defName>
     <label>vista panel</label>
-    <description>A wall-length display that mounts into the wall itself, showing somewhere with a horizon in it. The feed runs on the local clock - grey dawn, open daylight, a long sunset, then stars - and the panel throws enough light into the room to cast the right colour of shadow at the right hour.\n\nIt is not a window and nobody is fooled for long, but a room with one in it stops feeling quite so much like a hole in the ground. Colonists in the room it faces hold off cabin fever for longer, though it will never do the job of actually going outside.\n\nNeeds three tiles of wall to mount on.</description>
+    <description>A wall-length display that mounts into the wall itself, showing somewhere with a horizon in it. The feed runs on the local clock - grey dawn, open daylight, a long sunset, then stars - and the panel throws enough light into the room to cast the right colour of shadow at the right hour.\n\nIt is not a window and nobody is fooled for long, but a room with one in it stops feeling quite so much like a hole in the ground. Colonists in the room it faces hold off cabin fever for longer, though it will never do the job of actually going outside.\n\nHangs on the inside face of a wall: it needs three clear tiles with wall directly behind them. Colonists walk straight through it.</description>
     <graphicData>
       <texPath>EntertainingIdeas/Buildings/VistaPanel</texPath>
       <graphicClass>Graphic_Multi</graphicClass>
       <drawSize>(3,1)</drawSize>
-      <!-- Mounted in the wall, so it is drawn off its own cell and onto the
-           face the room sees, the way vanilla's wall lamp is. -->
-      <drawOffsetNorth>(0,0,0.5)</drawOffsetNorth>
-      <drawOffsetSouth>(0,0,-0.5)</drawOffsetSouth>
-      <drawOffsetEast>(0.5,0,0)</drawOffsetEast>
-      <drawOffsetWest>(-0.5,0,0)</drawOffsetWest>
+      <!-- It stands on the floor tiles in front of the wall and is drawn half
+           a tile backwards onto the wall's face, so it reads as mounted. The
+           offset is opposite the way it faces: a south-facing panel shows its
+           picture to the room to the south, and hangs on the wall to the
+           north. -->
+      <drawOffsetNorth>(0,0,-0.5)</drawOffsetNorth>
+      <drawOffsetSouth>(0,0,0.5)</drawOffsetSouth>
+      <drawOffsetEast>(-0.5,0,0)</drawOffsetEast>
+      <drawOffsetWest>(0.5,0,0)</drawOffsetWest>
       <damageData>
         <enabled>false</enabled>
       </damageData>
@@ -548,21 +551,26 @@
     <tickerType>Rare</tickerType>
     <rotatable>true</rotatable>
     <defaultPlacingRot>South</defaultPlacingRot>
-    <!-- An attachment rather than a building in its own right: it shares the
-         wall's cells instead of replacing the wall. -->
+    <!-- Not an edifice and not in the wall: it takes the floor tiles in front
+         of the wall, but with no fill, no path cost and full standability, so
+         colonists walk straight through it and it costs no usable floor.
+         Vanilla's own wall-attachment support is single-cell - GetWallAttachedTo
+         takes one position - so a three-tile panel cannot live inside the wall
+         the way a wall lamp does. -->
     <altitudeLayer>BuildingOnTop</altitudeLayer>
     <passability>Standable</passability>
     <terrainAffordanceNeeded IsNull="True" />
     <fillPercent>0</fillPercent>
     <pathCost>0</pathCost>
+    <blockWind>false</blockWind>
+    <castEdgeShadows>false</castEdgeShadows>
     <overrideMinifiedRot>North</overrideMinifiedRot>
-    <canOverlapZones>false</canOverlapZones>
+    <canOverlapZones>true</canOverlapZones>
     <building>
       <isEdifice>false</isEdifice>
-      <isAttachment>true</isAttachment>
     </building>
     <placeWorkers>
-      <li>EntertainingIdeas.PlaceWorker_AttachedToWallWide</li>
+      <li>EntertainingIdeas.PlaceWorker_MountedOnWallFace</li>
     </placeWorkers>
     <constructEffect>ConstructMetal</constructEffect>
     <constructionSkillPrerequisite>8</constructionSkillPrerequisite>
@@ -794,19 +802,26 @@
         <frameCount>6</frameCount>
         <ticksPerFrame>16</ticksPerFrame>
         <drawSize>(1.15,1.15)</drawSize>
-        <requireUser>false</requireUser>
+        <!-- This is the waterline that hides an occupant's lower half, not the
+             tub's own water. Drawn with nobody in the tub it reads as a tub
+             that is only half full, so it waits for a bather. -->
+        <requireUser>true</requireUser>
+        <playJobs>
+          <li>EI_UseSoakingTub</li>
+        </playJobs>
         <drawOverPawns>true</drawOverPawns>
       </li>
-      <!-- Steam sits above the waterline, and only while the firebox is lit. -->
-      <li Class="EntertainingIdeas.CompProperties_AnimatedScreen">
-        <framePath>EntertainingIdeas/Buildings/SoakingTubSteam</framePath>
-        <frameCount>6</frameCount>
-        <ticksPerFrame>14</ticksPerFrame>
-        <drawSize>(1.15,1.15)</drawSize>
-        <requireUser>false</requireUser>
+      <!-- Steam off the hot water, thrown as the game's own flecks rather than
+           painted frames: a puff has to drift and fade on its own clock, and
+           six stepped frames read as a grey blob blinking. Only while the
+           firebox is lit and there is water to steam. -->
+      <li Class="EntertainingIdeas.CompProperties_SteamPlume">
+        <puffInterval>22</puffInterval>
+        <rippleInterval>40</rippleInterval>
+        <radius>0.32</radius>
         <requireFuel>true</requireFuel>
-        <drawOverPawns>true</drawOverPawns>
       </li>
+      <li Class="EntertainingIdeas.CompProperties_Bathing"/>
     </comps>
   </ThingDef>
 
@@ -879,17 +894,24 @@
         <frameCount>6</frameCount>
         <ticksPerFrame>16</ticksPerFrame>
         <drawSize>(1.15,1.15)</drawSize>
-        <requireUser>false</requireUser>
+        <!-- This is the waterline that hides an occupant's lower half, not the
+             tub's own water. Drawn with nobody in the tub it reads as a tub
+             that is only half full, so it waits for a bather. -->
+        <requireUser>true</requireUser>
+        <playJobs>
+          <li>EI_UseSoakingTub</li>
+        </playJobs>
         <drawOverPawns>true</drawOverPawns>
       </li>
-      <li Class="EntertainingIdeas.CompProperties_AnimatedScreen">
-        <framePath>EntertainingIdeas/Buildings/SoakingTubSteam</framePath>
-        <frameCount>6</frameCount>
-        <ticksPerFrame>14</ticksPerFrame>
-        <drawSize>(1.15,1.15)</drawSize>
-        <requireUser>false</requireUser>
-        <drawOverPawns>true</drawOverPawns>
+      <!-- As the wood-fired tub, but the element keeps it steaming as long as
+           there is power. -->
+      <li Class="EntertainingIdeas.CompProperties_SteamPlume">
+        <puffInterval>20</puffInterval>
+        <rippleInterval>40</rippleInterval>
+        <radius>0.32</radius>
+        <requirePower>true</requirePower>
       </li>
+      <li Class="EntertainingIdeas.CompProperties_Bathing"/>
     </comps>
     <researchPrerequisites>
       <li>ComplexFurniture</li>
@@ -952,7 +974,9 @@
         <glowRadius>3</glowRadius>
         <glowColor>(150,220,240,0)</glowColor>
       </li>
-      <!-- The fish keep swimming whether or not anyone is watching. -->
+      <!-- Planting and caustics only. These drift slowly enough that stepping
+           through frames is invisible; the fish do not, which is why they are
+           drawn by the comp below instead. -->
       <li Class="EntertainingIdeas.CompProperties_AnimatedScreen">
         <framePath>EntertainingIdeas/Buildings/AquariumLife</framePath>
         <frameCount>8</frameCount>
@@ -960,6 +984,38 @@
         <drawSize>(2,1)</drawSize>
         <rotateWithBuilding>true</rotateWithBuilding>
         <requireUser>false</requireUser>
+      </li>
+      <!-- Each fish is placed every rendered frame from a continuous clock, so
+           it glides instead of stepping. They keep swimming whether or not
+           anyone is watching, and stop when the game is paused. -->
+      <li Class="EntertainingIdeas.CompProperties_SwimmingFish">
+        <tankSize>(1.62,0.44)</tankSize>
+        <stocks>
+          <li>
+            <texPath>EntertainingIdeas/Buildings/AquariumFish_0</texPath>
+            <size>0.30</size>
+            <count>2</count>
+            <speed>0.85</speed>
+          </li>
+          <li>
+            <texPath>EntertainingIdeas/Buildings/AquariumFish_1</texPath>
+            <size>0.26</size>
+            <count>2</count>
+            <speed>1.05</speed>
+          </li>
+          <li>
+            <texPath>EntertainingIdeas/Buildings/AquariumFish_2</texPath>
+            <size>0.21</size>
+            <count>3</count>
+            <speed>1.35</speed>
+          </li>
+          <li>
+            <texPath>EntertainingIdeas/Buildings/AquariumFish_3</texPath>
+            <size>0.23</size>
+            <count>2</count>
+            <speed>1.15</speed>
+          </li>
+        </stocks>
       </li>
     </comps>
     <researchPrerequisites>

@@ -71,6 +71,19 @@
           <value><joyKind>Hydrotherapy</joyKind></value>
         </li>
 
+        <!-- Get undressed. DubsBadHygiene.Patches.HarmonyPatches.Patch_GetDrawParms
+             postfixes PawnRenderer.GetDrawParms and strips a pawn's clothing
+             from the render when its current job's def is a WashingJobDef -
+             that is the whole test. Retyping our soak job to that class hands
+             the tub the same behaviour as DBH's own bath, with no reference to
+             DBH from our assembly and no Harmony of our own. WashingJobDef adds
+             one bool to JobDef and nothing else, so nothing else changes. -->
+        <li Class="PatchOperationAttributeSet">
+          <xpath>/Defs/JobDef[defName="EI_UseSoakingTub"]</xpath>
+          <attribute>Class</attribute>
+          <value>DubsBadHygiene.WashingJobDef</value>
+        </li>
+
       </operations>
     </match>
   </Operation>

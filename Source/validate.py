@@ -208,6 +208,22 @@ for folder, _, files in os.walk(DEFS):
                     fail("%s: missing frame textures %s"
                          % (frame_path, ", ".join(str(i) for i in missing)))
 
+# A texPath outside graphicData belongs to a comp (the aquarium's fish), and
+# the building texture check above never looks at those.
+for folder, _, files in os.walk(DEFS):
+    for filename in files:
+        if not filename.endswith(".xml"):
+            continue
+        root = ET.parse(os.path.join(folder, filename)).getroot()
+        for node in root.iter():
+            if node.tag == "graphicData":
+                continue
+            for child in node.findall("texPath"):
+                if not child.text:
+                    continue
+                if not os.path.isfile(os.path.join(TEX, child.text.replace("/", os.sep)) + ".png"):
+                    fail("no texture file for %s" % child.text)
+
 for klass in sorted(our_classes_used):
     if klass not in source_classes:
         fail("XML names EntertainingIdeas.%s but no C# source defines it" % klass)

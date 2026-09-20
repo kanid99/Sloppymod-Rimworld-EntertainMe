@@ -51,39 +51,76 @@ namespace EntertainingIdeas
     }
 
     /// <summary>
-    /// Vanilla's wall attachments are all one cell, and its own place worker
-    /// checks accordingly. A three-tile display has to have wall under all of
-    /// it, or it ends up half mounted and half hanging in the room.
+    /// A display that hangs on a wall's inner face.
+    ///
+    /// Vanilla's wall attachments occupy the wall cell itself, and its own
+    /// support for that is written for one cell: GenConstruct.GetWallAttachedTo
+    /// takes a single position and rotation. A three-tile panel embedded in
+    /// three wall cells is not something the game will accept.
+    ///
+    /// So this panel does not go inside the wall. It stands on the floor tiles
+    /// in front of it - as a non-edifice with no fill, no path cost and full
+    /// standability, so colonists walk straight through it - and its graphic is
+    /// drawn half a tile backwards onto the wall's face. It reads as mounted,
+    /// it needs no special machinery, and it works at any width.
+    ///
+    /// The rule this enforces: every tile of the panel must be clear, and must
+    /// have wall directly behind it.
     /// </summary>
-    public class PlaceWorker_AttachedToWallWide : PlaceWorker
+    public class PlaceWorker_MountedOnWallFace : PlaceWorker
     {
         public override AcceptanceReport AllowsPlacing(BuildableDef checkingDef, IntVec3 loc, Rot4 rot,
                                                        Map map, Thing thingToIgnore = null, Thing thing = null)
         {
+            // The panel faces into the room, so the wall is behind it.
+            IntVec3 backwards = rot.Opposite.FacingCell;
+
             foreach (IntVec3 cell in GenAdj.CellsOccupiedBy(loc, rot, checkingDef.Size))
             {
                 if (!cell.InBounds(map))
                 {
-                    return new AcceptanceReport("Must be placed on a wall.");
+                    return new AcceptanceReport("Must hang on a wall.");
                 }
-                Building edifice = cell.GetEdifice(map);
-                if (edifice == null || edifice == thingToIgnore)
+
+                Building blocking = cell.GetEdifice(map);
+                if (blocking != null && blocking != thingToIgnore
+                    && blocking.def.passability == Traversability.Impassable)
                 {
-                    return new AcceptanceReport("Must be placed on a wall.");
+                    return new AcceptanceReport("Hangs on the inside of a wall, not inside the wall itself.");
                 }
-                if (edifice is Building_Door || !edifice.def.holdsRoof
-                    || edifice.def.passability != Traversability.Impassable)
+
+                IntVec3 wallCell = cell + backwards;
+                if (!wallCell.InBounds(map) || !IsWall(wallCell.GetEdifice(map), thingToIgnore))
                 {
-                    return new AcceptanceReport("Must be placed on a wall, not a door.");
+                    return new AcceptanceReport("Every tile of the panel needs wall directly behind it.");
                 }
             }
             return true;
         }
 
+        private static bool IsWall(Building edifice, Thing thingToIgnore)
+        {
+            return edifice != null
+                   && edifice != thingToIgnore
+                   && !(edifice is Building_Door)
+                   && edifice.def.holdsRoof
+                   && edifice.def.passability == Traversability.Impassable;
+        }
+
         public override void DrawGhost(ThingDef def, IntVec3 center, Rot4 rot, Color ghostCol, Thing thing = null)
         {
-            // Show which way it will face, since it is drawn off its own cell.
-            GenDraw.DrawFieldEdges(GenAdj.CellsOccupiedBy(center, rot, def.Size).ToList(), ghostCol);
+            Map map = Find.CurrentMap;
+            if (map == null)
+            {
+                return;
+            }
+            // Highlight the run of wall it will hang on, so a panel one tile
+            // off the wall is obvious before you commit to it.
+            IntVec3 backwards = rot.Opposite.FacingCell;
+            List<IntVec3> wall = GenAdj.CellsOccupiedBy(center, rot, def.Size)
+                                       .Select(cell => cell + backwards)
+                                       .ToList();
+            GenDraw.DrawFieldEdges(wall, ghostCol);
         }
     }
 }
