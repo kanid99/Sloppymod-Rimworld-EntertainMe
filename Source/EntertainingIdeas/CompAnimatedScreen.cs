@@ -57,6 +57,15 @@ namespace EntertainingIdeas
         /// own steam, like a lantern that turns on its own draught.
         /// </summary>
         public bool requireUser = true;
+        /// <summary>
+        /// Optional attract loop, shown while the building is powered but
+        /// nobody is playing - a real cabinet never sits on a black screen.
+        /// Leave unset and an idle building simply shows nothing.
+        /// </summary>
+        public string idleFramePath;
+        public int idleFrameCount = 0;
+        /// <summary>Attract loops run slower than play; defaults to 3x.</summary>
+        public int idleTicksPerFrame = 0;
 
         public CompProperties_AnimatedScreen()
         {
@@ -81,6 +90,18 @@ namespace EntertainingIdeas
             {
                 yield return "CompProperties_AnimatedScreen needs ticksPerFrame >= 1.";
             }
+            if (!idleFramePath.NullOrEmpty() && idleFrameCount < 1)
+            {
+                yield return "CompProperties_AnimatedScreen has an idleFramePath but no idleFrameCount.";
+            }
+            if (idleFrameCount > 0 && idleFramePath.NullOrEmpty())
+            {
+                yield return "CompProperties_AnimatedScreen has an idleFrameCount but no idleFramePath.";
+            }
+            if (idleFrameCount > 0 && !requireUser)
+            {
+                yield return "CompProperties_AnimatedScreen idle frames do nothing when requireUser is false: the play loop already runs constantly.";
+            }
             if (requireUser && (playJobs == null || playJobs.Count == 0))
             {
                 yield return "CompProperties_AnimatedScreen needs at least one entry in playJobs when requireUser is true.";
@@ -91,6 +112,7 @@ namespace EntertainingIdeas
     public class CompAnimatedScreen : ThingComp
     {
         private FrameSet frames;
+        private FrameSet idleFrames;
         private CompPowerTrader power;
         private CompRefuelable fuel;
         private bool inUse;
@@ -107,6 +129,9 @@ namespace EntertainingIdeas
             power = parent.TryGetComp<CompPowerTrader>();
             fuel = parent.TryGetComp<CompRefuelable>();
             frames = new FrameSet(Props.framePath, Props.frameCount, Props.drawSize);
+            idleFrames = Props.idleFrameCount > 0
+                ? new FrameSet(Props.idleFramePath, Props.idleFrameCount, Props.drawSize)
+                : null;
             nextRecheckTick = -99999;
         }
 
@@ -126,12 +151,23 @@ namespace EntertainingIdeas
             {
                 return;
             }
+            // Playing wins; otherwise fall back to the attract loop if the def
+            // has one, and to nothing at all if it does not.
+            FrameSet set = frames;
+            int ticksPerFrame = Props.ticksPerFrame;
             if (Props.requireUser && !AnyoneStillPlaying())
             {
-                return;
+                if (idleFrames == null)
+                {
+                    return;
+                }
+                set = idleFrames;
+                ticksPerFrame = Props.idleTicksPerFrame > 0
+                    ? Props.idleTicksPerFrame
+                    : Props.ticksPerFrame * 3;
             }
 
-            Graphic graphic = frames.At(frames.IndexFor(Props.ticksPerFrame));
+            Graphic graphic = set.At(set.IndexFor(ticksPerFrame));
             if (graphic == null)
             {
                 return;

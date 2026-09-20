@@ -129,9 +129,9 @@
     <graphicData>
       <graphicClass>Graphic_Multi</graphicClass>
       <shaderType>CutoutComplex</shaderType>
-      <drawSize>(1,3)</drawSize>
+      <drawSize>(1,2)</drawSize>
       <shadowData>
-        <volume>(0.75,0.5,2.6)</volume>
+        <volume>(0.75,0.5,1.7)</volume>
       </shadowData>
       <damageData>
         <rectN>(0.1,0.02,0.8,0.96)</rectN>
@@ -140,16 +140,19 @@
         <rectW>(0.02,0.1,0.96,0.8)</rectW>
       </damageData>
     </graphicData>
-    <size>(1,3)</size>
+    <size>(1,2)</size>
     <altitudeLayer>BuildingOnTop</altitudeLayer>
     <rotatable>true</rotatable>
     <defaultPlacingRot>South</defaultPlacingRot>
     <fillPercent>0.5</fillPercent>
     <pathCost>48</pathCost>
     <canOverlapZones>false</canOverlapZones>
-    <!-- The cabinet runs three tiles deep; the player stands off the near end,
-         at the flippers. Offsets are written north-facing and rotate with the
-         building, so a south-facing machine puts its player one tile south. -->
+    <!-- The cabinet runs two tiles deep; the player stands off the near end,
+         at the flippers. GenAdj.AdjustForRotation puts an even-sized building's
+         cells at Position.z and Position.z+1 when it faces north, and the art
+         puts the lockbar at that far end, so the player cell is +2 - the same
+         offset a three-deep cabinet wanted. Rotation carries it round, so a
+         south-facing machine puts its player two tiles south of Position. -->
     <hasInteractionCell>true</hasInteractionCell>
     <interactionCellOffset>(0,0,2)</interactionCellOffset>
     <placeWorkers>
@@ -170,7 +173,7 @@
         <framePath>EntertainingIdeas/Buildings/PinballPlay</framePath>
         <frameCount>8</frameCount>
         <ticksPerFrame>6</ticksPerFrame>
-        <drawSize>(1,3)</drawSize>
+        <drawSize>(1,2)</drawSize>
         <rotateWithBuilding>true</rotateWithBuilding>
         <playJobs>
           <li>EI_Play_Pinball</li>
@@ -313,7 +316,7 @@
   <ThingDef ParentName="EI_JoyBuildingBase">
     <defName>EI_CocktailArcadeTable</defName>
     <label>cocktail arcade table</label>
-    <description>A sit-down arcade cabinet with the screen lying face up under a sheet of glass and a joystick at each of two seats. One player runs a little yellow eater around a maze, hoovering pellets while four ghosts hunt them down; the other heckles from across the table and waits their turn. The picture flips between turns so both seats play it the right way up.\n\nSeats two - set a chair on either side. Quick reflexes help, and the ribbing that comes with them is half the point.</description>
+    <description>A sit-down arcade cabinet with the screen lying face up under a sheet of glass and a joystick at each of two seats. One player runs a little yellow eater around a maze, hoovering pellets while four ghosts hunt them down; the other heckles from across the table and waits their turn. The picture flips between turns so both seats play it the right way up.\n\nLeft alone it drops into attract mode and sits there running its title screen at nobody, which is somehow the most convincing thing about it.\n\nSeats two - set a chair on either side. Quick reflexes help, and the ribbing that comes with them is half the point.</description>
     <graphicData>
       <texPath>EntertainingIdeas/Buildings/CocktailArcade</texPath>
       <graphicClass>Graphic_Single</graphicClass>
@@ -358,12 +361,17 @@
       </li>
       <!-- Runs the screen animation while someone is actually playing, and
            only while the table has power. 16 frames at 8 ticks each is one
-           lap of the maze every ~2 seconds at normal speed. -->
+           lap of the maze every ~2 seconds at normal speed. With nobody at it
+           the cabinet falls back to its attract loop - title, the cast walking
+           past, and a coin prompt - rather than sitting on a dead screen. -->
       <li Class="EntertainingIdeas.CompProperties_AnimatedScreen">
         <framePath>EntertainingIdeas/Buildings/CocktailArcadeScreen</framePath>
         <frameCount>16</frameCount>
         <ticksPerFrame>8</ticksPerFrame>
         <drawSize>(1.15,1.15)</drawSize>
+        <idleFramePath>EntertainingIdeas/Buildings/CocktailArcadeTitle</idleFramePath>
+        <idleFrameCount>8</idleFrameCount>
+        <idleTicksPerFrame>20</idleTicksPerFrame>
         <playJobs>
           <li>EI_Play_CocktailArcade</li>
         </playJobs>

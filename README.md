@@ -24,9 +24,9 @@ for each — see [Versions](#versions).
 
 | Building | Size | Recreation | Power | Research |
 |---|---|---|---|---|
-| Pinball machine | 1×3 | Dexterity | 120W | Electricity |
-| Boomalope blitz pinball | 1×3 | Dexterity | 150W | Electricity |
-| Mech rampage pinball | 1×3 | Dexterity | 180W | Microelectronics basics |
+| Pinball machine | 1×2 | Dexterity | 120W | Electricity |
+| Boomalope blitz pinball | 1×2 | Dexterity | 150W | Electricity |
+| Mech rampage pinball | 1×2 | Dexterity | 180W | Microelectronics basics |
 | Cocktail arcade table | 1×1 | Dexterity | 100W | Tube television |
 | Massage chair | 1×1 | Solitary relaxation | 90W | Complex furniture + Electricity |
 | Aquarium | 2×1 | Solitary relaxation | 60W | Complex furniture + Electricity |
@@ -49,7 +49,7 @@ session.
 
 | Building | Size | Recreation | Power | Research |
 |---|---|---|---|---|
-| Archotech dreamtable | 1×3 | Dexterity | 200W | Fabrication + Microelectronics |
+| Archotech dreamtable | 1×2 | Dexterity | 200W | Fabrication + Microelectronics |
 | Hologame pod | 1×1 | Cerebral | 250W | Fabrication |
 | Vista panel | 3×1 | *(outdoors need)* | 150W | Flatscreen television |
 | Dreamloop holotheater | 3×1 | Television | 500W | Advanced fabrication |

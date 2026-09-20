@@ -171,21 +171,24 @@ for folder, _, files in os.walk(DEFS):
             for value in [node.get("Class"), node.text]:
                 if value and value.strip().startswith("EntertainingIdeas."):
                     our_classes_used.add(value.strip().split(".", 1)[1])
-        # Every frame strip referenced anywhere must be complete on disk.
+        # Every frame strip referenced anywhere must be complete on disk,
+        # play loops and idle attract loops alike.
         for node in root.iter():
-            frame_path = node.findtext("framePath")
-            if not frame_path:
-                continue
-            count_text = node.findtext("frameCount")
-            count = int(count_text) if count_text else 0
-            if count < 1:
-                fail("%s: frameCount must be at least 1" % frame_path)
-                continue
-            missing = [i for i in range(count)
-                       if not os.path.isfile(os.path.join(TEX, frame_path.replace("/", os.sep)) + "_%d.png" % i)]
-            if missing:
-                fail("%s: missing frame textures %s"
-                     % (frame_path, ", ".join(str(i) for i in missing)))
+            for path_tag, count_tag in (("framePath", "frameCount"),
+                                        ("idleFramePath", "idleFrameCount")):
+                frame_path = node.findtext(path_tag)
+                if not frame_path:
+                    continue
+                count_text = node.findtext(count_tag)
+                count = int(count_text) if count_text else 0
+                if count < 1:
+                    fail("%s: %s must be at least 1" % (frame_path, count_tag))
+                    continue
+                missing = [i for i in range(count)
+                           if not os.path.isfile(os.path.join(TEX, frame_path.replace("/", os.sep)) + "_%d.png" % i)]
+                if missing:
+                    fail("%s: missing frame textures %s"
+                         % (frame_path, ", ".join(str(i) for i in missing)))
 
 for klass in sorted(our_classes_used):
     if klass not in source_classes:

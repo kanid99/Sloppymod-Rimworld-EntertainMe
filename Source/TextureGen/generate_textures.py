@@ -185,37 +185,50 @@ def shadow_theater_frames(total=10):
 # ---------------------------------------------------------------------------
 # 3. Pinball machines  (four themed tables, 1x1 footprint, rotatable)
 # ---------------------------------------------------------------------------
+# Cabinet geometry, shared by the static art and the play-frame overlay so the
+# ball always lands on the bumpers that are actually painted on the table.
+PB_W, PB_H = 160, 320             # 1x2
+PB_TOP, PB_BOT = 6, 314
+PB_BACKBOX = 92                   # backbox shell ends here
+PB_LAMP_Y = 82                    # marquee lamp row
+PB_FIELD_BOT = 266                # playfield ends here, lockbar below
+PB_FLIP_Y = 252                   # flipper pivots
+BUMPERS = [(60, 148, 15), (102, 139, 13), (78, 179, 12)]
+BALL_PATH = [(126, 219), (126, 168), (117, 126), (96, 136),
+             (66, 147), (76, 176), (60, 218), (98, 247)]
+
+
 def pinball(name, cab, cab_dark, field, accent, accent2, glass, motif):
-    """A 1x3 cabinet: backbox at the far end, playfield, lockbar at the player end."""
-    c = Canvas(160, 480)
+    """A 1x2 cabinet: backbox at the far end, playfield, lockbar at the player end."""
+    c = Canvas(PB_W, PB_H)
     L, R = 14, 146        # cabinet sides
-    TOP, BOT = 8, 472
+    TOP, BOT = PB_TOP, PB_BOT
     mid = (L + R) / 2
 
     c.rect(L - 4, TOP - 4, R + 4, BOT + 4, DARK, 12)           # outline
     c.rect(L, TOP, R, BOT, cab_dark, 10)                       # cabinet
-    c.rect(L, TOP, R, 120, DARK, 10)                           # backbox shell
-    c.rect(L + 7, TOP + 8, R - 7, 112, glass, 6)               # backglass
-    c.rect(L + 7, TOP + 8, R - 7, 44, (255, 255, 255, 46), 6)  # glass sheen
-    motif(c, L, R, 28)                                         # theme art
+    c.rect(L, TOP, R, PB_BACKBOX, DARK, 10)                    # backbox shell
+    c.rect(L + 7, TOP + 6, R - 7, PB_BACKBOX - 8, glass, 6)    # backglass
+    c.rect(L + 7, TOP + 6, R - 7, TOP + 34, (255, 255, 255, 46), 6)   # sheen
+    motif(c, L, R, TOP + 14)                                   # theme art
     for i in range(6):                                          # marquee lamps
-        c.circle(L + 16 + i * 21.6, 106, 3.4, (255, 244, 208, 230))
+        c.circle(L + 16 + i * 21.6, PB_LAMP_Y, 3.4, (255, 244, 208, 230))
 
     # Playfield.
-    c.rect(L + 5, 126, R - 5, BOT - 56, DARK, 6)
-    c.rect(L + 8, 129, R - 8, BOT - 59, field, 5)
-    c.rect(L + 8, 129, R - 8, 200, (255, 255, 255, 20), 5)
+    c.rect(L + 5, PB_BACKBOX + 4, R - 5, PB_FIELD_BOT + 3, DARK, 6)
+    c.rect(L + 8, PB_BACKBOX + 7, R - 8, PB_FIELD_BOT, field, 5)
+    c.rect(L + 8, PB_BACKBOX + 7, R - 8, PB_BACKBOX + 56, (255, 255, 255, 20), 5)
 
     # Plunger lane and a guide rail sweeping back up the playfield.
-    c.line(R - 20, 142, R - 20, 330, (238, 238, 244, 150), 3)
-    c.line(L + 18, 150, L + 18, 268, (238, 238, 244, 105), 2.4)
+    c.line(R - 20, 110, R - 20, 218, (238, 238, 244, 150), 3)
+    c.line(L + 18, 116, L + 18, 186, (238, 238, 244, 105), 2.4)
 
     # Drop target bank.
     for tx in range(3):
-        c.rect(L + 30 + tx * 18, 156, L + 43 + tx * 18, 163, accent2, 2)
+        c.rect(L + 30 + tx * 18, 120, L + 43 + tx * 18, 127, accent2, 2)
 
     # Pop bumpers.
-    for bx, by, rr in ((mid - 20, 212, 17), (mid + 22, 196, 15), (mid - 2, 268, 14)):
+    for bx, by, rr in BUMPERS:
         c.circle(bx, by, rr + 2, DARK)
         c.circle(bx, by, rr, accent)
         c.circle(bx, by, rr * 0.62, (250, 250, 252, 255))
@@ -223,34 +236,34 @@ def pinball(name, cab, cab_dark, field, accent, accent2, glass, motif):
         c.circle(bx - rr * 0.3, by - rr * 0.3, rr * 0.16, (255, 255, 255, 190))
 
     # Slingshots.
-    c.poly([(L + 14, 372), (L + 42, 360), (L + 42, 382)], DARK)
-    c.poly([(L + 17, 372), (L + 39, 363), (L + 39, 379)], accent2)
-    c.poly([(R - 14, 372), (R - 42, 360), (R - 42, 382)], DARK)
-    c.poly([(R - 17, 372), (R - 39, 363), (R - 39, 379)], accent2)
+    c.poly([(L + 14, 232), (L + 42, 222), (L + 42, 242)], DARK)
+    c.poly([(L + 17, 232), (L + 39, 225), (L + 39, 239)], accent2)
+    c.poly([(R - 14, 232), (R - 42, 222), (R - 42, 242)], DARK)
+    c.poly([(R - 17, 232), (R - 39, 225), (R - 39, 239)], accent2)
 
     # Flippers at the player end.
     for sx in (-1, 1):
-        x0, x1 = mid + sx * 10, mid + sx * 36
-        c.line(x0, 400, x1, 390, DARK, 13)
-        c.line(x0, 400, x1, 390, accent, 9)
-        c.circle(x0, 400, 4.5, (236, 236, 240, 255))
+        x0, x1 = mid + sx * 10, mid + sx * 34
+        c.line(x0, PB_FLIP_Y, x1, PB_FLIP_Y - 9, DARK, 12)
+        c.line(x0, PB_FLIP_Y, x1, PB_FLIP_Y - 9, accent, 8)
+        c.circle(x0, PB_FLIP_Y, 4.2, (236, 236, 240, 255))
 
     # Ball and shooter rod.
-    c.circle(R - 20, 348, 6.5, DARK)
-    c.circle(R - 20, 348, 5.2, (226, 228, 236, 255))
-    c.circle(R - 21.6, 346.4, 2.0, (255, 255, 255, 220))
-    c.rect(R - 14, BOT - 60, R - 6, BOT - 34, DARK, 3)
-    c.circle(R - 10, BOT - 34, 6.5, DARK)
-    c.circle(R - 10, BOT - 34, 5, accent)
+    c.circle(R - 20, 208, 6.5, DARK)
+    c.circle(R - 20, 208, 5.2, (226, 228, 236, 255))
+    c.circle(R - 21.6, 206.4, 2.0, (255, 255, 255, 220))
+    c.rect(R - 14, PB_FIELD_BOT - 2, R - 6, PB_FIELD_BOT + 20, DARK, 3)
+    c.circle(R - 10, PB_FIELD_BOT + 20, 6.5, DARK)
+    c.circle(R - 10, PB_FIELD_BOT + 20, 5, accent)
 
     # Lockbar with the flipper buttons.
-    c.rect(L, BOT - 54, R, BOT, cab, 10)
-    c.rect(L + 5, BOT - 48, R - 5, BOT - 8, cab_dark, 7)
+    c.rect(L, BOT - 44, R, BOT, cab, 10)
+    c.rect(L + 5, BOT - 39, R - 5, BOT - 7, cab_dark, 7)
     for bx in (L + 20, R - 20):
-        c.circle(bx, BOT - 28, 6, DARK)
-        c.circle(bx, BOT - 28, 4.4, accent2)
-    c.rect(mid - 16, BOT - 36, mid + 16, BOT - 20, (24, 22, 26, 255), 3)   # coin door
-    c.circle(mid, BOT - 28, 4, accent)
+        c.circle(bx, BOT - 23, 5.6, DARK)
+        c.circle(bx, BOT - 23, 4.2, accent2)
+    c.rect(mid - 16, BOT - 30, mid + 16, BOT - 16, (24, 22, 26, 255), 3)   # coin door
+    c.circle(mid, BOT - 23, 3.8, accent)
 
     # Side-rail highlight.
     c.frame(L, TOP, R, BOT, (255, 255, 255, 36), 2.5, 10)
@@ -515,6 +528,55 @@ def cocktail_arcade_frames(total=16):
     print("  CocktailArcadeScreen_0..%d.png  (160x160)" % (total - 1))
 
 
+def draw_arcade_title(c, frame, total):
+    """Attract mode: the cast marches across under the title, coin prompt blinking."""
+    from preview import text, text_width          # shared 5x7 bitmap font
+
+    x0, y0, x1, y1 = SCREEN
+    # Opaque, so the maze baked into the cabinet art is covered while idle.
+    c.rect(x0, y0, x1, y1, SCREEN_BG, 8)
+
+    title = "CHOMPER"
+    c.rect(x0, 38, x1, 58, (18, 16, 40, 255))               # title bar glow
+    tw = text_width(title, 2)
+    text(c, title, 80 - tw / 2.0, 42, 2, (246, 214, 62, 255))
+
+    # The cast walks a lap across the glass, eater in front, ghosts trailing.
+    p = float(frame) / total
+    span = (x1 - x0) + 40
+    for k, col in enumerate(((226, 74, 70, 255), (238, 150, 196, 255),
+                             (124, 196, 232, 255), (244, 170, 92, 255))):
+        gx = x0 - 20 + ((p * span) + (k + 1) * 17) % span
+        draw_ghost(c, gx, 80, col, 1, 0, frame + k)
+    ex = x0 - 20 + (p * span) % span
+    c.circle(ex, 78, 10, (246, 214, 62, 255))
+    mouth = (45, 26, 6, 26)[frame % 4]
+    if mouth > 2:
+        c.wedge(ex, 78, 11, 0, -mouth, mouth, SCREEN_BG)
+
+    # Pellets ahead of the eater, eaten as it passes.
+    for k in range(7):
+        px = x0 + 6 + k * 14
+        if px > ex + 6:
+            c.circle(px, 78, 2.2, (248, 236, 198, 255))
+
+    if (frame // 2) % 2 == 0:                                # coin prompt blinks
+        prompt = "INSERT COIN"
+        pw = text_width(prompt, 1)
+        text(c, prompt, 80 - pw / 2.0, 106, 1, (226, 232, 248, 255))
+
+    c.frame(x0, y0, x1, y1, (86, 92, 118, 220), 2.5, 8)
+
+
+def cocktail_arcade_title_frames(total=8):
+    """Idle overlays; CompAnimatedScreen runs these when nobody is playing."""
+    for i in range(total):
+        c = Canvas(160, 160)
+        draw_arcade_title(c, i, total)
+        c.save(os.path.join(OUT, "CocktailArcadeTitle_%d.png" % i))
+    print("  CocktailArcadeTitle_0..%d.png  (160x160)" % (total - 1))
+
+
 # ---------------------------------------------------------------------------
 # 7. Massage chair  (industrial, 1x1, pawn sits in it)
 #
@@ -773,15 +835,10 @@ def vista_panel_frames(total=6):
 # steel and violet cabinets.
 # ---------------------------------------------------------------------------
 
-BALL_PATH = [(126, 340), (126, 248), (117, 172), (96, 190),
-             (66, 210), (76, 262), (60, 338), (98, 392)]
-BUMPERS = [(60, 212, 17), (102, 196, 15), (78, 268, 14)]
-
-
 def pinball_play_frames(total=8):
     import math
     for i in range(total):
-        c = Canvas(160, 480)
+        c = Canvas(PB_W, PB_H)
         bx, by = BALL_PATH[i % len(BALL_PATH)]
         px, py = BALL_PATH[(i - 1) % len(BALL_PATH)]
 
@@ -797,23 +854,23 @@ def pinball_play_frames(total=8):
                 c.circle(mx, my, mr * 0.5, (255, 255, 244, 220))
 
         # Flippers snap up as the ball comes down to them.
-        if by > 360:
+        if by > 200:
             for sx in (-1, 1):
-                x0, x1 = 80 + sx * 10, 80 + sx * 36
-                c.line(x0, 400, x1, 384, (255, 250, 220, 210), 10)
+                x0, x1 = 80 + sx * 10, 80 + sx * 34
+                c.line(x0, PB_FLIP_Y, x1, PB_FLIP_Y - 22, (255, 250, 220, 210), 9)
 
         # Backglass keeps flashing while the table is live.
         if i % 2 == 0:
-            c.rect(21, 16, 139, 112, (255, 248, 210, 30), 6)
+            c.rect(21, 12, 139, PB_BACKBOX - 8, (255, 248, 210, 30), 6)
         for k in range(6):
             if (i + k) % 3 == 0:
-                c.circle(30 + k * 21.6, 106, 4.6, (255, 250, 220, 200))
+                c.circle(30 + k * 21.6, PB_LAMP_Y, 4.6, (255, 250, 220, 200))
 
         c.circle(bx, by, 7.5, (30, 30, 36, 220))
         c.circle(bx, by, 6, (232, 236, 246, 255))
         c.circle(bx - 1.8, by - 1.8, 2.4, (255, 255, 255, 240))
         c.save(os.path.join(OUT, "PinballPlay_%d.png" % i))
-    print("  PinballPlay_0..%d.png  (160x480)" % (total - 1))
+    print("  PinballPlay_0..%d.png  (%dx%d)" % (total - 1, PB_W, PB_H))
 
 
 # ---------------------------------------------------------------------------
@@ -1370,6 +1427,7 @@ def _build_pinball():
 def _build_cocktail():
     canvas = cocktail_arcade()
     cocktail_arcade_frames()
+    cocktail_arcade_title_frames()
     return {"CocktailArcade": canvas}
 
 
