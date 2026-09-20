@@ -1989,60 +1989,58 @@ def pool_filter():
 def hammock():
     """Near-neutral, because the stuff colour tints the whole sprite.
 
-    The sheet and the two posts are separate objects, so each carries its own
-    bold line - that is what a hammock looks like from above. The weave, the
-    sag and the cushion are tints on the sheet, not lines."""
+    No posts of its own: it is slung between whatever is standing at each end -
+    a wall or a column - so the cords gather to a point right at the edge of
+    the sprite, where that support is. The bold line goes round the sheet and
+    nothing inside it; the weave, the sag and the cushion are tints."""
     c = Canvas(160, 320)
     mid = 80
     OUT = 4.5
-    wood = (126, 112, 98, 255)
-    wood_lt = (158, 144, 128, 255)
     body = (208, 200, 188, 255)
     weave = (184, 176, 164, 210)
     selvedge = (170, 162, 150, 235)
-    cord = (96, 86, 76, 255)
+    cord = (104, 94, 82, 255)
+    cord_lt = (140, 128, 114, 255)
+
+    head, foot = 84, 236          # where the sheet begins and ends
 
     def sag(y):
         """Half-width of the sheet at height y: gathered at the ends, slack in
         the middle, which is the whole shape of the thing."""
-        t = max(0.0, min(1.0, (y - 96) / 128.0))
-        return 40 + 26 * math.sin(math.pi * t)
+        t = max(0.0, min(1.0, (y - head) / float(foot - head)))
+        return 34 + 30 * math.sin(math.pi * t)
 
-    # Cords, drawn first so both posts and sheet sit on top of them.
-    for sx in (-1, 1):
-        for k in range(5):
-            x = mid + sx * (7 + k * 4)
-            c.line(x, 44, mid + sx * 50, 98, cord, 2.6)
-            c.line(x, 276, mid + sx * 50, 222, cord, 2.6)
+    # Cords running off to the supports at either end, drawn first so the
+    # sheet sits on top of them.
+    for end_y, toward in ((head, 4), (foot, 316)):
+        for k in range(-3, 4):
+            spread = k * 9
+            c.line(mid + spread, end_y, mid + k * 1.5, toward, cord, 2.8)
+            c.line(mid + spread, end_y, mid + k * 1.5, toward, cord_lt, 1.2)
+        c.circle(mid, toward, 5, DARK)             # the ring it hangs from
+        c.circle(mid, toward, 3.4, cord_lt)
 
     # The sheet: one pass oversized in the outline colour, one at true size.
-    for y in range(96 - int(OUT) - 1, 225 + int(OUT) + 1):
+    for y in range(head - int(OUT) - 1, foot + int(OUT) + 1):
         w = sag(y) + OUT
         c.rect(mid - w, y, mid + w, y + 1, DARK)
-    for y in range(96, 225):
+    for y in range(head, foot):
         w = sag(y)
         c.rect(mid - w, y, mid + w, y + 1, body)
 
-    for k in range(9):                                     # weave, following the sag
-        t = (k + 0.5) / 9.0
-        y = 96 + t * 128
+    for k in range(11):                            # weave, following the sag
+        t = (k + 0.5) / 11.0
+        y = head + t * (foot - head)
         w = sag(y)
         c.line(mid - w + 4, y, mid + w - 4, y, weave, 1.6)
-    c.line(mid, 102, mid, 218, selvedge, 1.4)              # the fold down the middle
+    c.line(mid, head + 6, mid, foot - 6, selvedge, 1.4)     # the fold
 
-    for sx in (-1, 1):                                     # rolled edge, a tint
-        for y in range(98, 223, 2):
+    for sx in (-1, 1):                             # rolled edge, a tint
+        for y in range(head + 2, foot - 1, 2):
             c.circle(mid + sx * (sag(y) - 2), y, 2.2, selvedge)
 
-    c.rect(mid - 20, 150, mid + 20, 176, (226, 220, 210, 255), 8)   # cushion
-    c.line(mid - 14, 163, mid + 14, 163, weave, 1.6)
-
-    # End posts, each its own silhouette.
-    for py in (26, 294):
-        silhouette(c, [("rect", mid - 26, py - 9, mid + 26, py + 9, 6, wood)], OUT)
-        for sx in (-1, 1):
-            c.circle(mid + sx * 23, py, 3.6, wood_lt)      # the eye the cords tie to
-        c.line(mid - 18, py, mid + 18, py, (104, 92, 80, 220), 1.6)
+    c.rect(mid - 21, 146, mid + 21, 174, (226, 220, 210, 255), 9)   # cushion
+    c.line(mid - 15, 160, mid + 15, 160, weave, 1.6)
     save_rotations(c, "Hammock")
     return c
 

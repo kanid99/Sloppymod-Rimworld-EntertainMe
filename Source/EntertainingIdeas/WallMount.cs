@@ -123,4 +123,123 @@ namespace EntertainingIdeas
             GenDraw.DrawFieldEdges(wall, ghostCol);
         }
     }
+    /// <summary>
+    /// A hammock hangs; it does not stand. Both ends need something solid
+    /// directly beyond them to be slung from.
+    ///
+    /// What counts is anything that holds a roof up and is not a door - walls
+    /// and columns, in other words. That is the same question the game already
+    /// answers for roofs, so it needs no list of acceptable defs and it keeps
+    /// working for walls and columns added by other mods.
+    ///
+    /// Blueprints and frames count too, so a hammock can be planned in the same
+    /// breath as the columns it will hang from rather than only after they are
+    /// standing.
+    /// </summary>
+    public class PlaceWorker_SlungBetweenSupports : PlaceWorker
+    {
+        public override AcceptanceReport AllowsPlacing(BuildableDef checkingDef, IntVec3 loc, Rot4 rot,
+                                                       Map map, Thing thingToIgnore = null, Thing thing = null)
+        {
+            foreach (IntVec3 anchor in AnchorsFor(checkingDef, loc, rot))
+            {
+                if (!Supports(map, anchor, thingToIgnore))
+                {
+                    return new AcceptanceReport(
+                        "Needs a wall or a column at both ends to hang from.");
+                }
+            }
+            return true;
+        }
+
+        public override void DrawGhost(ThingDef def, IntVec3 center, Rot4 rot, Color ghostCol, Thing thing = null)
+        {
+            Map map = Find.CurrentMap;
+            if (map == null)
+            {
+                return;
+            }
+            // Colour each end for what is actually there, so a hammock one tile
+            // short of its wall is obvious before you commit to it.
+            foreach (IntVec3 anchor in AnchorsFor(def, center, rot))
+            {
+                GenDraw.DrawFieldEdges(new List<IntVec3> { anchor },
+                                       Supports(map, anchor, null) ? Color.cyan : Color.red);
+            }
+        }
+
+        /// <summary>
+        /// The cells just beyond each end of the hammock. Written for any size,
+        /// so a wider or longer version would still ask the right question.
+        /// </summary>
+        private static IEnumerable<IntVec3> AnchorsFor(BuildableDef def, IntVec3 loc, Rot4 rot)
+        {
+            IntVec3 axis = rot.FacingCell;
+            List<IntVec3> cells = GenAdj.CellsOccupiedBy(loc, rot, def.Size).ToList();
+            int low = int.MaxValue;
+            int high = int.MinValue;
+            for (int i = 0; i < cells.Count; i++)
+            {
+                int along = Along(cells[i], axis);
+                low = Mathf.Min(low, along);
+                high = Mathf.Max(high, along);
+            }
+            for (int i = 0; i < cells.Count; i++)
+            {
+                int along = Along(cells[i], axis);
+                if (along == low)
+                {
+                    yield return cells[i] - axis;
+                }
+                if (along == high)
+                {
+                    yield return cells[i] + axis;
+                }
+            }
+        }
+
+        /// <summary>How far along the hammock's own long axis a cell sits.</summary>
+        private static int Along(IntVec3 cell, IntVec3 axis)
+        {
+            return cell.x * axis.x + cell.z * axis.z;
+        }
+
+        private static bool Supports(Map map, IntVec3 cell, Thing thingToIgnore)
+        {
+            if (!cell.InBounds(map))
+            {
+                return false;
+            }
+
+            Building edifice = cell.GetEdifice(map);
+            if (edifice != null && edifice != thingToIgnore && HoldsUp(edifice.def))
+            {
+                return true;
+            }
+
+            // A wall that is only planned still counts, so the pair can be
+            // queued together.
+            List<Thing> things = cell.GetThingList(map);
+            for (int i = 0; i < things.Count; i++)
+            {
+                Thing t = things[i];
+                if (t == thingToIgnore)
+                {
+                    continue;
+                }
+                if (t.def.entityDefToBuild is ThingDef && HoldsUp((ThingDef)t.def.entityDefToBuild))
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        /// <summary>Anything that holds a roof up and is not a door.</summary>
+        private static bool HoldsUp(ThingDef def)
+        {
+            return def != null && def.holdsRoof && def.thingClass != typeof(Building_Door)
+                   && !typeof(Building_Door).IsAssignableFrom(def.thingClass);
+        }
+    }
 }

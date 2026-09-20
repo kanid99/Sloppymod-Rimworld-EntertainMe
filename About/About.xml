@@ -3,25 +3,42 @@
   <name>Entertaining Ideas</name>
   <author>kanid99</author>
   <packageId>kanid99.entertainingideas</packageId>
+  <!-- Stamped with the build number, date and commit by Source/package.sh
+       when a zip is cut, so an installed copy says which build it is. -->
+  <modVersion>0.9.0-dev</modVersion>
   <supportedVersions>
     <li>1.5</li>
     <li>1.6</li>
   </supportedVersions>
-  <description>Thirteen new recreation ideas (seventeen buildings), spread across the tech ladder, so a colony has something worth doing whether it is chewing pemmican in a hide tent or running an archotech lounge.
+  <description>Eighteen new recreation ideas - twenty-three buildings and a swimming pool you paint in whatever shape you like - spread across the tech ladder, so a colony has something worth doing whether it is chewing pemmican in a hide tent or running an archotech lounge.
 
-- Knucklebone mat (neolithic) - the thinking game a tribe can build on day one. Cast bones, argue, gamble.
-- Soaking tub (medieval) - a wood-fired barrel colonists get into. Warms the room, steams while the firebox is lit, and hides whoever is in it below the waterline. An electric version follows at industrial tech for anyone tired of hauling logs. Either way a tub holds one soak and somebody has to carry water out to it between uses - unless Dubs Bad Hygiene is installed and you run a pipe to it, in which case it fills itself.
-- Skittles lane (medieval) - five tiles of board and nine pins. Roll from the near end; the pins scatter when the ball arrives.
-- Shadow lantern theater (medieval) - a lamp, a linen screen, and a drum the flame turns by itself. The shadows walk whether or not anyone is watching, and a whole room can sit and watch them.
-- Pinball machines (industrial and up) - four themed tables on one 1x3 cabinet frame: the standard machine, the chemfuel-flashpot boomalope blitz, the solid-state mech rampage, and the archotech dreamtable that projects a ball you cannot miss.
-- Cocktail arcade table (industrial) - a face-up screen under glass with a joystick at each of two seats. The maze game runs while someone is playing it.
-- Aquarium (industrial) - fish that swim whether or not anyone is watching, and a lot of beauty.
-- Karaoke machine (industrial) - a crowd of up to five, and practice at handling other people. A turn at the microphone builds artistic and social skill. The singer has a good time no matter what; everyone else in the room makes up their own mind, based on whether the singer can actually hold a tune, what they think of them personally, and whether they were ever going to enjoy this. Being well liked covers for being terrible.
-- Massage chair (industrial) - colonists sit in it, not beside it. Rollers work up the backrest while it runs.
-- Hologame pod (spacer) - a board of light that tunes itself just past your ability. Trains intellectual.
-- Vista panel (spacer) - a 3x1 wall display showing somewhere with a horizon in it, running on the local clock: grey dawn, daylight, a long sunset, then stars. It lights the room to match, and colonists in that room hold off cabin fever for longer.
-- Gravball court (ultratech) - a 3x3 court with the ball held in a lazy orbit, played from the edges by up to four colonists.
-- Dreamloop holotheater (ultratech) - point it at a wall within six tiles and it throws a moving picture onto that wall. A whole room can watch, bedridden colonists included.
+NEOLITHIC AND MEDIEVAL
+- Knucklebone mat - the thinking game a tribe can build on day one. Cast bones, argue, gamble.
+- Hammock - rest that is not a bed. Nobody is assigned to it and nobody sleeps the night in it; a colonist gets in, does nothing for half an hour, and gets out less tired. It hangs rather than stands, so it needs a wall or a column at each end.
+- Soaking tub - a wood-fired barrel colonists get into. Warms the room, steams while the firebox is lit, and the water closes round whoever is in it. An electric version follows at industrial tech for anyone tired of hauling logs. A tub holds one soak and somebody carries water out to it between uses, unless Dubs Bad Hygiene is installed and you run a pipe to it.
+- Skittles lane - seven tiles of board and nine pins. Roll from the near end; the pins stay where the ball leaves them until somebody sets them up again.
+- Shadow lantern theater - a lamp, a linen screen, and a drum the flame turns by itself. The shadows walk whether or not anyone is watching.
+- Armillary sphere - brass rings on a tripod, turning under their own clockwork. It does nothing. It is beautiful.
 
-Includes a small assembly for the animated screens, the wall projection, the sit-in furniture, the vista panel and the karaoke crowd, built separately for 1.5 and 1.6 because 1.6 changed the joy-tick API. No new research either - everything gates on projects the game already has, so the tree gains seventeen buildings and not one extra node. No Harmony and no mod dependencies. If Dubs Bad Hygiene happens to be installed, the aquarium plumbs into its water network and the tubs join its hydrotherapy category; without it, nothing changes.</description>
+INDUSTRIAL
+- Pinball machines - four themed tables on one 1x2 cabinet: the standard machine, the chemfuel-flashpot boomalope blitz, the solid-state mech rampage, and the archotech dreamtable. Each has a proper backglass with score reels that climb while somebody plays.
+- Cocktail arcade tables - face-up screens under glass with a joystick at each of two seats. ORE RUSH: clear seams of ore down a mine shaft while the things that live down there come up the same corridor. THRUMBO!: a colonist is stranded at the top of a half-built scaffold and something enormous is rolling rocks down the girders at you. Left alone either one drops into attract mode.
+- Aquarium - fish that swim continuously rather than stepping through frames, and a lot of beauty.
+- Karaoke machine - a crowd of up to five. The singer has a good time no matter what; everyone else makes up their own mind based on whether the singer can hold a tune, what they think of them personally, and whether they were ever going to enjoy this. Being well liked covers for being terrible.
+- Massage chair - colonists sit in it, not beside it. Rollers work up the backrest while it runs.
+- Bowling lane - the skittles lane with a pinsetter, so nobody has to walk down and stand the pins back up.
+- Swimming pool - terrain, not an object. Paint pool basin tiles in any shape and stand a filtration unit against an edge; it claims every basin tile joined to it. Water held, power drawn and evaporation all scale with how many tiles you drew, and the pool fills outward from the filter and drains back toward it.
+- Orreries - a hand-cranked tabletop model of the system, and a 2x2 grand orrery under glass with five worlds and a moon on its own arm. Both clockwork, both turning, neither needing power.
+
+SPACER AND ULTRATECH
+- Hologame pod - a board of light that tunes itself just past your ability. Trains intellectual.
+- Vista panel - a wall-hung display showing somewhere with a horizon in it, running on the local clock: grey dawn, daylight, a long sunset, then stars. It lights the room to match, and colonists in that room hold off cabin fever for longer.
+- Gravball court - a 3x3 court with the ball held in a lazy orbit, played from the edges by up to four colonists.
+- Dreamloop holotheater - point it at a wall and it throws a moving picture onto that wall. A whole room can watch, bedridden colonists included.
+
+NO NEW RESEARCH. Everything gates on projects the game already has, so the tree gains twenty-three buildings and not one extra node.
+
+Includes a small assembly for the animated screens, the swimming fish, the wall projection, the sit-in furniture, the pool, the vista panel and the karaoke crowd, built separately for 1.5 and 1.6 because 1.6 changed the joy-tick API. No Harmony and no mod dependencies.
+
+If Dubs Bad Hygiene is installed, the aquarium and the tubs plumb into its water network, the tubs join its hydrotherapy category, a soak washes the colonist and they form an opinion about the water temperature, and they undress to get in. If Vanilla Furniture Expanded is installed, the powered luxury furniture here follows its own furniture research instead of arriving earlier. Without either, nothing changes.</description>
 </ModMetaData>

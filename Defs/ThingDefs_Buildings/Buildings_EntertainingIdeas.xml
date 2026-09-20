@@ -1565,7 +1565,7 @@
   <ThingDef ParentName="EI_JoyBuildingBase">
     <defName>EI_Hammock</defName>
     <label>hammock</label>
-    <description>A slung sheet between two posts, deep enough to disappear into. A colonist gets in, stops having opinions about anything for half an hour, and gets out slightly less tired than they went in.\n\nThis is not a bed. Nobody is assigned to it, nobody sleeps the night in it, and no doctor will treat anyone in it. It is somewhere to do nothing, which the average colony has far too little of.</description>
+    <description>A slung sheet, deep enough to disappear into. A colonist gets in, stops having opinions about anything for half an hour, and gets out slightly less tired than they went in.\n\nIt hangs rather than stands: it needs a wall or a column directly beyond each end to be slung from, and cannot be built without both.\n\nThis is not a bed. Nobody is assigned to it, nobody sleeps the night in it, and no doctor will treat anyone in it. It is somewhere to do nothing, which the average colony has far too little of.</description>
     <graphicData>
       <texPath>EntertainingIdeas/Buildings/Hammock</texPath>
       <graphicClass>Graphic_Multi</graphicClass>
@@ -1603,8 +1603,11 @@
     </stuffCategories>
     <costStuffCount>45</costStuffCount>
     <costList>
-      <WoodLog>25</WoodLog>
+      <WoodLog>15</WoodLog>
     </costList>
+    <placeWorkers>
+      <li>EntertainingIdeas.PlaceWorker_SlungBetweenSupports</li>
+    </placeWorkers>
     <building>
       <joyKind>Meditative</joyKind>
       <paintable>true</paintable>
