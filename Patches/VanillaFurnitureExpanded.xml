@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <Patch>
 
-  <!-- Optional compatibility. Inert unless Vanilla Furniture Expanded is loaded.
+  <!-- Optional compatibility. Inert unless Vanilla Furniture Expanded's own
+       furniture research is present.
 
        VFE gates recreation two ways. Anything with a screen in it goes behind
        vanilla's television research - its arcade machine and industrial
@@ -12,12 +13,21 @@
        Powered luxury furniture is different: VFE puts its piano, roulette table
        and lounger behind its own MF_ModernFurniture. The three pieces here of
        that same kind follow them, so a colony running VFE does not get this
-       mod's armchair-tier comforts noticeably earlier than VFE's own. -->
+       mod's armchair-tier comforts noticeably earlier than VFE's own.
 
-  <Operation Class="PatchOperationFindMod">
-    <mods>
-      <li>Vanilla Furniture Expanded</li>
-    </mods>
+       The test is for that research project rather than for the mod's name.
+       PatchOperationFindMod matches on ModLister.HasActiveModWithName, so it
+       fires for one exact display name only, and reuploads, translations and
+       "(Continued)" forks all carry a different one. More to the point, the
+       name is a proxy for what this patch actually needs. If VFE were present
+       but had moved or renamed that project, a name gate would fire anyway and
+       write a prerequisite that resolves to nothing, which makes all three
+       buildings unbuildable. Testing for the def cannot fail either way. Load
+       order is not a problem: RimWorld merges every active mod's defs into one
+       document and only then applies everyone's patches. -->
+
+  <Operation Class="PatchOperationConditional">
+    <xpath>/Defs/ResearchProjectDef[defName="MF_ModernFurniture"]</xpath>
     <match Class="PatchOperationSequence">
       <operations>
 

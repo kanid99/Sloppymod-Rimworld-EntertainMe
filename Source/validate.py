@@ -25,6 +25,7 @@ Usage: python3 Source/validate.py
 """
 
 import os
+import re
 import sys
 import xml.etree.ElementTree as ET
 
@@ -234,6 +235,34 @@ if our_classes_used and len(built) < len(ASSEMBLIES):
          "Source/build.sh (defs naming a missing class will not load)"
          % ", ".join(missing))
 
+# --- patch targets ----------------------------------------------------------
+# A patch only runs when its gate matches, so an xpath left pointing at a def
+# this mod has since renamed fails silently and forever. Every one of our own
+# defNames named in a patch has to exist.
+PATCHES = os.path.join(ROOT, "Patches")
+patch_targets = 0
+if os.path.isdir(PATCHES):
+    known = set(thing_defs) | set(terrain_defs) | job_defs | research_defs | set(named)
+    known |= {g.findtext("defName") for g in joy_givers}
+    for filename in sorted(os.listdir(PATCHES)):
+        if not filename.endswith(".xml"):
+            continue
+        path = os.path.join(PATCHES, filename)
+        try:
+            root = ET.parse(path).getroot()
+        except ET.ParseError as exc:
+            fail("Patches/%s: malformed XML (%s)" % (filename, exc))
+            continue
+        for node in root.iter("xpath"):
+            if not node.text:
+                continue
+            for name in re.findall(r'defName\s*=\s*"(EI_[A-Za-z0-9_]+)"', node.text):
+                patch_targets += 1
+                if name not in known:
+                    fail("Patches/%s: xpath targets %s, which no def defines"
+                         % (filename, name))
+
+
 # --- vanilla def names, when the game's own defs are available -------------
 CORE_DEFS = os.environ.get("RIMWORLD_CORE_DEFS")
 # XML tags whose value names a def the base game owns.
@@ -301,9 +330,10 @@ else:
 
 print("%d C# classes referenced from XML, %d/%d version assemblies built"
       % (len(our_classes_used), len(built), len(ASSEMBLIES)))
-print("%d ThingDefs, %d TerrainDefs, %d JoyGiverDefs, %d JobDefs, %d ResearchProjectDefs"
+print("%d ThingDefs, %d TerrainDefs, %d JoyGiverDefs, %d JobDefs, "
+      "%d ResearchProjectDefs, %d patch targets"
       % (len(thing_defs), len(terrain_defs), len(joy_givers), len(job_defs),
-         len(research_defs)))
+         len(research_defs), patch_targets))
 if problems:
     print("\nFAILED:")
     for line in problems:
