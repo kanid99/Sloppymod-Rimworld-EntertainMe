@@ -112,7 +112,9 @@
 
   <JobDef>
     <defName>EI_Play_Skittles</defName>
-    <driverClass>JobDriver_WatchBuilding</driverClass>
+    <!-- Vanilla's watch-building job plus "playing knocks the pins over".
+         Harmless on the bowling lane, which has no pin deck to notify. -->
+    <driverClass>EntertainingIdeas.JobDriver_PlayAtPinDeck</driverClass>
     <reportString>rolling at the skittles.</reportString>
     <joyDuration>4000</joyDuration>
     <joyMaxParticipants>1</joyMaxParticipants>
@@ -121,6 +123,12 @@
     <joyKind>Gaming_Dexterity</joyKind>
     <taleOnCompletion>PlayedGame</taleOnCompletion>
     <allowOpportunisticPrefix>true</allowOpportunisticPrefix>
+  </JobDef>
+
+  <JobDef>
+    <defName>EI_ResetPins</defName>
+    <driverClass>EntertainingIdeas.JobDriver_ServiceBuilding</driverClass>
+    <reportString>setting up the pins at TargetA.</reportString>
   </JobDef>
 
   <JobDef>

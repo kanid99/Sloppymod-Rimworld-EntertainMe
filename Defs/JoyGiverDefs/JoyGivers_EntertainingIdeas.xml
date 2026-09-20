@@ -141,11 +141,13 @@
 
   <JoyGiverDef>
     <defName>EI_Play_Skittles</defName>
-    <giverClass>JoyGiver_InteractBuildingInteractionCell</giverClass>
+    <!-- Ours, so a lane waiting on somebody to set its pins is not offered. -->
+    <giverClass>EntertainingIdeas.JoyGiver_InteractBuildingServiceable</giverClass>
     <baseChance>3</baseChance>
     <desireSit>false</desireSit>
     <thingDefs>
       <li>EI_SkittlesLane</li>
+      <li>EI_BowlingLane</li>
     </thingDefs>
     <jobDef>EI_Play_Skittles</jobDef>
     <joyKind>Gaming_Dexterity</joyKind>

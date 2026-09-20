@@ -945,7 +945,7 @@
   <ThingDef ParentName="EI_JoyBuildingBase">
     <defName>EI_SkittlesLane</defName>
     <label>skittles lane</label>
-    <description>Seven tiles of planed board with a shallow gutter down each side, and nine turned pins standing in a diamond at the far end. Roll the ball down, knock over what you can, walk up and set them again. The old game that ten-pin bowling was eventually made from, and it eats floor space exactly the way the real thing does.\n\nThe thrower stands off the near end. Steady rolling trains shooting.</description>
+    <description>Seven tiles of planed board with a shallow gutter down each side, and nine turned pins standing in a diamond at the far end. Roll the ball down, knock over what you can, then walk up and set them again - because nothing here does it for you. The old game that ten-pin bowling was eventually made from, and it eats floor space exactly the way the real thing does.\n\nThe pins stay down after about three games until somebody sets them. The thrower stands off the near end, and steady rolling trains shooting.</description>
     <graphicData>
       <texPath>EntertainingIdeas/Buildings/SkittlesLane</texPath>
       <graphicClass>Graphic_Multi</graphicClass>
@@ -981,6 +981,13 @@
       <joyKind>Gaming_Dexterity</joyKind>
     </building>
     <comps>
+      <!-- Nobody resets the pins but a colonist. After three games somebody
+           walks down and stands them up again; until then the lane is not
+           offered. The bowling lane below has a pinsetter and never needs it. -->
+      <li Class="EntertainingIdeas.CompProperties_PinDeck">
+        <gamesPerReset>3</gamesPerReset>
+        <resetWorkTicks>300</resetWorkTicks>
+      </li>
       <li Class="EntertainingIdeas.CompProperties_AnimatedScreen">
         <framePath>EntertainingIdeas/Buildings/SkittlesLaneRoll</framePath>
         <frameCount>6</frameCount>
@@ -992,6 +999,73 @@
         </playJobs>
       </li>
     </comps>
+  </ThingDef>
+
+  <!-- ==================== 11b. Bowling lane (industrial) ================== -->
+
+  <ThingDef ParentName="EI_JoyBuildingBase">
+    <defName>EI_BowlingLane</defName>
+    <label>bowling lane</label>
+    <description>The same game with the work taken out of it. Oiled boards, ten pins in a triangle, a ball return that rolls the ball back to the player, and a pinsetter at the far end that sweeps the deck and stands the pins up between frames. Nobody walks down the lane, nobody bends over, nobody argues about whether that one was already leaning.\n\nDraws power for the machinery. Trains shooting.</description>
+    <graphicData>
+      <texPath>EntertainingIdeas/Buildings/BowlingLane</texPath>
+      <graphicClass>Graphic_Multi</graphicClass>
+      <drawSize>(1,7)</drawSize>
+      <shadowData>
+        <volume>(0.85,0.2,6.5)</volume>
+      </shadowData>
+    </graphicData>
+    <size>(1,7)</size>
+    <rotatable>true</rotatable>
+    <defaultPlacingRot>South</defaultPlacingRot>
+    <fillPercent>0.2</fillPercent>
+    <pathCost>22</pathCost>
+    <canOverlapZones>false</canOverlapZones>
+    <hasInteractionCell>true</hasInteractionCell>
+    <interactionCellOffset>(0,0,4)</interactionCellOffset>
+    <placeWorkers>
+      <li>PlaceWorker_PreventInteractionSpotOverlap</li>
+    </placeWorkers>
+    <constructEffect>ConstructMetal</constructEffect>
+    <constructionSkillPrerequisite>7</constructionSkillPrerequisite>
+    <statBases>
+      <MaxHitPoints>220</MaxHitPoints>
+      <WorkToBuild>14000</WorkToBuild>
+      <Mass>140</Mass>
+      <Beauty>8</Beauty>
+      <JoyGainFactor>1.35</JoyGainFactor>
+    </statBases>
+    <costList>
+      <Steel>120</Steel>
+      <WoodLog>60</WoodLog>
+      <ComponentIndustrial>4</ComponentIndustrial>
+    </costList>
+    <building>
+      <joyKind>Gaming_Dexterity</joyKind>
+      <paintable>true</paintable>
+    </building>
+    <comps>
+      <li Class="CompProperties_Power">
+        <compClass>CompPowerTrader</compClass>
+        <shortCircuitInRain>true</shortCircuitInRain>
+        <basePowerConsumption>140</basePowerConsumption>
+      </li>
+      <li Class="CompProperties_Flickable"/>
+      <li Class="EntertainingIdeas.CompProperties_AnimatedScreen">
+        <framePath>EntertainingIdeas/Buildings/BowlingLaneRoll</framePath>
+        <frameCount>6</frameCount>
+        <ticksPerFrame>13</ticksPerFrame>
+        <drawSize>(1,7)</drawSize>
+        <rotateWithBuilding>true</rotateWithBuilding>
+        <playJobs>
+          <li>EI_Play_Skittles</li>
+        </playJobs>
+      </li>
+    </comps>
+    <researchPrerequisites>
+      <li>ComplexFurniture</li>
+      <li>Electricity</li>
+    </researchPrerequisites>
   </ThingDef>
 
   <!-- ================== 12. Karaoke machine (industrial) ================== -->

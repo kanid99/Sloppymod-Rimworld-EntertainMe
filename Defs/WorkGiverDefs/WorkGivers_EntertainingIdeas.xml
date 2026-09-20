@@ -1,20 +1,22 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <Defs>
 
-  <!-- Carrying water to a tub that is not plumbed in. Filed under hauling,
+  <!-- Topping a building back up: carrying water to a tub that is not plumbed
+       in, or standing the pins up at a skittles lane. Filed under hauling,
        below the usual hauling work so it never competes with moving food or
-       ammunition, and it never appears for a tub Dubs Bad Hygiene has piped. -->
+       ammunition, and it never appears for a tub Dubs Bad Hygiene has piped or
+       a bowling lane whose pinsetter does the job itself. -->
 
   <JobDef>
     <defName>EI_FillWaterBasin</defName>
-    <driverClass>EntertainingIdeas.JobDriver_FillWaterBasin</driverClass>
+    <driverClass>EntertainingIdeas.JobDriver_ServiceBuilding</driverClass>
     <reportString>filling TargetA.</reportString>
   </JobDef>
 
   <WorkGiverDef>
     <defName>EI_FillWaterBasin</defName>
-    <label>fill tubs</label>
-    <giverClass>EntertainingIdeas.WorkGiver_FillWaterBasin</giverClass>
+    <label>fill tubs and set pins</label>
+    <giverClass>EntertainingIdeas.WorkGiver_ServiceBuilding</giverClass>
     <workType>Hauling</workType>
     <priorityInType>30</priorityInType>
     <verb>fill</verb>

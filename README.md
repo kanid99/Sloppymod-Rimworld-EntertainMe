@@ -31,6 +31,7 @@ for each — see [Versions](#versions).
 | Massage chair | 1×1 | Solitary relaxation | 90W | Complex furniture + Electricity |
 | Aquarium | 2×1 | Solitary relaxation | 60W | Complex furniture + Electricity |
 | Karaoke machine | 1×1 | Social | 120W | Microelectronics basics |
+| Bowling lane | 1×7 | Dexterity | 140W | Complex furniture + Electricity |
 | Heated soaking tub | 1×1 | Solitary relaxation | 200W | Complex furniture + Electricity |
 
 All four pinball tables share one cabinet frame and one animation; they differ in
@@ -95,6 +96,15 @@ washes amber at sunset and blue after dark. `CompOutdoorsSimulator` tops up the
 outdoors need of everyone sharing the room, but only to a ceiling (35% by
 default): enough to hold off cabin fever in a sealed base, never enough to
 replace going outside.
+
+**Some things run out and need a colonist.** The tub holds one soak; the
+skittles lane's pins stay where the ball leaves them. Both implement one
+`IServiceable` interface, so a single work giver and job driver cover "carry
+water out to it" and "walk down and stand the pins up", and a lane waiting on
+somebody is not offered to anyone wanting a game. The bowling lane is the same
+game with a pinsetter in it — ten pins, a ball return, and nobody walking down
+the lane — which is the whole difference between the medieval version and the
+industrial one.
 
 **Some furniture is sat *in*, not beside.** No vanilla joy giver does this — the
 sit-adjacent giver puts a pawn in a *separate* chair next to the thing — so

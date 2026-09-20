@@ -7,10 +7,24 @@ using Verse.AI;
 
 namespace EntertainingIdeas
 {
+    /// <summary>
+    /// A building that runs out of something a colonist has to top back up -
+    /// the tub's water, the skittles lane's standing pins. One work giver and
+    /// one job driver serve all of them.
+    /// </summary>
+    public interface IServiceable
+    {
+        bool NeedsService { get; }
+        int ServiceWorkTicks { get; }
+        JobDef ServiceJob { get; }
+        void Service();
+    }
+
     [DefOf]
     public static class EI_JobDefOf
     {
         public static JobDef EI_FillWaterBasin;
+        public static JobDef EI_ResetPins;
 
         static EI_JobDefOf()
         {
@@ -36,7 +50,7 @@ namespace EntertainingIdeas
         }
     }
 
-    public class CompWaterBasin : ThingComp
+    public class CompWaterBasin : ThingComp, IServiceable
     {
         private bool filled;
 
@@ -158,6 +172,27 @@ namespace EntertainingIdeas
             filled = true;
         }
 
+        // --- IServiceable: a tub off the plumbing needs carrying to ----------
+        public bool NeedsService
+        {
+            get { return !Plumbed && !filled; }
+        }
+
+        public int ServiceWorkTicks
+        {
+            get { return Props.fillWorkTicks; }
+        }
+
+        public JobDef ServiceJob
+        {
+            get { return EI_JobDefOf.EI_FillWaterBasin; }
+        }
+
+        public void Service()
+        {
+            Fill();
+        }
+
         /// <summary>A soak empties a hand-filled tub; a plumbed one refills itself.</summary>
         public void Drain()
         {
@@ -177,7 +212,7 @@ namespace EntertainingIdeas
         }
     }
 
-    public class WorkGiver_FillWaterBasin : WorkGiver_Scanner
+    public class WorkGiver_ServiceBuilding : WorkGiver_Scanner
     {
         public override ThingRequest PotentialWorkThingRequest
         {
@@ -189,10 +224,28 @@ namespace EntertainingIdeas
             get { return PathEndMode.Touch; }
         }
 
+        private static IServiceable ServiceableOn(Thing t)
+        {
+            ThingWithComps twc = t as ThingWithComps;
+            if (twc == null)
+            {
+                return null;
+            }
+            List<ThingComp> comps = twc.AllComps;
+            for (int i = 0; i < comps.Count; i++)
+            {
+                IServiceable serviceable = comps[i] as IServiceable;
+                if (serviceable != null && serviceable.NeedsService)
+                {
+                    return serviceable;
+                }
+            }
+            return null;
+        }
+
         public override bool HasJobOnThing(Pawn pawn, Thing t, bool forced = false)
         {
-            CompWaterBasin basin = t.TryGetComp<CompWaterBasin>();
-            if (basin == null || basin.Plumbed || basin.HasWater)
+            if (ServiceableOn(t) == null)
             {
                 return false;
             }
@@ -205,18 +258,32 @@ namespace EntertainingIdeas
 
         public override Job JobOnThing(Pawn pawn, Thing t, bool forced = false)
         {
-            return JobMaker.MakeJob(EI_JobDefOf.EI_FillWaterBasin, t);
+            IServiceable serviceable = ServiceableOn(t);
+            return serviceable == null ? null : JobMaker.MakeJob(serviceable.ServiceJob, t);
         }
     }
 
-    public class JobDriver_FillWaterBasin : JobDriver
+    public class JobDriver_ServiceBuilding : JobDriver
     {
-        private CompWaterBasin Basin
+        private IServiceable Target
         {
             get
             {
-                Thing thing = job.GetTarget(TargetIndex.A).Thing;
-                return thing == null ? null : thing.TryGetComp<CompWaterBasin>();
+                ThingWithComps thing = job.GetTarget(TargetIndex.A).Thing as ThingWithComps;
+                if (thing == null)
+                {
+                    return null;
+                }
+                List<ThingComp> comps = thing.AllComps;
+                for (int i = 0; i < comps.Count; i++)
+                {
+                    IServiceable serviceable = comps[i] as IServiceable;
+                    if (serviceable != null && serviceable.ServiceJob == job.def)
+                    {
+                        return serviceable;
+                    }
+                }
+                return null;
             }
         }
 
@@ -231,35 +298,25 @@ namespace EntertainingIdeas
             this.FailOnForbidden(TargetIndex.A);
             AddFailCondition(delegate
             {
-                CompWaterBasin basin = Basin;
-                return basin == null || basin.HasWater;
+                IServiceable target = Target;
+                return target == null || !target.NeedsService;
             });
 
             yield return Toils_Goto.GotoThing(TargetIndex.A, PathEndMode.Touch);
 
-            CompProperties_WaterBasin props = null;
-            Thing target = job.GetTarget(TargetIndex.A).Thing;
-            if (target != null)
+            IServiceable serviceable = Target;
+            Toil work = Toils_General.Wait(serviceable != null ? serviceable.ServiceWorkTicks : 240, TargetIndex.A);
+            work.WithProgressBarToilDelay(TargetIndex.A);
+            work.FailOnDespawnedOrNull(TargetIndex.A);
+            work.AddFinishAction(delegate
             {
-                CompWaterBasin comp = target.TryGetComp<CompWaterBasin>();
-                if (comp != null)
+                IServiceable target = Target;
+                if (target != null)
                 {
-                    props = (CompProperties_WaterBasin)comp.props;
-                }
-            }
-
-            Toil fill = Toils_General.Wait(props != null ? props.fillWorkTicks : 240, TargetIndex.A);
-            fill.WithProgressBarToilDelay(TargetIndex.A);
-            fill.FailOnDespawnedOrNull(TargetIndex.A);
-            fill.AddFinishAction(delegate
-            {
-                CompWaterBasin basin = Basin;
-                if (basin != null)
-                {
-                    basin.Fill();
+                    target.Service();
                 }
             });
-            yield return fill;
+            yield return work;
         }
     }
 }

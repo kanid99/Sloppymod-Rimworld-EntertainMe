@@ -978,28 +978,50 @@ def aquarium_frames(total=8):
 # 11. Skittles lane  (medieval, 1x5, rolled from the near end)
 # ---------------------------------------------------------------------------
 
-# Nine pins in a diamond, which is what skittles actually uses.
+# Nine pins in a diamond, which is what skittles actually uses; ten in a
+# triangle for the bowling lane it eventually turned into.
 PIN_ROWS = [(64,), (50, 78), (36, 64, 92), (50, 78), (64,)]
+PIN_ROWS_TENPIN = [(64,), (52, 76), (40, 64, 88), (28, 52, 76, 100)]
+
+LANE_RUSTIC = dict(frame=(72, 50, 32, 255), lane=(186, 148, 96, 255),
+                   plank=(168, 130, 82, 120), gutter=(54, 38, 24, 255),
+                   deck=(198, 164, 112, 255), ball=(58, 62, 78, 255),
+                   ball_hi=(128, 134, 156, 255), foul=(150, 60, 50, 220))
+LANE_MODERN = dict(frame=(44, 48, 62, 255), lane=(224, 192, 138, 255),
+                   plank=(206, 170, 112, 110), gutter=(28, 32, 44, 255),
+                   deck=(36, 40, 54, 255), ball=(62, 42, 104, 255),
+                   ball_hi=(152, 120, 220, 255), foul=(196, 72, 60, 230))
 
 
-def draw_skittles(c, frame=None, total=6):
+def draw_skittles(c, frame=None, total=6, modern=False):
     import math
     p = None if frame is None else float(frame) / (total - 1)
+    pal = LANE_MODERN if modern else LANE_RUSTIC
+    rows = PIN_ROWS_TENPIN if modern else PIN_ROWS
 
     c.rect(6, 8, 122, 888, DARK, 10)
-    c.rect(9, 11, 119, 885, (72, 50, 32, 255), 8)               # frame
-    c.rect(24, 16, 104, 880, (186, 148, 96, 255), 4)            # lane
-    for y in range(20, 876, 26):                                 # planks
-        c.line(26, y, 102, y, (168, 130, 82, 120), 1.6)
-    c.rect(12, 16, 24, 880, (54, 38, 24, 255), 3)               # gutters
-    c.rect(104, 16, 116, 880, (54, 38, 24, 255), 3)
-    c.rect(24, 16, 104, 190, (198, 164, 112, 255), 4)           # pin deck
+    c.rect(9, 11, 119, 885, pal["frame"], 8)                    # frame
+    c.rect(24, 16, 104, 880, pal["lane"], 4)                    # lane
+    for y in range(20, 876, 26):                                 # boards
+        c.line(26, y, 102, y, pal["plank"], 1.6)
+    c.rect(12, 16, 24, 880, pal["gutter"], 3)                   # gutters
+    c.rect(104, 16, 116, 880, pal["gutter"], 3)
+    c.rect(24, 16, 104, 190, pal["deck"], 4)                    # pin deck
     c.line(26, 190, 102, 190, (120, 88, 54, 190), 2)
-    c.line(26, 812, 102, 812, (150, 60, 50, 220), 3)            # foul line
+    c.line(26, 812, 102, 812, pal["foul"], 3)                   # foul line
 
-    # Pins: standing, or scattered once the ball has reached them.
+    if modern:
+        c.rect(24, 16, 104, 60, (24, 26, 36, 255), 3)           # pinsetter housing
+        for k in range(4):
+            c.circle(38 + k * 18, 38, 4, (120, 200, 210, 220))
+        for k, ax in enumerate((40, 52, 64, 76, 88)):            # aiming arrows
+            c.poly([(ax, 700), (ax - 5, 712), (ax + 5, 712)], (188, 146, 92, 200))
+        for dx in (36, 50, 64, 78, 92):                          # approach dots
+            c.circle(dx, 836, 2.6, (150, 120, 80, 200))
+        c.rect(106, 200, 114, 800, (58, 64, 84, 255), 3)        # ball return rail
+
     scattered = p is not None and p > 0.72
-    for row, xs in enumerate(PIN_ROWS):
+    for row, xs in enumerate(rows):
         py = 46 + row * 27
         for k, px in enumerate(xs):
             if scattered:
@@ -1014,15 +1036,14 @@ def draw_skittles(c, frame=None, total=6):
             c.ellipse(px, py2, 5.5 + tilt, 7.5 - tilt * 0.4, (238, 232, 218, 255))
             c.ellipse(px, py2 - 2, 3.4, 2.6, (196, 62, 54, 255))
 
-    # The ball, rolling up the lane.
     if p is None:
         bx, by = 64, 846
     else:
         by = 846 - min(1.0, p / 0.72) * 640
         bx = 64 + 10 * math.sin(p * 5)
     c.circle(bx, by, 13, DARK)
-    c.circle(bx, by, 11, (58, 62, 78, 255))
-    c.circle(bx - 3, by - 3, 3.4, (128, 134, 156, 255))
+    c.circle(bx, by, 11, pal["ball"])
+    c.circle(bx - 3, by - 3, 3.4, pal["ball_hi"])
     for k in range(3):                                           # finger holes
         c.circle(bx - 3 + k * 3, by + 3, 1.6, (28, 30, 38, 255))
     if p is not None and p > 0.05:
@@ -1042,6 +1063,21 @@ def skittles_frames(total=6):
         draw_skittles(c, i, total)
         c.save(os.path.join(OUT, "SkittlesLaneRoll_%d.png" % i))
     print("  SkittlesLaneRoll_0..%d.png  (128x896)" % (total - 1))
+
+
+def bowling_lane():
+    c = Canvas(128, 896)
+    draw_skittles(c, None, modern=True)
+    save_rotations(c, "BowlingLane")
+    return c
+
+
+def bowling_frames(total=6):
+    for i in range(total):
+        c = Canvas(128, 896)
+        draw_skittles(c, i, total, modern=True)
+        c.save(os.path.join(OUT, "BowlingLaneRoll_%d.png" % i))
+    print("  BowlingLaneRoll_0..%d.png  (128x896)" % (total - 1))
 
 
 # ---------------------------------------------------------------------------
@@ -1285,6 +1321,12 @@ def _build_skittles():
     return {"SkittlesLane": canvas}
 
 
+def _build_bowling():
+    canvas = bowling_lane()
+    bowling_frames()
+    return {"BowlingLane": canvas}
+
+
 def _build_karaoke():
     canvas = karaoke_machine()
     karaoke_frames()
@@ -1314,6 +1356,7 @@ _register("holotheater", _build_holotheater)
 _register("soakingtub", _build_soakingtub)
 _register("aquarium", _build_aquarium)
 _register("skittles", _build_skittles)
+_register("bowling", _build_bowling)
 _register("karaoke", _build_karaoke)
 _register("gravball", _build_gravball)
 
