@@ -914,7 +914,65 @@ def soaking_tub_frames(total=6):
 # 10. Aquarium  (industrial, 2x1, something to watch)
 # ---------------------------------------------------------------------------
 
-TANK = (18, 20, 238, 108)
+# Looking down INTO the tank, not through the side of it: the game's camera is
+# a steep top-down, so you see the water surface, the gravel through it, plants
+# as rosettes, and fish from above. A shallow band of near glass along the
+# south edge keeps it from reading as a flat rectangle on the floor.
+TANK = (22, 26, 234, 100)          # water surface, in texture pixels
+GLASS_BAND = 12                    # near wall visible below the water
+
+
+def _rot_poly(cx, cy, rx, ry, ang, n=14):
+    import math
+    pts = []
+    for i in range(n):
+        t = 2 * math.pi * i / n
+        x, y = rx * math.cos(t), ry * math.sin(t)
+        pts.append((cx + x * math.cos(ang) - y * math.sin(ang),
+                    cy + x * math.sin(ang) + y * math.cos(ang)))
+    return pts
+
+
+def draw_fish_from_above(c, x, y, ang, length, col, wiggle=0.0):
+    """A fish seen from directly overhead: slim body, tail kicked to one side."""
+    import math
+    body_r, body_w = length * 0.5, length * 0.22
+    c.poly(_rot_poly(x, y, body_r, body_w, ang), col)
+
+    tail_ang = ang + wiggle
+    tx = x - math.cos(ang) * body_r * 0.9
+    ty = y - math.sin(ang) * body_r * 0.9
+    tip_x = tx - math.cos(tail_ang) * length * 0.42
+    tip_y = ty - math.sin(tail_ang) * length * 0.42
+    spread = length * 0.2
+    c.poly([(tx, ty),
+            (tip_x - math.sin(tail_ang) * spread, tip_y + math.cos(tail_ang) * spread),
+            (tip_x + math.sin(tail_ang) * spread, tip_y - math.cos(tail_ang) * spread)], col)
+
+    for side in (-1, 1):                                    # pectoral fins
+        fx = x + math.cos(ang) * body_r * 0.15
+        fy = y + math.sin(ang) * body_r * 0.15
+        c.poly([(fx, fy),
+                (fx - math.sin(ang) * side * body_w * 2.1 - math.cos(ang) * length * 0.1,
+                 fy + math.cos(ang) * side * body_w * 2.1 - math.sin(ang) * length * 0.1),
+                (fx - math.cos(ang) * length * 0.18, fy - math.sin(ang) * length * 0.18)],
+               col[:3] + (150,))
+    # head highlight, so the fish reads as pointing somewhere
+    c.circle(x + math.cos(ang) * body_r * 0.55, y + math.sin(ang) * body_r * 0.55,
+             body_w * 0.5, (255, 255, 255, 90))
+
+
+def _swim_point(p, phase, x0, y0, x1, y1):
+    """A lazy looping path inside the tank, with the heading along it."""
+    import math
+    t = 2 * math.pi * ((p + phase) % 1.0)
+    cx, cy = (x0 + x1) / 2.0, (y0 + y1) / 2.0
+    rx, ry = (x1 - x0) * 0.32, (y1 - y0) * 0.26
+    x = cx + math.cos(t) * rx
+    y = cy + math.sin(t * 2) * ry * 0.6          # figure-eight, reads as wandering
+    dx = -math.sin(t) * rx
+    dy = math.cos(t * 2) * ry * 1.2
+    return x, y, math.atan2(dy, dx)
 
 
 def draw_tank_contents(c, frame=None, total=8):
@@ -922,46 +980,68 @@ def draw_tank_contents(c, frame=None, total=8):
     x0, y0, x1, y1 = TANK
     p = 0.0 if frame is None else float(frame) / total
 
-    c.rect(x0, y0, x1, y1, (26, 74, 108, 255), 4)               # water
-    for band in range(4):                                        # light shafts
-        bx = x0 + 30 + band * 52
-        c.poly([(bx, y0), (bx + 16, y0), (bx + 4, y1), (bx - 10, y1)],
-               (150, 220, 240, 26))
-    c.rect(x0, y1 - 14, x1, y1, (96, 84, 62, 255), 3)           # gravel
-    for k in range(18):
-        c.circle(x0 + 8 + k * 13, y1 - 10 + (k % 3) * 3, 3, (120, 106, 80, 255))
+    # Gravel bed, seen through the water.
+    c.rect(x0, y0, x1, y1, (104, 92, 70, 255), 5)
+    for k in range(120):
+        gx = x0 + 4 + (k * 53) % (x1 - x0 - 8)
+        gy = y0 + 4 + (k * 31) % (y1 - y0 - 8)
+        shade = (124, 112, 86, 255) if k % 3 else (88, 78, 60, 255)
+        c.circle(gx, gy, 2.4, shade)
 
-    for k, px in enumerate((44, 96, 150, 206)):                  # weed
-        sway = 4 * math.sin(2 * math.pi * (p + k * 0.2))
-        c.line(px, y1 - 10, px + sway, y1 - 40, (54, 132, 84, 255), 5)
-        c.line(px + 6, y1 - 10, px + 6 + sway * 0.7, y1 - 28, (70, 158, 96, 255), 4)
+    # Water over it: deeper in the middle, paler at the rim.
+    c.rect(x0, y0, x1, y1, (34, 126, 158, 165), 5)
+    c.ellipse((x0 + x1) / 2, (y0 + y1) / 2, (x1 - x0) * 0.42, (y1 - y0) * 0.42,
+              (18, 96, 134, 105))
+    c.frame(x0, y0, x1, y1, (12, 54, 78, 90), 4, 5)          # depth at the walls
 
-    fish = ((0.0, 42, (238, 146, 52)), (0.45, 62, (226, 96, 96)), (0.72, 80, (240, 206, 90)))
-    for phase, fy, col in fish:
-        t = (p + phase) % 1.0
-        fx = x0 + 10 + t * (x1 - x0 - 20)
-        facing = 1 if t < 0.5 else -1
-        wiggle = 3 * math.sin(2 * math.pi * (p * 3 + phase))
-        c.ellipse(fx, fy + wiggle, 11, 6, col + (255,))
-        c.poly([(fx - facing * 10, fy + wiggle), (fx - facing * 19, fy - 6 + wiggle),
-                (fx - facing * 19, fy + 6 + wiggle)], col + (255,))
-        c.circle(fx + facing * 5, fy - 1.5 + wiggle, 1.8, (20, 20, 28, 255))
+    # Planting, seen from overhead as rosettes of blades.
+    for px, py, r, col in ((52, 44, 13, (58, 138, 86)), (96, 86, 11, (72, 158, 96)),
+                           (170, 48, 12, (54, 128, 80)), (206, 82, 10, (74, 160, 100))):
+        sway = 0.5 * math.sin(2 * math.pi * (p + px * 0.01))
+        for k in range(9):
+            a = k / 9.0 * 2 * math.pi + sway
+            c.line(px, py, px + math.cos(a) * r, py + math.sin(a) * r, col + (235,), 3)
+        c.circle(px, py, 3, (36, 92, 60, 255))
+    for rx, ry, rr in ((132, 40, 7), (74, 74, 5), (196, 40, 4)):    # stones
+        c.circle(rx, ry, rr, (92, 96, 104, 255))
+        c.circle(rx - rr * 0.3, ry - rr * 0.3, rr * 0.5, (118, 122, 130, 255))
 
-    for k in range(5):                                           # bubbles
-        t = (p + k * 0.2) % 1.0
-        c.circle(x0 + 24 + k * 47, y1 - 12 - t * (y1 - y0 - 18), 2.6 + k % 2,
-                 (226, 244, 250, int(150 * (1 - t * 0.5))))
+    # Fish, with a soft shadow on the gravel below them.
+    school = ((0.00, 15, (240, 156, 60)), (0.38, 13, (226, 96, 96)), (0.71, 11, (244, 214, 96)))
+    for phase, length, col in school:
+        fx, fy, ang = _swim_point(p, phase, x0, y0, x1, y1)
+        wig = 0.5 * math.sin(2 * math.pi * (p * 4 + phase * 3))
+        draw_fish_from_above(c, fx + 2.5, fy + 3.5, ang, length, (14, 40, 60, 90), wig)
+        draw_fish_from_above(c, fx, fy, ang, length, col + (255,), wig)
+
+    # Caustics and surface glare drifting across the top.
+    for k in range(6):
+        cx = x0 + 14 + ((p * 0.4 + k / 6.0) % 1.0) * (x1 - x0 - 28)
+        cy = y0 + 12 + (k * 27) % (y1 - y0 - 26)
+        for seg in range(3):                                  # wavy, not dashes
+            import math as _m
+            a = _m.sin(seg * 1.6 + p * 6) * 3
+            c.line(cx + seg * 7 - 10, cy + a, cx + seg * 7 - 3, cy - a,
+                   (170, 226, 240, 34), 2.4)
+    c.rect(x0, y0, x1, y0 + 10, (226, 246, 252, 30), 4)
 
 
 def aquarium():
     c = Canvas(256, 128)
-    c.rect(8, 10, 248, 118, DARK, 10)
-    c.rect(11, 13, 245, 115, (58, 62, 74, 255), 8)              # cabinet
-    c.rect(TANK[0] - 4, TANK[1] - 4, TANK[2] + 4, TANK[3] + 4, (24, 26, 34, 255), 5)
+    x0, y0, x1, y1 = TANK
+
+    c.rect(10, 14, 246, y1 + GLASS_BAND + 6, DARK, 10)          # cabinet shell
+    c.rect(13, 17, 243, y1 + GLASS_BAND + 3, (62, 66, 80, 255), 8)
+
     draw_tank_contents(c, None)
-    c.frame(TANK[0] - 4, TANK[1] - 4, TANK[2] + 4, TANK[3] + 4, (168, 196, 210, 110), 2.5, 5)
-    c.rect(96, 4, 160, 16, DARK, 5)                              # hood light
-    c.rect(99, 6, 157, 14, (206, 226, 236, 230), 4)
+
+    # The bit of near wall the camera can see, below the water line.
+    c.rect(x0, y1, x1, y1 + GLASS_BAND, (38, 74, 96, 235), 3)
+    c.rect(x0, y1, x1, y1 + 3, (150, 206, 224, 120), 2)
+    c.frame(x0 - 3, y0 - 3, x1 + 3, y1 + GLASS_BAND, (176, 200, 214, 110), 2.5, 5)
+
+    c.rect(86, 8, 170, 20, DARK, 5)                              # hood lamp
+    c.rect(89, 10, 167, 18, (214, 232, 240, 235), 4)
     save_rotations(c, "Aquarium")
     return c
 
