@@ -1250,35 +1250,49 @@ def soaking_tub(name="SoakingTub", electric=False):
 
 
 def soaking_tub_water_frames(total=6):
-    """The near half of the tub, drawn OVER the occupant.
+    """The water surface, drawn OVER the occupant so they sit down in it.
 
-    1.6 has a real swimming pose, but it is keyed to Pawn.Swimming, which is
-    read-only and comes from the terrain underfoot - a building cannot ask for
-    it. Painting the front of the tub back over the occupant's legs gets the
-    same read on both 1.5 and 1.6. Everything above the waterline is left clear
-    so their head and shoulders still show.
+    Not a waterline. A waterline - a flat horizontal edge with water below it
+    and air above - is what you see standing beside a tub, and this game's
+    camera is directly overhead. From up there the surface is the whole circle
+    and a bather is surrounded by it, head and shoulders proud of the water and
+    everything else under it. So the overlay is a ring: water right around the
+    outside, a hole in the middle the size of a pawn's head and shoulders.
+
+    1.6 does have a real swimming pose, but it is keyed to Pawn.Swimming, which
+    is read-only and comes from the terrain underfoot - a building cannot ask
+    for it - so the surface has to do the work on both 1.5 and 1.6.
     """
     import math
+    water = (46, 104, 112, 255)
+    surface = 38.0          # the tub's water reaches this far
+    bather = 20.0           # head and shoulders stay clear of the water
+
     for i in range(total):
         c = Canvas(128, 128)
         p = float(i) / total
-        # Everything below the waterline, filled scanline by scanline so the
-        # line sits where a pawn's chest is rather than halfway up their head.
-        waterline = 72
-        for y in range(waterline, 102):
-            dy = y - 62
-            half = math.sqrt(max(0.0, 39.0 * 39.0 - dy * dy))
-            if half > 0:
-                c.line(64 - half, y, 64 + half, y, (46, 104, 112, 255), 1.4)
-        c.line(64 - 36, waterline, 64 + 36, waterline, (96, 176, 184, 200), 2.4)
-        for k in range(3):                                      # ripples
-            r = 10 + ((p + k / 3.0) % 1.0) * 26
-            alpha = int(140 * (1.0 - (r - 10) / 26.0))
+
+        c.ring(64, 62, surface, bather, water)
+        # A meniscus where the water meets them, and a soft edge inside it, so
+        # the hole does not read as a cut-out.
+        c.ring(64, 62, bather + 1.6, bather - 0.4, (96, 176, 184, 170))
+        c.ring(64, 62, bather + 0.4, bather - 2.0, (46, 104, 112, 120))
+
+        # Ripples pushing out from the bather and dying against the staves.
+        for k in range(3):
+            t = (p + k / 3.0) % 1.0
+            r = bather + 2 + t * (surface - bather - 3)
+            alpha = int(150 * (1.0 - t))
             if alpha > 8:
-                c.wedge(64, 62, r, r - 2.4, 200, 340, (192, 236, 240, alpha))
-        c.wedge(64, 62, 46, 39, 184, 356, (112, 78, 48, 255))   # near rim
-        c.wedge(64, 62, 45, 41, 184, 356, (146, 150, 158, 255))  # iron band
-        c.wedge(64, 62, 48, 46, 184, 356, DARK)
+                c.ring(64, 62, r, r - 1.8, (168, 222, 228, alpha))
+
+        # A couple of glints on the moving surface.
+        for k in range(4):
+            a = 2 * math.pi * ((p * 0.6 + k / 4.0) % 1.0)
+            gr = bather + 5 + 9 * math.sin(2 * math.pi * (p + k * 0.2))
+            c.circle(64 + math.cos(a) * gr, 62 + math.sin(a) * gr, 2.4,
+                     (210, 244, 248, 90))
+
         c.save(os.path.join(OUT, "SoakingTubWater_%d.png" % i))
     print("  SoakingTubWater_0..%d.png  (128x128)" % (total - 1))
 
