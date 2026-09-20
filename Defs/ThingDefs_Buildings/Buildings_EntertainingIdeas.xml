@@ -391,7 +391,9 @@
     <graphicData>
       <texPath>EntertainingIdeas/Buildings/MassageChair</texPath>
       <graphicClass>Graphic_Multi</graphicClass>
-      <drawSize>(1.15,1.15)</drawSize>
+      <!-- Matched to vanilla's armchair, which a massage chair should not look
+           like a child's version of. -->
+      <drawSize>(1.3,1.3)</drawSize>
       <shadowData>
         <volume>(0.7,0.4,0.75)</volume>
       </shadowData>
@@ -446,7 +448,7 @@
         <framePath>EntertainingIdeas/Buildings/MassageChairRollers</framePath>
         <frameCount>8</frameCount>
         <ticksPerFrame>7</ticksPerFrame>
-        <drawSize>(1.15,1.15)</drawSize>
+        <drawSize>(1.3,1.3)</drawSize>
         <rotateWithBuilding>true</rotateWithBuilding>
         <playJobs>
           <li>EI_UseMassageChair</li>

@@ -198,16 +198,56 @@ def shadow_theater_frames(total=10):
 PB_W, PB_H = 160, 320             # 1x2
 PB_TOP, PB_BOT = 6, 314
 PB_BACKBOX = 92                   # backbox shell ends here
-PB_LAMP_Y = 82                    # marquee lamp row
-PB_FIELD_BOT = 266                # playfield ends here, lockbar below
-PB_FLIP_Y = 252                   # flipper pivots
-BUMPERS = [(60, 148, 15), (102, 139, 13), (78, 179, 12)]
-BALL_PATH = [(126, 219), (126, 168), (117, 126), (96, 136),
-             (66, 147), (76, 176), (60, 218), (98, 247)]
+PB_GLASS_TOP = 12                 # backglass artwork band
+PB_SCORE_TOP, PB_SCORE_BOT = 60, 82   # score reels along the bottom of it
+PB_FIELD_BOT = 282                # playfield ends here, lockbar below
+PB_FLIP_Y = 266                   # flipper pivots
+PB_LOCKBAR = 28                   # how deep the front rail is
+BUMPERS = [(60, 153, 15), (102, 143, 13), (78, 187, 12)]
+BALL_PATH = [(126, 231), (126, 175), (117, 129), (96, 140),
+             (66, 152), (76, 183), (60, 229), (98, 261)]
+
+# A seven-segment digit, the way a real score reel reads.
+SEVEN_SEG = {
+    0: "abcdef", 1: "bc", 2: "abdeg", 3: "abcdg", 4: "bcfg",
+    5: "acdfg", 6: "acdefg", 7: "abc", 8: "abcdefg", 9: "abcdfg",
+}
+
+
+def seg_digit(c, x, y, w, h, value, on, off):
+    """One seven-segment digit with its top-left at (x, y)."""
+    t = max(1.4, w * 0.22)
+    mid = y + h / 2.0
+    places = {
+        "a": (x, y, x + w, y + t),
+        "b": (x + w - t, y, x + w, mid),
+        "c": (x + w - t, mid, x + w, y + h),
+        "d": (x, y + h - t, x + w, y + h),
+        "e": (x, mid, x + t, y + h),
+        "f": (x, y, x + t, mid),
+        "g": (x, mid - t / 2, x + w, mid + t / 2),
+    }
+    lit = SEVEN_SEG.get(value, "")
+    for name, (x0, y0, x1, y1) in places.items():
+        c.rect(x0, y0, x1, y1, on if name in lit else off, 1)
+
+
+def score_reels(c, L, R, digits_left, digits_right, glow):
+    """Two score windows, the way a solid-state table shows two players."""
+    dark = (18, 16, 20, 255)
+    off = (52, 26, 18, 255)
+    for side, digits in ((0, digits_left), (1, digits_right)):
+        x0 = L + 4 if side == 0 else R - 62
+        c.rect(x0, PB_SCORE_TOP, x0 + 58, PB_SCORE_BOT, (10, 9, 12, 255), 3)
+        c.rect(x0 + 2, PB_SCORE_TOP + 2, x0 + 56, PB_SCORE_BOT - 2, dark, 2)
+        for i, value in enumerate(digits):
+            seg_digit(c, x0 + 5 + i * 9, PB_SCORE_TOP + 5, 6.5, 12, value, glow, off)
 
 
 def pinball(name, cab, cab_dark, field, accent, accent2, glass, motif):
-    """A 1x2 cabinet: backbox at the far end, playfield, lockbar at the player end."""
+    """A 1x2 cabinet: backbox at the far end, playfield, lockbar at the player
+    end. The backbox carries painted art over a pair of score reels, the way a
+    real backglass does, and the shooter rod stands proud of the front rail."""
     c = Canvas(PB_W, PB_H)
     L, R = 14, 146        # cabinet sides
     TOP, BOT = PB_TOP, PB_BOT
@@ -216,24 +256,27 @@ def pinball(name, cab, cab_dark, field, accent, accent2, glass, motif):
     c.rect(L - 4, TOP - 4, R + 4, BOT + 4, DARK, 12)           # outline
     c.rect(L, TOP, R, BOT, cab_dark, 10)                       # cabinet
     c.rect(L, TOP, R, PB_BACKBOX, DARK, 10)                    # backbox shell
-    c.rect(L + 7, TOP + 6, R - 7, PB_BACKBOX - 8, glass, 6)    # backglass
-    c.rect(L + 7, TOP + 6, R - 7, TOP + 34, (255, 255, 255, 46), 6)   # sheen
-    motif(c, L, R, TOP + 14)                                   # theme art
-    for i in range(6):                                          # marquee lamps
-        c.circle(L + 16 + i * 21.6, PB_LAMP_Y, 3.4, (255, 244, 208, 230))
 
-    # Playfield.
+    # Backglass: painted art above, score reels below.
+    c.rect(L + 6, PB_GLASS_TOP - 6, R - 6, PB_BACKBOX - 6, glass, 6)
+    c.rect(L + 6, PB_GLASS_TOP - 6, R - 6, PB_GLASS_TOP + 14, (255, 255, 255, 40), 6)
+    motif(c, L, R, 2)
+    score_reels(c, L, R, (0, 1, 2, 4, 8, 0), (0, 0, 3, 9, 6, 0), accent)
+    for i in range(6):                                          # marquee lamps
+        c.circle(L + 16 + i * 21.6, PB_BACKBOX - 4, 3.2, (255, 244, 208, 230))
+
+    # Playfield, now running further forward than the three-tile cabinet did.
     c.rect(L + 5, PB_BACKBOX + 4, R - 5, PB_FIELD_BOT + 3, DARK, 6)
     c.rect(L + 8, PB_BACKBOX + 7, R - 8, PB_FIELD_BOT, field, 5)
     c.rect(L + 8, PB_BACKBOX + 7, R - 8, PB_BACKBOX + 56, (255, 255, 255, 20), 5)
 
     # Plunger lane and a guide rail sweeping back up the playfield.
-    c.line(R - 20, 110, R - 20, 218, (238, 238, 244, 150), 3)
-    c.line(L + 18, 116, L + 18, 186, (238, 238, 244, 105), 2.4)
+    c.line(R - 20, 111, R - 20, 229, (238, 238, 244, 150), 3)
+    c.line(L + 18, 117, L + 18, 194, (238, 238, 244, 105), 2.4)
 
     # Drop target bank.
     for tx in range(3):
-        c.rect(L + 30 + tx * 18, 120, L + 43 + tx * 18, 127, accent2, 2)
+        c.rect(L + 30 + tx * 18, 122, L + 43 + tx * 18, 130, accent2, 2)
 
     # Pop bumpers.
     for bx, by, rr in BUMPERS:
@@ -244,10 +287,13 @@ def pinball(name, cab, cab_dark, field, accent, accent2, glass, motif):
         c.circle(bx - rr * 0.3, by - rr * 0.3, rr * 0.16, (255, 255, 255, 190))
 
     # Slingshots.
-    c.poly([(L + 14, 232), (L + 42, 222), (L + 42, 242)], DARK)
-    c.poly([(L + 17, 232), (L + 39, 225), (L + 39, 239)], accent2)
-    c.poly([(R - 14, 232), (R - 42, 222), (R - 42, 242)], DARK)
-    c.poly([(R - 17, 232), (R - 39, 225), (R - 39, 239)], accent2)
+    for sx in (-1, 1):
+        ex = L + 14 if sx < 0 else R - 14
+        ix = L + 42 if sx < 0 else R - 42
+        c.poly([(ex, 246), (ix, 236), (ix, 256)], DARK)
+        c.poly([(ex + sx * -3, 246), (ix - sx * -3, 239), (ix - sx * -3, 253)], accent2)
+        c.line(ex, 246, ix, 236, (255, 255, 255, 120), 2)     # rubber, catching light
+        c.line(ex, 246, ix, 256, (255, 255, 255, 120), 2)
 
     # Flippers at the player end.
     for sx in (-1, 1):
@@ -256,22 +302,28 @@ def pinball(name, cab, cab_dark, field, accent, accent2, glass, motif):
         c.line(x0, PB_FLIP_Y, x1, PB_FLIP_Y - 9, accent, 8)
         c.circle(x0, PB_FLIP_Y, 4.2, (236, 236, 240, 255))
 
-    # Ball and shooter rod.
-    c.circle(R - 20, 208, 6.5, DARK)
-    c.circle(R - 20, 208, 5.2, (226, 228, 236, 255))
-    c.circle(R - 21.6, 206.4, 2.0, (255, 255, 255, 220))
-    c.rect(R - 14, PB_FIELD_BOT - 2, R - 6, PB_FIELD_BOT + 20, DARK, 3)
-    c.circle(R - 10, PB_FIELD_BOT + 20, 6.5, DARK)
-    c.circle(R - 10, PB_FIELD_BOT + 20, 5, accent)
+    # Ball sitting in the lane.
+    c.circle(R - 20, 218, 6.5, DARK)
+    c.circle(R - 20, 218, 5.2, (226, 228, 236, 255))
+    c.circle(R - 21.6, 216.4, 2.0, (255, 255, 255, 220))
 
-    # Lockbar with the flipper buttons.
-    c.rect(L, BOT - 44, R, BOT, cab, 10)
-    c.rect(L + 5, BOT - 39, R - 5, BOT - 7, cab_dark, 7)
-    for bx in (L + 20, R - 20):
-        c.circle(bx, BOT - 23, 5.6, DARK)
-        c.circle(bx, BOT - 23, 4.2, accent2)
-    c.rect(mid - 16, BOT - 30, mid + 16, BOT - 16, (24, 22, 26, 255), 3)   # coin door
-    c.circle(mid, BOT - 23, 3.8, accent)
+    # Lockbar: shallower than it was, to give the playfield the room.
+    c.rect(L, BOT - PB_LOCKBAR, R, BOT, cab, 10)
+    c.rect(L + 5, BOT - PB_LOCKBAR + 4, R - 5, BOT - 5, cab_dark, 6)
+    for bx in (L + 20, R - 34):
+        c.circle(bx, BOT - 13, 5.2, DARK)
+        c.circle(bx, BOT - 13, 3.8, accent2)
+    c.rect(mid - 14, BOT - 20, mid + 14, BOT - 7, (24, 22, 26, 255), 3)   # coin door
+    c.circle(mid, BOT - 13, 3.4, accent)
+
+    # Shooter rod: through the rail and out the front, with a knob you can see.
+    rod_x = R - 12
+    c.rect(rod_x - 5, PB_FIELD_BOT - 6, rod_x + 5, BOT - 4, DARK, 4)
+    c.rect(rod_x - 3, PB_FIELD_BOT - 4, rod_x + 3, BOT - 6, (206, 208, 216, 255), 3)
+    c.circle(rod_x, PB_FIELD_BOT - 2, 4.2, (176, 180, 190, 255))          # spring collar
+    c.circle(rod_x, BOT - 5, 8.0, DARK)                                   # knob
+    c.circle(rod_x, BOT - 5, 6.2, accent)
+    c.circle(rod_x - 2, BOT - 7, 2.3, (255, 255, 255, 150))
 
     # Side-rail highlight.
     c.frame(L, TOP, R, BOT, (255, 255, 255, 36), 2.5, 10)
@@ -595,54 +647,70 @@ def cocktail_arcade_title_frames(total=8):
 def massage_chair():
     """Shaped like vanilla's armchair: soft rounded upholstery seen from above,
     a tall back, padded arms, and a light neutral palette so the stuff colour
-    carries it. The massage side is the roller seams and the control pad."""
+    carries it. The massage side is the roller seams and the control pad.
+
+    Drawn the way RimWorld draws furniture: one bold dark line around the whole
+    silhouette and nothing like it inside. That is what the two passes below
+    are for - every piece of the chair is laid down oversized in the outline
+    colour first, then every piece is laid down again at true size in its fill,
+    which buries the outline everywhere two pieces touch and leaves it showing
+    only around the outside. Interior divisions are a darker tint of the
+    upholstery at a fraction of the weight, never the outline colour.
+    """
     c = Canvas(128, 128)
     pale = (212, 206, 202, 255)        # takes the stuff colour
     pale_lt = (230, 225, 221, 255)
-    pale_dk = (176, 170, 166, 255)
-    shade = (146, 140, 136, 255)
-    seam = (150, 144, 140, 170)
+    pale_dk = (178, 172, 168, 255)
+    seam = (168, 162, 158, 200)        # interior lines: a tint, not the outline
+    seam_soft = (186, 180, 176, 190)
 
-    c.ellipse(64, 74, 47, 44, (0, 0, 0, 55))                 # contact shadow
+    # The chair, as rounded boxes: (x0, y0, x1, y1, corner radius).
+    back = (12, 8, 116, 64, 22)
+    arm_l = (6, 46, 34, 112, 13)
+    arm_r = (94, 46, 122, 112, 13)
+    seat = (22, 50, 106, 112, 18)
+    foot = (34, 104, 94, 122, 10)
+    pieces = (back, arm_l, arm_r, seat, foot)
 
-    # Back, tallest part of the chair, curved at the top.
-    c.rect(26, 16, 102, 74, DARK, 20)
-    c.rect(29, 19, 99, 72, pale_dk, 18)
-    c.rect(34, 24, 94, 66, pale, 15)
-    c.ellipse(64, 30, 28, 11, pale_lt)                        # headrest crown
-    for y in range(36, 64, 8):                                # roller seams
-        c.line(40, y, 88, y, seam, 2.4)
+    OUT = 5.0                                                  # silhouette weight
+    for x0, y0, x1, y1, r in pieces:                           # pass 1: outline
+        c.rect(x0 - OUT, y0 - OUT, x1 + OUT, y1 + OUT, DARK, r + OUT)
+    for x0, y0, x1, y1, r in pieces:                           # pass 2: fill
+        c.rect(x0, y0, x1, y1, pale_dk, r)
 
-    # Arms: rounded pads either side, sitting proud of the seat.
-    for ax in (16, 88):
-        c.rect(ax, 52, ax + 24, 104, DARK, 11)
-        c.rect(ax + 2, 54, ax + 22, 102, pale_dk, 10)
-        c.ellipse(ax + 12, 66, 9, 11, pale)
-        c.ellipse(ax + 12, 62, 8, 8, pale_lt)
+    # Pass 3: the soft interior. Tints only.
+    c.rect(18, 14, 110, 58, pale, 18)                          # backrest face
+    c.ellipse(64, 24, 34, 12, pale_lt)                         # headrest crown
+    for y in range(32, 56, 7):                                 # roller seams
+        c.line(30, y, 98, y, seam, 1.6)
 
-    # Seat cushion, bulging toward the viewer.
-    c.rect(28, 64, 100, 108, DARK, 16)
-    c.rect(31, 67, 97, 105, pale_dk, 14)
-    c.rect(35, 70, 93, 101, pale, 12)
-    c.ellipse(64, 88, 27, 15, pale_lt)
-    c.line(40, 96, 88, 96, seam, 2.4)
+    c.rect(28, 56, 100, 106, pale, 15)                         # seat cushion
+    c.ellipse(64, 82, 32, 18, pale_lt)
+    c.line(32, 94, 96, 94, seam, 1.6)
+    c.line(64, 60, 64, 92, seam_soft, 1.4)                     # cushion split
 
-    # Footrest, folded down at the front - it is a recliner.
-    c.rect(40, 102, 88, 120, DARK, 9)
-    c.rect(43, 104, 85, 118, pale_dk, 8)
-    c.ellipse(64, 110, 18, 5, pale)
+    for ax in (6, 94):                                         # arm pads
+        c.rect(ax + 4, 52, ax + 24, 106, pale, 10)
+        c.ellipse(ax + 14, 66, 8, 12, pale_lt)
+        c.line(ax + 6, 88, ax + 22, 88, seam_soft, 1.4)
 
-    # Control pad on the right arm, and the base shadow under everything.
-    c.rect(92, 78, 108, 98, (58, 56, 60, 255), 5)
+    c.rect(38, 106, 90, 119, pale, 8)                          # footrest face
+    c.ellipse(64, 112, 20, 4, pale_lt)
+
+    # Control pad: the one thing meant to read as hardware rather than
+    # upholstery, so it keeps a dark body - inset well inside the arm so it
+    # never breaks the silhouette.
+    c.rect(99, 76, 117, 98, (62, 60, 64, 255), 5)
     for i in range(3):
-        c.circle(100, 83 + i * 6, 2.3, (238, 232, 216, 255))
-    c.line(30, 112, 98, 112, (146, 140, 136, 60), 1)
+        c.circle(108, 82 + i * 7, 2.6, (238, 232, 216, 255))
     save_rotations(c, "MassageChair")
     return c
 
 
 def massage_chair_frames(total=8):
-    """Roller sweep up the backrest, vibration arcs, pulsing control light."""
+    """Roller sweep up the backrest, vibration arcs, pulsing control light.
+    Kept to the backrest and the arms: a pawn using the chair is drawn on top
+    of the seat, so anything painted there is never seen."""
     import math
     for i in range(total):
         c = Canvas(128, 128)
@@ -651,24 +719,23 @@ def massage_chair_frames(total=8):
         # Rollers travelling up the backrest, wrapping at the top.
         for roller in (0.0, 0.5):
             t = (phase + roller) % 1.0
-            y = 58 - t * 32
+            y = 54 - t * 34
             glow = int(150 * math.sin(math.pi * t) + 40)
-            c.rect(37, y - 3, 91, y + 3, (255, 214, 150, max(0, min(220, glow))), 3)
+            c.rect(30, y - 3, 98, y + 3, (255, 214, 150, max(0, min(220, glow))), 3)
 
         # Vibration arcs off the armrests, where a seated pawn will not hide them.
-        for side, sx in ((-1, 26), (1, 102)):
+        for side, sx in ((-1, 18), (1, 110)):
             for ring in range(3):
                 t = (phase + ring / 3.0) % 1.0
                 r = 5 + t * 13
                 alpha = int(150 * (1.0 - t))
                 if alpha > 6:
-                    c.wedge(sx, 78, r, r - 2.2, 90 + side * 30, 90 + side * 150,
-                            (250, 222, 180, alpha))
+                    c.wedge(sx, 80, r, r - 2.2, 90 + side * 30, 90 + side * 150,
+                            (255, 226, 176, alpha))
 
-        # Control pad light pulsing through its three lamps.
-        lamp = i % 3
-        c.circle(99, 67 + lamp * 6, 3.4, (255, 214, 120, 235))
-        c.circle(99, 67 + lamp * 6, 5.6, (255, 196, 96, 70))
+        # Control pad light, pulsing in time with the rollers.
+        lamp = int(120 + 120 * math.sin(2 * math.pi * phase))
+        c.circle(108, 94, 3.2, (255, 190, 120, max(0, min(255, lamp))))
         c.save(os.path.join(OUT, "MassageChairRollers_%d.png" % i))
     print("  MassageChairRollers_0..%d.png  (128x128)" % (total - 1))
 
@@ -862,17 +929,21 @@ def pinball_play_frames(total=8):
                 c.circle(mx, my, mr * 0.5, (255, 255, 244, 220))
 
         # Flippers snap up as the ball comes down to them.
-        if by > 200:
+        if by > 210:
             for sx in (-1, 1):
                 x0, x1 = 80 + sx * 10, 80 + sx * 34
                 c.line(x0, PB_FLIP_Y, x1, PB_FLIP_Y - 22, (255, 250, 220, 210), 9)
 
         # Backglass keeps flashing while the table is live.
         if i % 2 == 0:
-            c.rect(21, 12, 139, PB_BACKBOX - 8, (255, 248, 210, 30), 6)
+            c.rect(20, 6, 140, PB_BACKBOX - 6, (255, 248, 210, 26), 6)
         for k in range(6):
             if (i + k) % 3 == 0:
-                c.circle(30 + k * 21.6, PB_LAMP_Y, 4.6, (255, 250, 220, 200))
+                c.circle(30 + k * 21.6, PB_BACKBOX - 4, 4.4, (255, 250, 220, 200))
+
+        # The score climbing, which is the whole reason anyone plays.
+        left = tuple((d * (i + 1) + i) % 10 for d in (1, 3, 7, 2, 9, 0))
+        score_reels(c, 14, 146, left, (0, 0, 3, 9, 6, 0), (255, 176, 72, 255))
 
         c.circle(bx, by, 7.5, (30, 30, 36, 220))
         c.circle(bx, by, 6, (232, 236, 246, 255))
