@@ -190,4 +190,49 @@
     </requiredCapacities>
   </JoyGiverDef>
 
+
+  <JoyGiverDef>
+    <defName>EI_Watch_Orrery</defName>
+    <giverClass>JoyGiver_WatchBuilding</giverClass>
+    <baseChance>2</baseChance>
+    <thingDefs>
+      <li>EI_ArmillarySphere</li>
+      <li>EI_TabletopOrrery</li>
+      <li>EI_GrandOrrery</li>
+    </thingDefs>
+    <jobDef>EI_Watch_Orrery</jobDef>
+    <joyKind>Meditative</joyKind>
+    <requiredCapacities>
+      <li>Sight</li>
+    </requiredCapacities>
+  </JoyGiverDef>
+
+  <!-- Ours, so a pool with no water or no power is never offered, and so an
+       indoor pool counts even when vanilla would call it too cold to swim. -->
+  <JoyGiverDef>
+    <defName>EI_Swim</defName>
+    <giverClass>EntertainingIdeas.JoyGiver_Swim</giverClass>
+    <baseChance>3</baseChance>
+    <thingDefs>
+      <li>EI_PoolFilter</li>
+    </thingDefs>
+    <jobDef>EI_Swim</jobDef>
+    <joyKind>Social</joyKind>
+    <requiredCapacities>
+      <li>Moving</li>
+    </requiredCapacities>
+  </JoyGiverDef>
+
+  <!-- Pawns get into the hammock itself, not a chair beside it. -->
+  <JoyGiverDef>
+    <defName>EI_Lounge</defName>
+    <giverClass>EntertainingIdeas.JoyGiver_SitInBuilding</giverClass>
+    <baseChance>2.5</baseChance>
+    <thingDefs>
+      <li>EI_Hammock</li>
+    </thingDefs>
+    <jobDef>EI_Lounge</jobDef>
+    <joyKind>Meditative</joyKind>
+  </JoyGiverDef>
+
 </Defs>

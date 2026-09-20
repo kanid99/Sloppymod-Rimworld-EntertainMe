@@ -38,6 +38,7 @@ named = {}           # Name="..." -> element (including Abstract parents)
 joy_givers = []
 job_defs = set()
 research_defs = set()
+terrain_defs = {}
 
 
 def fail(msg):
@@ -67,6 +68,23 @@ for folder, _, files in os.walk(DEFS):
                 job_defs.add(name)
             elif node.tag == "ResearchProjectDef" and name:
                 research_defs.add(name)
+            elif node.tag == "TerrainDef" and name:
+                terrain_defs[name] = node
+
+# --- terrain ----------------------------------------------------------------
+# Terrain carries its texture in texturePath, not graphicData/texPath, so the
+# building check above never looks at it.
+for name, node in terrain_defs.items():
+    tex = node.findtext("texturePath")
+    if not tex:
+        fail("TerrainDef %s has no texturePath" % name)
+    elif not os.path.isfile(os.path.join(TEX, tex.replace("/", os.sep)) + ".png"):
+        fail("TerrainDef %s: no texture file for %s" % (name, tex))
+
+# Terrain the C# swaps in must exist, or the DefOf throws on startup.
+for name in ("EI_PoolBasin", "EI_PoolWater"):
+    if name not in terrain_defs:
+        fail("EntertainingIdeas.EI_TerrainDefOf needs a TerrainDef named %s" % name)
 
 # --- every recreation building must be reachable through a JoyGiverDef ------
 listed = {}
@@ -267,8 +285,9 @@ else:
 
 print("%d C# classes referenced from XML, %d/%d version assemblies built"
       % (len(our_classes_used), len(built), len(ASSEMBLIES)))
-print("%d ThingDefs, %d JoyGiverDefs, %d JobDefs, %d ResearchProjectDefs"
-      % (len(thing_defs), len(joy_givers), len(job_defs), len(research_defs)))
+print("%d ThingDefs, %d TerrainDefs, %d JoyGiverDefs, %d JobDefs, %d ResearchProjectDefs"
+      % (len(thing_defs), len(terrain_defs), len(joy_givers), len(job_defs),
+         len(research_defs)))
 if problems:
     print("\nFAILED:")
     for line in problems:

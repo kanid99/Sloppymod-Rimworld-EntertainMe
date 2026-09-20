@@ -10,6 +10,7 @@ read the same from every side when seen from above, the rotations are true
 90-degree turns of the south-facing art rather than redrawn views.
 """
 
+import math
 import os
 import sys
 
@@ -18,6 +19,7 @@ from pnglib import Canvas, rotate, write_png  # noqa: E402
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".."))
 OUT = os.path.join(ROOT, "Textures", "EntertainingIdeas", "Buildings")
+TERRAIN = os.path.join(ROOT, "Textures", "EntertainingIdeas", "Terrain")
 
 DARK = (26, 22, 20, 255)          # shared outline colour
 
@@ -34,6 +36,12 @@ def save_rotations(canvas, name):
 def save_single(canvas, name):
     canvas.save(os.path.join(OUT, "%s.png" % name))
     print("  %s.png  (%dx%d)" % (name, canvas.w, canvas.h))
+
+
+def save_terrain(canvas, name):
+    os.makedirs(TERRAIN, exist_ok=True)
+    canvas.save(os.path.join(TERRAIN, "%s.png" % name))
+    print("  Terrain/%s.png  (%dx%d)" % (name, canvas.w, canvas.h))
 
 
 # ---------------------------------------------------------------------------
@@ -1347,6 +1355,347 @@ def gravball_frames(total=6):
     print("  GravballPlay_0..%d.png  (160x160)" % (total - 1))
 
 
+
+# ---------------------------------------------------------------------------
+# 19-21. Orreries  (clockwork, three sizes, always turning)
+# ---------------------------------------------------------------------------
+
+BRASS = (198, 154, 74, 255)
+BRASS_HI = (238, 206, 132, 255)
+BRASS_DK = (128, 94, 40, 255)
+ORR_WOOD = (110, 78, 50, 255)
+ORR_WOOD_DK = (74, 50, 32, 255)
+
+
+def ell_ring(c, cx, cy, rx, ry, w, color, steps=240):
+    """Thin elliptical band, stamped as overlapping dots. pnglib has no
+    elliptical ring and no way to erase, so the band is drawn, not carved."""
+    for i in range(steps):
+        a = 2 * math.pi * i / steps
+        c.circle(cx + math.cos(a) * rx, cy + math.sin(a) * ry, w / 2.0, color)
+
+
+def orbiting_planet(c, cx, cy, r, body, rim=None):
+    c.circle(cx, cy, r + 1.4, DARK)
+    c.circle(cx, cy, r, body)
+    c.circle(cx - r * 0.3, cy - r * 0.32, r * 0.34, (255, 255, 255, 110))
+    if rim:
+        ell_ring(c, cx, cy, r * 2.0, r * 0.8, 1.8, rim)
+
+
+# Orbit radius, planet radius, colour, ring colour, laps per animation cycle.
+# Inner planets go round more often, as they should.
+TABLETOP_ORBITS = [
+    (20, 4.0, (188, 150, 120, 255), None, 3),
+    (30, 5.2, (96, 142, 186, 255), None, 2),
+    (40, 6.4, (206, 150, 96, 255), BRASS_HI, 1),
+]
+GRAND_ORBITS = [
+    (32, 5.0, (186, 148, 118, 255), None, 5),
+    (50, 6.4, (214, 178, 122, 255), None, 4),
+    (68, 7.6, (92, 140, 190, 255), None, 3),
+    (86, 10.0, (208, 152, 98, 255), BRASS_HI, 2),
+    (104, 8.4, (178, 190, 214, 255), None, 1),
+]
+
+
+def tabletop_orrery_body(c, phase=None):
+    """phase None draws the static cabinet; a number draws only the planets."""
+    cx = cy = 80
+    if phase is None:
+        c.rect(18, 18, 142, 142, DARK, 10)
+        c.rect(21, 21, 139, 139, ORR_WOOD, 9)
+        c.rect(26, 26, 134, 134, ORR_WOOD_DK, 7)
+        c.frame(26, 26, 134, 134, (255, 255, 255, 30), 2, 7)
+        for fx, fy in ((30, 30), (130, 30), (30, 130), (130, 130)):
+            c.circle(fx, fy, 5, BRASS_DK)
+            c.circle(fx, fy, 3.2, BRASS)
+        c.circle(cx, cy, 44, (30, 26, 24, 190))
+        for orbit, _, _, _, _ in TABLETOP_ORBITS:
+            c.ring(cx, cy, orbit + 1.2, orbit - 1.2, BRASS_DK)
+            c.ring(cx, cy, orbit + 0.6, orbit - 0.6, BRASS)
+        c.circle(cx, cy, 11, (232, 170, 52, 255))
+        c.circle(cx, cy, 8, (252, 220, 120, 255))
+        c.circle(cx, cy, 4, (255, 248, 216, 255))
+        c.rect(136, 74, 152, 86, DARK, 4)                 # hand crank
+        c.rect(138, 76, 150, 84, BRASS, 3)
+        c.circle(152, 80, 6, DARK)
+        c.circle(152, 80, 4.4, BRASS_HI)
+        return
+
+    for k, (orbit, pr, col, rim, laps) in enumerate(TABLETOP_ORBITS):
+        a = 2 * math.pi * (phase * laps + k * 0.31)
+        orbiting_planet(c, cx + math.cos(a) * orbit, cy + math.sin(a) * orbit, pr, col, rim)
+
+
+def tabletop_orrery():
+    c = Canvas(160, 160)
+    tabletop_orrery_body(c, None)
+    tabletop_orrery_body(c, 0.0)      # a still frame for the build menu
+    save_single(c, "TabletopOrrery")
+    return c
+
+
+def tabletop_orrery_frames(total=12):
+    for i in range(total):
+        c = Canvas(160, 160)
+        tabletop_orrery_body(c, float(i) / total)
+        c.save(os.path.join(OUT, "TabletopOrreryTurn_%d.png" % i))
+    print("  TabletopOrreryTurn_0..%d.png  (160x160)" % (total - 1))
+
+
+def grand_orrery_body(c, phase=None):
+    cx = cy = 160
+    if phase is None:
+        for r, col in ((152, DARK), (146, (58, 48, 44, 255)), (134, ORR_WOOD_DK)):
+            c.poly([(cx + math.cos(math.radians(a)) * r, cy + math.sin(math.radians(a)) * r)
+                    for a in range(22, 382, 45)], col)
+        c.ring(cx, cy, 132, 118, BRASS_DK)                # engraved zodiac band
+        c.ring(cx, cy, 130, 120, BRASS)
+        for i in range(24):
+            a = math.radians(i * 15)
+            c.line(cx + math.cos(a) * 120, cy + math.sin(a) * 120,
+                   cx + math.cos(a) * 130, cy + math.sin(a) * 130, BRASS_DK, 2)
+        c.circle(cx, cy, 116, (22, 20, 30, 210))          # night under the dome
+        for orbit, _, _, _, _ in GRAND_ORBITS:
+            c.ring(cx, cy, orbit + 1.6, orbit - 1.6, BRASS_DK)
+            c.ring(cx, cy, orbit + 0.8, orbit - 0.8, BRASS)
+        c.circle(cx, cy, 18, (230, 160, 44, 255))         # gilded sun
+        c.circle(cx, cy, 13, (250, 214, 110, 255))
+        c.circle(cx, cy, 6, (255, 250, 228, 255))
+        for i in range(16):
+            a = math.radians(i * 22.5 + 8)
+            c.line(cx + math.cos(a) * 18, cy + math.sin(a) * 18,
+                   cx + math.cos(a) * 26, cy + math.sin(a) * 26, (250, 210, 120, 150), 2.4)
+        c.ring(cx, cy, 116, 110, (208, 232, 246, 60))     # glass dome edge
+        c.ellipse(cx - 46, cy - 60, 40, 26, (255, 255, 255, 26))
+        for fx, fy in ((44, 44), (276, 44), (44, 276), (276, 276)):
+            c.circle(fx, fy, 13, DARK)                    # corner pillars
+            c.circle(fx, fy, 10, BRASS_DK)
+            c.circle(fx, fy, 6.5, BRASS)
+        return
+
+    for k, (orbit, pr, col, rim, laps) in enumerate(GRAND_ORBITS):
+        a = 2 * math.pi * (phase * laps + k * 0.23)
+        px, py = cx + math.cos(a) * orbit, cy + math.sin(a) * orbit
+        orbiting_planet(c, px, py, pr, col, rim)
+        if k == 2:                                        # a moon on its own arm
+            ma = 2 * math.pi * (phase * 9 + 0.5)
+            c.circle(px + math.cos(ma) * 14, py + math.sin(ma) * 14, 3.0, DARK)
+            c.circle(px + math.cos(ma) * 14, py + math.sin(ma) * 14, 2.0, (222, 222, 230, 255))
+
+
+def grand_orrery():
+    c = Canvas(320, 320)
+    grand_orrery_body(c, None)
+    grand_orrery_body(c, 0.0)
+    save_single(c, "GrandOrrery")
+    return c
+
+
+def grand_orrery_frames(total=16):
+    for i in range(total):
+        c = Canvas(320, 320)
+        grand_orrery_body(c, float(i) / total)
+        c.save(os.path.join(OUT, "GrandOrreryTurn_%d.png" % i))
+    print("  GrandOrreryTurn_0..%d.png  (320x320)" % (total - 1))
+
+
+def armillary_body(c, phase=None):
+    """The rings themselves turn, so the sphere reads as slowly precessing."""
+    cx = cy = 80
+    if phase is None:
+        for a in (90, 210, 330):                          # tripod legs
+            ax = math.radians(a)
+            x, y = cx + math.cos(ax) * 56, cy + math.sin(ax) * 56
+            c.line(cx, cy, x, y, DARK, 9)
+            c.line(cx, cy, x, y, ORR_WOOD, 6)
+            c.circle(x, y, 8, DARK)
+            c.circle(x, y, 6, BRASS_DK)
+            c.circle(x, y, 3.6, BRASS)
+        c.ring(cx, cy, 60, 54, DARK)                      # fixed horizon ring
+        c.ring(cx, cy, 59, 55, BRASS)
+        for i in range(36):
+            a = math.radians(i * 10)
+            c.line(cx + math.cos(a) * 55, cy + math.sin(a) * 55,
+                   cx + math.cos(a) * 59, cy + math.sin(a) * 59, BRASS_DK, 1.4)
+        return
+
+    # Seen from above, a ring turning about the vertical axis reads as an
+    # ellipse whose width breathes between edge-on and full circle.
+    t = 2 * math.pi * phase
+    for k, (base, col) in enumerate(((46, BRASS_HI), (36, BRASS), (44, (226, 186, 104, 255)))):
+        w = abs(math.cos(t + k * math.pi / 3.0))
+        rx = max(4.0, base * (0.12 + 0.88 * w))
+        ell_ring(c, cx, cy, rx, base, 4.4, DARK)
+        ell_ring(c, cx, cy, rx, base, 2.8, col)
+    ell_ring(c, cx, cy, 46, 46, 5.2, DARK)                # equatorial, fixed
+    ell_ring(c, cx, cy, 46, 46, 3.4, BRASS_HI)
+    c.line(cx, cy - 52, cx, cy + 52, DARK, 5)             # polar axis
+    c.line(cx, cy - 52, cx, cy + 52, BRASS_DK, 3)
+    c.circle(cx, cy, 13, DARK)                            # the world, gilded
+    c.circle(cx, cy, 11, (92, 132, 174, 255))
+    c.poly([(cx - 7, cy - 2), (cx - 1, cy - 7), (cx + 5, cy - 1), (cx - 2, cy + 5)],
+           (108, 152, 96, 255))
+    c.circle(cx - 3.5, cy - 4, 3.2, (255, 255, 255, 90))
+
+
+def armillary_sphere():
+    c = Canvas(160, 160)
+    armillary_body(c, None)
+    armillary_body(c, 0.0)
+    save_single(c, "ArmillarySphere")
+    return c
+
+
+def armillary_sphere_frames(total=12):
+    for i in range(total):
+        c = Canvas(160, 160)
+        armillary_body(c, float(i) / total)
+        c.save(os.path.join(OUT, "ArmillarySphereTurn_%d.png" % i))
+    print("  ArmillarySphereTurn_0..%d.png  (160x160)" % (total - 1))
+
+
+# ---------------------------------------------------------------------------
+# 22. Swimming pool: two terrains and the filtration unit that fills them
+# ---------------------------------------------------------------------------
+
+def _tile_grid(c, size, tile, grout, colors, seed=1):
+    """Seamless square-tile pattern. Wraps because the grid divides the size."""
+    n = size // tile
+    state = seed
+    c.rect(0, 0, size, size, grout)
+    for gy in range(n):
+        for gx in range(n):
+            state = (state * 1103515245 + 12345) & 0x7FFFFFFF
+            col = colors[state % len(colors)]
+            x0, y0 = gx * tile, gy * tile
+            c.rect(x0 + 1.5, y0 + 1.5, x0 + tile - 1.5, y0 + tile - 1.5, col, 2)
+
+
+def pool_basin_terrain():
+    c = Canvas(256, 256, ss=2)
+    _tile_grid(c, 256, 32, (150, 156, 158, 255),
+               [(214, 220, 222, 255), (206, 213, 216, 255),
+                (219, 226, 228, 255), (200, 208, 212, 255)], seed=7)
+    save_terrain(c, "PoolBasin")
+    return c
+
+
+def pool_water_terrain():
+    c = Canvas(256, 256, ss=2)
+    # The same tiling, read through water: darker, bluer, with caustics on top.
+    _tile_grid(c, 256, 32, (28, 84, 108, 255),
+               [(56, 134, 164, 255), (48, 124, 154, 255),
+                (62, 142, 172, 255), (44, 118, 148, 255)], seed=7)
+    c.rect(0, 0, 256, 256, (40, 130, 180, 90))
+    state = 99
+    for _ in range(90):
+        state = (state * 1103515245 + 12345) & 0x7FFFFFFF
+        x = state % 256
+        state = (state * 1103515245 + 12345) & 0x7FFFFFFF
+        y = state % 256
+        state = (state * 1103515245 + 12345) & 0x7FFFFFFF
+        r = 5 + state % 11
+        # Drawn four times so a blob crossing an edge comes back on the other.
+        for ox in (0, 256, -256):
+            for oy in (0, 256, -256):
+                if abs(x + ox - 128) < 128 + r and abs(y + oy - 128) < 128 + r:
+                    c.ring(x + ox, y + oy, r, r - 2.2, (196, 236, 250, 46))
+    save_terrain(c, "PoolWater")
+    return c
+
+
+def pool_filter():
+    """1x2 plant room: pump, sand filter, and a gauge you can read."""
+    c = Canvas(160, 320)
+    L, R, TOP, BOT = 12, 148, 8, 312
+    mid = (L + R) / 2
+
+    c.rect(L - 4, TOP - 4, R + 4, BOT + 4, DARK, 10)
+    c.rect(L, TOP, R, BOT, (96, 104, 112, 255), 8)         # housing
+    c.rect(L + 6, TOP + 6, R - 6, BOT - 6, (74, 82, 92, 255), 6)
+
+    c.circle(mid, TOP + 78, 50, DARK)                      # sand filter tank
+    c.circle(mid, TOP + 78, 46, (128, 136, 146, 255))
+    c.ring(mid, TOP + 78, 46, 38, (152, 160, 170, 255))
+    c.ring(mid, TOP + 78, 30, 26, (60, 66, 76, 255))
+    c.circle(mid, TOP + 78, 24, (46, 52, 62, 255))
+    c.circle(mid - 12, TOP + 62, 9, (255, 255, 255, 40))
+
+    c.circle(mid, BOT - 96, 34, DARK)                      # pump volute
+    c.circle(mid, BOT - 96, 30, (108, 116, 126, 255))
+    c.ring(mid, BOT - 96, 30, 22, (140, 148, 158, 255))
+    for i in range(6):
+        a = math.radians(i * 60 + 12)
+        c.line(mid, BOT - 96, mid + math.cos(a) * 20, BOT - 96 + math.sin(a) * 20,
+               (58, 64, 74, 255), 4)
+    c.circle(mid, BOT - 96, 7, (44, 50, 60, 255))
+
+    for px in (L + 18, R - 18):                            # inlet and outlet
+        c.rect(px - 9, TOP + 128, px + 9, BOT - 120, DARK, 5)
+        c.rect(px - 6, TOP + 131, px + 6, BOT - 123, (86, 132, 156, 255), 4)
+    c.rect(L + 8, BOT - 52, R - 8, BOT - 16, DARK, 5)      # gauge plate
+    c.rect(L + 12, BOT - 48, R - 12, BOT - 20, (40, 46, 56, 255), 4)
+    c.circle(L + 34, BOT - 34, 11, (26, 30, 38, 255))
+    c.circle(L + 34, BOT - 34, 9, (210, 222, 232, 255))
+    c.line(L + 34, BOT - 34, L + 40, BOT - 41, (190, 60, 52, 255), 2.4)
+    for i in range(4):
+        c.rect(mid + 2 + i * 16, BOT - 42, mid + 12 + i * 16, BOT - 26,
+               (96, 214, 160, 255) if i < 3 else (58, 66, 78, 255), 2)
+    save_rotations(c, "PoolFilter")
+    return c
+
+
+# ---------------------------------------------------------------------------
+# 23. Hammock  (1x2, stuffable, a pawn lies in it)
+# ---------------------------------------------------------------------------
+
+def hammock():
+    """Near-neutral, because the stuff colour tints the whole sprite."""
+    c = Canvas(160, 320)
+    mid = 80
+
+    for py in (26, 294):                                   # end posts
+        c.rect(mid - 26, py - 9, mid + 26, py + 9, DARK, 6)
+        c.rect(mid - 23, py - 6, mid + 23, py + 6, (118, 104, 92, 255), 5)
+        c.circle(mid - 23, py, 5, DARK)
+        c.circle(mid - 23, py, 3.4, (150, 136, 122, 255))
+        c.circle(mid + 23, py, 5, DARK)
+        c.circle(mid + 23, py, 3.4, (150, 136, 122, 255))
+
+    for sx in (-1, 1):                                     # gathered cords
+        for k in range(5):
+            x = mid + sx * (6 + k * 4)
+            c.line(x, 42, mid + sx * 52, 96, (86, 78, 70, 255), 2.2)
+            c.line(x, 278, mid + sx * 52, 224, (86, 78, 70, 255), 2.2)
+
+    # The bed itself: a slack sheet, wider in the middle than at the ends.
+    body = (206, 198, 186, 255)
+    for y in range(96, 225):
+        t = (y - 96) / 128.0
+        w = 40 + 26 * math.sin(math.pi * t)
+        c.rect(mid - w, y, mid + w, y + 1, body)
+    c.poly([(mid - 40, 96), (mid + 40, 96), (mid + 52, 96), (mid - 52, 96)], body)
+
+    for k in range(9):                                     # weave, following the sag
+        t = (k + 0.5) / 9.0
+        y = 96 + t * 128
+        w = 40 + 26 * math.sin(math.pi * t)
+        c.line(mid - w + 3, y, mid + w - 3, y, (176, 168, 156, 255), 2.0)
+    c.line(mid, 100, mid, 220, (188, 180, 168, 255), 2.0)
+
+    for sx in (-1, 1):                                     # selvedge
+        for y in range(96, 225, 2):
+            t = (y - 96) / 128.0
+            w = 40 + 26 * math.sin(math.pi * t)
+            c.circle(mid + sx * w, y, 2.6, (150, 142, 130, 255))
+
+    c.rect(mid - 20, 150, mid + 20, 176, (222, 216, 206, 255), 8)   # cushion
+    c.line(mid - 14, 163, mid + 14, 163, (196, 190, 180, 255), 2)
+    save_rotations(c, "Hammock")
+    return c
+
 BUILDERS = {}
 
 
@@ -1504,7 +1853,31 @@ _register("aquarium", _build_aquarium)
 _register("skittles", _build_skittles)
 _register("bowling", _build_bowling)
 _register("karaoke", _build_karaoke)
+def _build_orreries():
+    made = {}
+    made["TabletopOrrery"] = tabletop_orrery()
+    tabletop_orrery_frames()
+    made["GrandOrrery"] = grand_orrery()
+    grand_orrery_frames()
+    made["ArmillarySphere"] = armillary_sphere()
+    armillary_sphere_frames()
+    return made
+
+
+def _build_pool():
+    pool_basin_terrain()
+    pool_water_terrain()
+    return {"PoolFilter": pool_filter()}
+
+
+def _build_hammock():
+    return {"Hammock": hammock()}
+
+
 _register("gravball", _build_gravball)
+_register("orreries", _build_orreries)
+_register("pool", _build_pool)
+_register("hammock", _build_hammock)
 
 
 if __name__ == "__main__":

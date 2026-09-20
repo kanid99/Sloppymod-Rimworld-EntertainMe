@@ -157,4 +157,44 @@
     <allowOpportunisticPrefix>true</allowOpportunisticPrefix>
   </JobDef>
 
+
+  <!-- An orrery is watched, like the shadow theater and the aquarium. -->
+  <JobDef>
+    <defName>EI_Watch_Orrery</defName>
+    <driverClass>JobDriver_WatchBuilding</driverClass>
+    <reportString>watching the worlds go round.</reportString>
+    <joyDuration>3000</joyDuration>
+    <joyMaxParticipants>3</joyMaxParticipants>
+    <joyKind>Meditative</joyKind>
+    <allowOpportunisticPrefix>true</allowOpportunisticPrefix>
+  </JobDef>
+
+  <!-- Swimming: our own driver, so an indoor heated pool counts and a pool
+       with the pump off does not. -->
+  <JobDef>
+    <defName>EI_Swim</defName>
+    <driverClass>EntertainingIdeas.JobDriver_Swim</driverClass>
+    <reportString>swimming.</reportString>
+    <joyDuration>4000</joyDuration>
+    <joyMaxParticipants>8</joyMaxParticipants>
+    <joyKind>Social</joyKind>
+    <casualInterruptible>true</casualInterruptible>
+  </JobDef>
+
+  <JobDef>
+    <defName>EI_FillPool</defName>
+    <driverClass>EntertainingIdeas.JobDriver_ServiceBuilding</driverClass>
+    <reportString>filling TargetA.</reportString>
+  </JobDef>
+
+  <JobDef>
+    <defName>EI_Lounge</defName>
+    <driverClass>EntertainingIdeas.JobDriver_Lounge</driverClass>
+    <reportString>lounging in TargetA.</reportString>
+    <joyDuration>3200</joyDuration>
+    <joyMaxParticipants>1</joyMaxParticipants>
+    <joyKind>Meditative</joyKind>
+    <allowOpportunisticPrefix>true</allowOpportunisticPrefix>
+  </JobDef>
+
 </Defs>

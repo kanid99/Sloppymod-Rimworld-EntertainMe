@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Defs>
+
+  <!-- The pool is terrain, not an object. Paint basin tiles in whatever shape
+       you want and the filtration unit claims every basin tile connected to
+       it, so the pool's size - and with it the water it holds and the power it
+       draws - is whatever you drew. The water terrain is not buildable: the
+       filter swaps it in as the pool fills, and back out as it drains. -->
+
+  <TerrainDef>
+    <defName>EI_PoolBasin</defName>
+    <label>pool basin</label>
+    <description>Glazed tile over a waterproof liner, laid in a shallow dish. Dry, it is a hard floor that is slightly unpleasant to walk on barefoot. Connect it to a pool filtration unit and it stops being a floor.\n\nLay as many tiles as you like, in any shape. The filter will take every tile joined to it edge-to-edge.</description>
+    <texturePath>EntertainingIdeas/Terrain/PoolBasin</texturePath>
+    <edgeType>Hard</edgeType>
+    <renderPrecedence>310</renderPrecedence>
+    <pathCost>2</pathCost>
+    <statBases>
+      <Beauty>1</Beauty>
+      <Cleanliness>0.3</Cleanliness>
+      <WorkToBuild>320</WorkToBuild>
+    </statBases>
+    <costList>
+      <Steel>3</Steel>
+    </costList>
+    <designationCategory>Joy</designationCategory>
+    <uiOrder>2100</uiOrder>
+    <constructEffect>ConstructMetal</constructEffect>
+    <terrainAffordanceNeeded>Heavy</terrainAffordanceNeeded>
+    <affordances>
+      <li>Light</li>
+      <li>Medium</li>
+      <li>Heavy</li>
+    </affordances>
+    <takeFootprints>true</takeFootprints>
+    <layerable>true</layerable>
+    <researchPrerequisites>
+      <li>Electricity</li>
+    </researchPrerequisites>
+  </TerrainDef>
+
+  <TerrainDef>
+    <defName>EI_PoolWater</defName>
+    <label>pool water</label>
+    <description>Filtered, circulating, chest-deep water over glazed tile. Colonists will swim in it for recreation as long as the pump is running.</description>
+    <texturePath>EntertainingIdeas/Terrain/PoolWater</texturePath>
+    <edgeType>Water</edgeType>
+    <renderPrecedence>320</renderPrecedence>
+    <!-- Wading is slower than walking, but this is a pool, not a river: it
+         must not be so expensive that pawns path all the way around it. -->
+    <pathCost>18</pathCost>
+    <statBases>
+      <Beauty>4</Beauty>
+      <Cleanliness>0.4</Cleanliness>
+      <WorkToBuild>320</WorkToBuild>
+    </statBases>
+    <waterBodyType>Freshwater</waterBodyType>
+    <takeSplashes>true</takeSplashes>
+    <takeFootprints>false</takeFootprints>
+    <extinguishesFire>true</extinguishesFire>
+    <holdSnowOrSand>false</holdSnowOrSand>
+    <layerable>true</layerable>
+    <affordances>
+      <li>Light</li>
+    </affordances>
+    <!-- No designationCategory: this is not something the player lays. The
+         filtration unit puts it down as the pool fills and takes it back up
+         again as the pool drains. -->
+  </TerrainDef>
+
+</Defs>

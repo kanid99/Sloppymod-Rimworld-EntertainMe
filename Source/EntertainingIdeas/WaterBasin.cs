@@ -33,95 +33,48 @@ namespace EntertainingIdeas
     }
 
     /// <summary>
-    /// Something that holds a tub's worth of water. A soak empties it and a
-    /// colonist has to carry more, unless the building is plumbed in - which it
-    /// is when Dubs Bad Hygiene is installed and its pipe reaches the tub.
+    /// Dubs Bad Hygiene is a soft dependency: it is reached by reflection so
+    /// this assembly never references it and works fine without it.
     /// </summary>
-    public class CompProperties_WaterBasin : CompProperties
+    public static class DubsPlumbing
     {
-        /// <summary>Work to carry and pour one tub's worth, in ticks.</summary>
-        public int fillWorkTicks = 240;
-        /// <summary>Start full when built, so the first soak needs no trip.</summary>
-        public bool filledOnSpawn = true;
-
-        public CompProperties_WaterBasin()
-        {
-            compClass = typeof(CompWaterBasin);
-        }
-    }
-
-    public class CompWaterBasin : ThingComp, IServiceable
-    {
-        private bool filled;
-
-        // Dubs Bad Hygiene is a soft dependency: it is reached by reflection so
-        // this assembly never references it and works fine without it.
-        private static bool dbhLookedUp;
+        private static bool lookedUp;
         private static PropertyInfo pipeNetProperty;
         private static FieldInfo pipeNetField;
         private static PropertyInfo waterStorageProperty;
 
-        private CompProperties_WaterBasin Props
+        /// <summary>The DBH pipe comp on this thing, if that mod is here and it is piped.</summary>
+        public static ThingComp PipeOn(ThingWithComps thing)
         {
-            get { return (CompProperties_WaterBasin)props; }
-        }
-
-        public override void PostSpawnSetup(bool respawningAfterLoad)
-        {
-            base.PostSpawnSetup(respawningAfterLoad);
-            if (!respawningAfterLoad && Props.filledOnSpawn)
+            if (thing == null)
             {
-                filled = true;
-            }
-        }
-
-        public override void PostExposeData()
-        {
-            base.PostExposeData();
-            Scribe_Values.Look(ref filled, "EI_filled", false);
-        }
-
-        /// <summary>The DBH pipe comp, if that mod is here and this is piped.</summary>
-        private ThingComp PipeComp
-        {
-            get
-            {
-                List<ThingComp> comps = parent.AllComps;
-                for (int i = 0; i < comps.Count; i++)
-                {
-                    if (comps[i].GetType().FullName == "DubsBadHygiene.CompPipe")
-                    {
-                        return comps[i];
-                    }
-                }
                 return null;
             }
-        }
-
-        public bool Plumbed
-        {
-            get { return PipeComp != null; }
-        }
-
-        public bool HasWater
-        {
-            get
+            List<ThingComp> comps = thing.AllComps;
+            for (int i = 0; i < comps.Count; i++)
             {
-                ThingComp pipe = PipeComp;
-                return pipe != null ? NetHasWater(pipe) : filled;
+                if (comps[i].GetType().FullName == "DubsBadHygiene.CompPipe")
+                {
+                    return comps[i];
+                }
             }
+            return null;
         }
 
         /// <summary>
         /// Reads DubsBadHygiene.CompPipe.pipeNet and asks its PlumbingNet what
         /// it is holding. If their internals ever move, this falls back to
-        /// treating a piped tub as supplied rather than breaking the building.
+        /// treating a piped building as supplied rather than breaking it.
         /// </summary>
-        private static bool NetHasWater(ThingComp pipe)
+        public static bool NetHasWater(ThingComp pipe)
         {
-            if (!dbhLookedUp)
+            if (pipe == null)
             {
-                dbhLookedUp = true;
+                return false;
+            }
+            if (!lookedUp)
+            {
+                lookedUp = true;
                 try
                 {
                     Type pipeType = pipe.GetType();
@@ -141,7 +94,7 @@ namespace EntertainingIdeas
                 catch (Exception ex)
                 {
                     Log.Warning("[Entertaining Ideas] Could not read Dubs Bad Hygiene's "
-                                + "plumbing; piped tubs will be treated as supplied. " + ex.Message);
+                                + "plumbing; piped buildings will be treated as supplied. " + ex.Message);
                 }
             }
 
@@ -164,6 +117,63 @@ namespace EntertainingIdeas
             catch
             {
                 return true;
+            }
+        }
+    }
+
+    /// <summary>
+    /// Something that holds a tub's worth of water. A soak empties it and a
+    /// colonist has to carry more, unless the building is plumbed in - which it
+    /// is when Dubs Bad Hygiene is installed and its pipe reaches the tub.
+    /// </summary>
+    public class CompProperties_WaterBasin : CompProperties
+    {
+        /// <summary>Work to carry and pour one tub's worth, in ticks.</summary>
+        public int fillWorkTicks = 240;
+        /// <summary>Start full when built, so the first soak needs no trip.</summary>
+        public bool filledOnSpawn = true;
+
+        public CompProperties_WaterBasin()
+        {
+            compClass = typeof(CompWaterBasin);
+        }
+    }
+
+    public class CompWaterBasin : ThingComp, IServiceable
+    {
+        private bool filled;
+
+        private CompProperties_WaterBasin Props
+        {
+            get { return (CompProperties_WaterBasin)props; }
+        }
+
+        public override void PostSpawnSetup(bool respawningAfterLoad)
+        {
+            base.PostSpawnSetup(respawningAfterLoad);
+            if (!respawningAfterLoad && Props.filledOnSpawn)
+            {
+                filled = true;
+            }
+        }
+
+        public override void PostExposeData()
+        {
+            base.PostExposeData();
+            Scribe_Values.Look(ref filled, "EI_filled", false);
+        }
+
+        public bool Plumbed
+        {
+            get { return DubsPlumbing.PipeOn(parent) != null; }
+        }
+
+        public bool HasWater
+        {
+            get
+            {
+                ThingComp pipe = DubsPlumbing.PipeOn(parent);
+                return pipe != null ? DubsPlumbing.NetHasWater(pipe) : filled;
             }
         }
 

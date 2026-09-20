@@ -1267,4 +1267,295 @@
     </researchPrerequisites>
   </ThingDef>
 
+
+  <!-- ================= 19-21. Orreries (clockwork, three sizes) =========== -->
+
+  <ThingDef Name="EI_OrreryBase" ParentName="EI_JoyBuildingBase" Abstract="True">
+    <rotatable>false</rotatable>
+    <constructEffect>ConstructMetal</constructEffect>
+    <building>
+      <joyKind>Meditative</joyKind>
+      <watchBuildingStandDistanceRange>
+        <min>1</min>
+        <max>4</max>
+      </watchBuildingStandDistanceRange>
+      <watchBuildingStandRectWidth>3</watchBuildingStandRectWidth>
+    </building>
+    <placeWorkers>
+      <li>PlaceWorker_WatchArea</li>
+    </placeWorkers>
+    <statBases>
+      <Flammability>0.6</Flammability>
+    </statBases>
+  </ThingDef>
+
+  <ThingDef ParentName="EI_OrreryBase">
+    <defName>EI_ArmillarySphere</defName>
+    <label>armillary sphere</label>
+    <description>A nest of graduated brass rings on a tripod, with a small gilded world hanging at the centre of them. The rings are the horizon, the equator and the sun's yearly path, and turning them against each other tells you where in the sky to expect things and roughly what day it is.\n\nNo colony needs one. Colonists who stop to work out what it is saying come away calmer than they went in, which is reason enough.</description>
+    <graphicData>
+      <texPath>EntertainingIdeas/Buildings/ArmillarySphere</texPath>
+      <graphicClass>Graphic_Single</graphicClass>
+      <drawSize>(1.2,1.2)</drawSize>
+      <shadowData>
+        <volume>(0.6,0.6,0.6)</volume>
+      </shadowData>
+      <damageData>
+        <rect>(0.1,0.1,0.8,0.8)</rect>
+      </damageData>
+    </graphicData>
+    <fillPercent>0.3</fillPercent>
+    <pathCost>42</pathCost>
+    <constructionSkillPrerequisite>6</constructionSkillPrerequisite>
+    <statBases>
+      <MaxHitPoints>90</MaxHitPoints>
+      <WorkToBuild>5000</WorkToBuild>
+      <Mass>14</Mass>
+      <Beauty>16</Beauty>
+      <JoyGainFactor>0.95</JoyGainFactor>
+    </statBases>
+    <costList>
+      <Steel>50</Steel>
+      <Gold>10</Gold>
+    </costList>
+    <comps>
+      <!-- Clockwork: it turns whether or not anyone is watching, and needs no
+           power to do it. -->
+      <li Class="EntertainingIdeas.CompProperties_AnimatedScreen">
+        <framePath>EntertainingIdeas/Buildings/ArmillarySphereTurn</framePath>
+        <frameCount>12</frameCount>
+        <ticksPerFrame>16</ticksPerFrame>
+        <drawSize>(1.2,1.2)</drawSize>
+        <requireUser>false</requireUser>
+      </li>
+    </comps>
+  </ThingDef>
+
+  <ThingDef ParentName="EI_OrreryBase">
+    <defName>EI_TabletopOrrery</defName>
+    <label>tabletop orrery</label>
+    <description>A hardwood case with a geared brass model of the local system set into it, three worlds on jointed arms around a lamp-lit sun. Wind the crank and the whole thing steps forward a day at a time, the inner world hurrying, the outer one barely moving.\n\nColonists argue about whether it is accurate. It is not, particularly, but it is hypnotic.</description>
+    <graphicData>
+      <texPath>EntertainingIdeas/Buildings/TabletopOrrery</texPath>
+      <graphicClass>Graphic_Single</graphicClass>
+      <drawSize>(1.2,1.2)</drawSize>
+      <shadowData>
+        <volume>(0.8,0.35,0.8)</volume>
+      </shadowData>
+      <damageData>
+        <rect>(0.08,0.08,0.84,0.84)</rect>
+      </damageData>
+    </graphicData>
+    <fillPercent>0.4</fillPercent>
+    <pathCost>50</pathCost>
+    <constructionSkillPrerequisite>8</constructionSkillPrerequisite>
+    <statBases>
+      <MaxHitPoints>110</MaxHitPoints>
+      <WorkToBuild>9000</WorkToBuild>
+      <Mass>22</Mass>
+      <Beauty>20</Beauty>
+      <JoyGainFactor>1.1</JoyGainFactor>
+    </statBases>
+    <costList>
+      <WoodLog>60</WoodLog>
+      <Steel>60</Steel>
+      <Gold>20</Gold>
+      <ComponentIndustrial>2</ComponentIndustrial>
+    </costList>
+    <comps>
+      <li Class="EntertainingIdeas.CompProperties_AnimatedScreen">
+        <framePath>EntertainingIdeas/Buildings/TabletopOrreryTurn</framePath>
+        <frameCount>12</frameCount>
+        <ticksPerFrame>14</ticksPerFrame>
+        <drawSize>(1.2,1.2)</drawSize>
+        <requireUser>false</requireUser>
+      </li>
+    </comps>
+    <researchPrerequisites>
+      <li>ComplexFurniture</li>
+    </researchPrerequisites>
+  </ThingDef>
+
+  <ThingDef ParentName="EI_OrreryBase">
+    <defName>EI_GrandOrrery</defName>
+    <label>grand orrery</label>
+    <description>A floor-standing clockwork model of the system under a glass dome, two paces across, with an engraved band of the year running round the rim. Five worlds on brass arms, one of them carrying a moon of its own, all of them creeping round a gilded sun at their proper relative speeds.\n\nIt does nothing. It costs a fortune. Visitors will not shut up about it, and neither will your colonists, which is rather the point.</description>
+    <graphicData>
+      <texPath>EntertainingIdeas/Buildings/GrandOrrery</texPath>
+      <graphicClass>Graphic_Single</graphicClass>
+      <drawSize>(2,2)</drawSize>
+      <shadowData>
+        <volume>(1.8,0.6,1.8)</volume>
+      </shadowData>
+      <damageData>
+        <rect>(0.1,0.1,1.8,1.8)</rect>
+      </damageData>
+    </graphicData>
+    <size>(2,2)</size>
+    <fillPercent>0.5</fillPercent>
+    <pathCost>60</pathCost>
+    <canOverlapZones>false</canOverlapZones>
+    <constructionSkillPrerequisite>10</constructionSkillPrerequisite>
+    <statBases>
+      <MaxHitPoints>220</MaxHitPoints>
+      <WorkToBuild>26000</WorkToBuild>
+      <Mass>140</Mass>
+      <Beauty>52</Beauty>
+      <JoyGainFactor>1.25</JoyGainFactor>
+    </statBases>
+    <costList>
+      <Steel>180</Steel>
+      <Gold>120</Gold>
+      <ComponentIndustrial>8</ComponentIndustrial>
+    </costList>
+    <building>
+      <watchBuildingStandDistanceRange>
+        <min>2</min>
+        <max>5</max>
+      </watchBuildingStandDistanceRange>
+      <watchBuildingStandRectWidth>5</watchBuildingStandRectWidth>
+    </building>
+    <comps>
+      <!-- Lamp-lit under the dome, and lit whether or not there is power to
+           the room: it is a clockwork piece with an oil lamp in the middle. -->
+      <li Class="CompProperties_Glower">
+        <glowRadius>5</glowRadius>
+        <glowColor>(250,214,140,0)</glowColor>
+      </li>
+      <li Class="EntertainingIdeas.CompProperties_AnimatedScreen">
+        <framePath>EntertainingIdeas/Buildings/GrandOrreryTurn</framePath>
+        <frameCount>16</frameCount>
+        <ticksPerFrame>15</ticksPerFrame>
+        <drawSize>(2,2)</drawSize>
+        <requireUser>false</requireUser>
+      </li>
+    </comps>
+    <researchPrerequisites>
+      <li>ComplexFurniture</li>
+    </researchPrerequisites>
+  </ThingDef>
+
+  <!-- ==================== 22. Swimming pool (industrial) ================== -->
+
+  <ThingDef ParentName="EI_JoyBuildingBase">
+    <defName>EI_PoolFilter</defName>
+    <label>pool filtration unit</label>
+    <description>A sand filter, a circulation pump and a chlorinator in one housing. Stand it against any edge of a pool basin and it takes charge of every basin tile joined to that one, so a pool is whatever shape you painted rather than whatever shape somebody else decided on.\n\nA bigger pool holds more water and costs more to circulate: both the fill and the power draw scale with the number of tiles. Off the plumbing, colonists carry the water in by hand, a load at a time. With Dubs Bad Hygiene installed, pipe it in and it keeps itself topped up.\n\nCut the power and the water stays, but it stops circulating and nobody will get in it.</description>
+    <graphicData>
+      <texPath>EntertainingIdeas/Buildings/PoolFilter</texPath>
+      <graphicClass>Graphic_Multi</graphicClass>
+      <drawSize>(1,2)</drawSize>
+      <shadowData>
+        <volume>(0.8,0.9,1.7)</volume>
+      </shadowData>
+      <damageData>
+        <rectN>(0.1,0.05,0.8,0.9)</rectN>
+        <rectS>(0.1,0.05,0.8,0.9)</rectS>
+        <rectE>(0.05,0.1,0.9,0.8)</rectE>
+        <rectW>(0.05,0.1,0.9,0.8)</rectW>
+      </damageData>
+    </graphicData>
+    <size>(1,2)</size>
+    <tickerType>Rare</tickerType>
+    <rotatable>true</rotatable>
+    <defaultPlacingRot>South</defaultPlacingRot>
+    <fillPercent>0.5</fillPercent>
+    <pathCost>60</pathCost>
+    <canOverlapZones>false</canOverlapZones>
+    <constructEffect>ConstructMetal</constructEffect>
+    <constructionSkillPrerequisite>7</constructionSkillPrerequisite>
+    <statBases>
+      <MaxHitPoints>180</MaxHitPoints>
+      <WorkToBuild>13000</WorkToBuild>
+      <Mass>80</Mass>
+      <Beauty>-4</Beauty>
+      <JoyGainFactor>1.15</JoyGainFactor>
+    </statBases>
+    <costList>
+      <Steel>120</Steel>
+      <ComponentIndustrial>5</ComponentIndustrial>
+    </costList>
+    <building>
+      <joyKind>Social</joyKind>
+    </building>
+    <comps>
+      <li Class="CompProperties_Power">
+        <compClass>CompPowerTrader</compClass>
+        <shortCircuitInRain>true</shortCircuitInRain>
+        <!-- Overwritten every rare tick with the real draw for this pool's
+             size; this is only what an unattached unit idles at. -->
+        <basePowerConsumption>80</basePowerConsumption>
+      </li>
+      <li Class="CompProperties_Flickable"/>
+      <li Class="EntertainingIdeas.CompProperties_PoolController">
+        <maxTiles>220</maxTiles>
+        <litresPerTile>20</litresPerTile>
+        <basePowerConsumption>80</basePowerConsumption>
+        <powerPerTile>5</powerPerTile>
+        <litresPerLoad>120</litresPerLoad>
+        <fillWorkTicks>320</fillWorkTicks>
+        <litresLostPerTilePerDay>0.6</litresLostPerTilePerDay>
+      </li>
+    </comps>
+    <researchPrerequisites>
+      <li>Electricity</li>
+    </researchPrerequisites>
+  </ThingDef>
+
+  <!-- ======================== 23. Hammock (any tech) ====================== -->
+
+  <ThingDef ParentName="EI_JoyBuildingBase">
+    <defName>EI_Hammock</defName>
+    <label>hammock</label>
+    <description>A slung sheet between two posts, deep enough to disappear into. A colonist gets in, stops having opinions about anything for half an hour, and gets out slightly less tired than they went in.\n\nThis is not a bed. Nobody is assigned to it, nobody sleeps the night in it, and no doctor will treat anyone in it. It is somewhere to do nothing, which the average colony has far too little of.</description>
+    <graphicData>
+      <texPath>EntertainingIdeas/Buildings/Hammock</texPath>
+      <graphicClass>Graphic_Multi</graphicClass>
+      <drawSize>(1,2)</drawSize>
+      <shadowData>
+        <volume>(0.6,0.25,1.5)</volume>
+      </shadowData>
+      <damageData>
+        <rectN>(0.15,0.05,0.7,0.9)</rectN>
+        <rectS>(0.15,0.05,0.7,0.9)</rectS>
+        <rectE>(0.05,0.15,0.9,0.7)</rectE>
+        <rectW>(0.05,0.15,0.9,0.7)</rectW>
+      </damageData>
+    </graphicData>
+    <size>(1,2)</size>
+    <rotatable>true</rotatable>
+    <defaultPlacingRot>South</defaultPlacingRot>
+    <fillPercent>0.25</fillPercent>
+    <pathCost>45</pathCost>
+    <canOverlapZones>false</canOverlapZones>
+    <constructionSkillPrerequisite>3</constructionSkillPrerequisite>
+    <statBases>
+      <MaxHitPoints>70</MaxHitPoints>
+      <WorkToBuild>2200</WorkToBuild>
+      <Mass>8</Mass>
+      <Beauty>6</Beauty>
+      <Comfort>0.85</Comfort>
+      <JoyGainFactor>1.05</JoyGainFactor>
+    </statBases>
+    <!-- Woven from whatever is to hand; the sprite is painted near-neutral so
+         the stuff colour carries it. -->
+    <stuffCategories>
+      <li>Fabric</li>
+      <li>Leathery</li>
+    </stuffCategories>
+    <costStuffCount>45</costStuffCount>
+    <costList>
+      <WoodLog>25</WoodLog>
+    </costList>
+    <building>
+      <joyKind>Meditative</joyKind>
+      <paintable>true</paintable>
+    </building>
+    <comps>
+      <li Class="EntertainingIdeas.CompProperties_Lounger">
+        <restEffectiveness>0.45</restEffectiveness>
+      </li>
+    </comps>
+  </ThingDef>
+
 </Defs>

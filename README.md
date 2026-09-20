@@ -1,9 +1,10 @@
 # Entertaining Ideas
 
-A RimWorld mod that adds **thirteen recreation ideas — seventeen buildings** — one
-for roughly each rung of the tech ladder, so a colony always has something worth
-doing. A tribe gets a hide mat full of knucklebones on day one; an archotech
-lounge gets a room-sized shared hallucination.
+A RimWorld mod that adds **seventeen recreation ideas — twenty-two buildings and
+a paintable swimming pool** — one for roughly each rung of the tech ladder, so a
+colony always has something worth doing. A tribe gets a hide mat full of
+knucklebones on day one; an archotech lounge gets a room-sized shared
+hallucination.
 
 Mostly XML, plus a small assembly for the parts that move. No Harmony, no mod
 dependencies. Supports RimWorld **1.5 and 1.6**, with a separate assembly built
@@ -19,6 +20,8 @@ for each — see [Versions](#versions).
 | Soaking tub | 1×1 | Solitary relaxation | Colonists get *in*. Burns wood (8/day), warms the room, steams while lit, and hides its occupant below the waterline. Holds one soak — see [water](#water). |
 | Skittles lane | 1×7 | Dexterity | Nine pins in a diamond; rolled from the near end. Pins scatter when the ball lands. Trains shooting. |
 | Shadow lantern theater | 2×1 | Social | Watched from 2–5 tiles by up to six colonists. The shadows walk on their own — the drum turns on the lamp's draught. |
+| Hammock | 1×2 | Solitary relaxation | Rest that is not a bed: no assignment, no sleeping the night, no medical care. Recovers rest at 45% of a plain bed while a colonist lounges. Woven from cloth or leather. |
+| Armillary sphere | 1×1 | Solitary relaxation | Brass rings on a tripod, turning under their own clockwork. Watched from 1–4 tiles. Beauty 16. |
 
 ### Industrial — powered
 
@@ -33,10 +36,42 @@ for each — see [Versions](#versions).
 | Karaoke machine | 1×1 | Social | 120W | Microelectronics basics |
 | Bowling lane | 1×7 | Dexterity | 140W | Complex furniture + Electricity |
 | Heated soaking tub | 1×1 | Solitary relaxation | 200W | Complex furniture + Electricity |
+| Pool filtration unit | 1×2 | Social | 80W + 5W/tile | Electricity |
+| Tabletop orrery | 1×1 | Solitary relaxation | — | Complex furniture |
+| Grand orrery | 2×2 | Solitary relaxation | — | Complex furniture |
 
 All four pinball tables share one cabinet frame and one animation; they differ in
 cost, power, beauty and how much joy they give. The cocktail table seats two —
 put a chair on either side.
+
+The three orreries are clockwork: they turn whether or not anyone is watching
+and draw no power at all. The grand one lights its own dome.
+
+### The swimming pool
+
+The pool is **terrain, not an object**. Paint `pool basin` tiles in whatever
+shape you like, stand a filtration unit against any edge of it, and the unit
+claims every basin tile joined to that one edge-to-edge. Everything then scales
+with what you drew:
+
+| | |
+|---|---|
+| Water it holds | 20 L per tile |
+| Power it draws | 80W + 5W per tile |
+| Evaporation | 0.6 L per tile per day |
+| Hand-filling | 120 L per hauled load |
+| Cap | 220 tiles per unit |
+
+The water level drives what you see: the pool fills outward from the filter and
+drains back toward it, a tile at a time, so the water line is always readable.
+Power is what makes it *usable* — cut it and the water stays where it is, but it
+stops circulating and nobody will get in. Pull the filter out entirely and the
+pool drains.
+
+Off the plumbing, colonists carry the water in by the load. With Dubs Bad
+Hygiene installed, pipe the unit in and it keeps itself topped up — see
+[water](#water). On 1.6 swimmers get the game's own swimming pose, because the
+job sets the flag 1.6 reads for it; on 1.5 they wade.
 
 The heated tub is the wood-fired one with the firebox swapped for an element: no
 hauling and no ash, but a standing draw on the grid. The massage chair is
@@ -59,7 +94,7 @@ session.
 Electricity for the first pinball tables, Tube television for the arcade
 cabinet, Microelectronics and Flatscreen television for the screens, Fabrication
 for the spacer builds and Advanced fabrication for the ultra pair — so the tree
-gains seventeen buildings and not one extra node. These are the same gates
+gains twenty-two buildings and not one extra node. These are the same gates
 Vanilla Furniture Expanded uses for equivalent things: its arcade machine and
 industrial computer sit on Tube television, its modern computer and spacer radio
 on Flatscreen television. Everything lands in the Recreation tab of the architect menu.
