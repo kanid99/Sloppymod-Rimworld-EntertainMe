@@ -315,8 +315,8 @@
 
   <ThingDef ParentName="EI_JoyBuildingBase">
     <defName>EI_CocktailArcadeTable</defName>
-    <label>cocktail arcade table</label>
-    <description>A sit-down arcade cabinet with the screen lying face up under a sheet of glass and a joystick at each of two seats. One player runs a little yellow eater around a maze, hoovering pellets while four ghosts hunt them down; the other heckles from across the table and waits their turn. The picture flips between turns so both seats play it the right way up.\n\nLeft alone it drops into attract mode and sits there running its title screen at nobody, which is somehow the most convincing thing about it.\n\nSeats two - set a chair on either side. Quick reflexes help, and the ribbing that comes with them is half the point.</description>
+    <label>cocktail arcade table (Ore Rush)</label>
+    <description>A sit-down arcade cabinet with the screen lying face up under a sheet of glass and a joystick at each of two seats. ORE RUSH: you are down a mine shaft with a hard hat and a lamp, clearing seams of ore one corridor at a time, and the things that live down there are coming along the same corridor from the other direction. The picture flips between turns so both seats play it the right way up.\n\nLeft alone it drops into attract mode and sits there running its title screen at nobody, which is somehow the most convincing thing about it.\n\nSeats two - set a chair on either side. Quick reflexes help, and the ribbing that comes with them is half the point.</description>
     <graphicData>
       <texPath>EntertainingIdeas/Buildings/CocktailArcade</texPath>
       <graphicClass>Graphic_Single</graphicClass>
@@ -1614,6 +1614,72 @@
         <restEffectiveness>0.45</restEffectiveness>
       </li>
     </comps>
+  </ThingDef>
+
+
+  <!-- Second cabinet: same table, a different game in the glass. -->
+  <ThingDef ParentName="EI_JoyBuildingBase">
+    <defName>EI_CocktailClimbTable</defName>
+    <label>cocktail arcade table (Thrumbo!)</label>
+    <description>The same sit-down cabinet running a different board. THRUMBO!: there is a colonist stranded at the top of a half-built scaffold and something enormous and extremely cross at the top of it throwing rocks down the girders at you. You climb. The rocks do not stop coming.\n\nNobody has ever reached the top. The high score is a matter of some dispute in the rec room.\n\nLeft alone it drops into attract mode and sits there running its title screen at nobody, which is somehow the most convincing thing about it.\n\nSeats two - set a chair on either side. Quick reflexes help, and the ribbing that comes with them is half the point.</description>
+    <graphicData>
+      <texPath>EntertainingIdeas/Buildings/CocktailClimb</texPath>
+      <graphicClass>Graphic_Single</graphicClass>
+      <drawSize>(1.15,1.15)</drawSize>
+      <shadowData>
+        <volume>(0.8,0.35,0.8)</volume>
+      </shadowData>
+      <damageData>
+        <rect>(0.08,0.08,0.84,0.84)</rect>
+      </damageData>
+    </graphicData>
+    <rotatable>false</rotatable>
+    <fillPercent>0.4</fillPercent>
+    <pathCost>50</pathCost>
+    <constructEffect>ConstructMetal</constructEffect>
+    <constructionSkillPrerequisite>7</constructionSkillPrerequisite>
+    <statBases>
+      <MaxHitPoints>120</MaxHitPoints>
+      <WorkToBuild>11000</WorkToBuild>
+      <Mass>35</Mass>
+      <Beauty>5</Beauty>
+      <JoyGainFactor>1.3</JoyGainFactor>
+    </statBases>
+    <costList>
+      <Steel>55</Steel>
+      <ComponentIndustrial>4</ComponentIndustrial>
+    </costList>
+    <building>
+      <joyKind>Gaming_Dexterity</joyKind>
+      <paintable>true</paintable>
+    </building>
+    <comps>
+      <li Class="CompProperties_Power">
+        <compClass>CompPowerTrader</compClass>
+        <shortCircuitInRain>true</shortCircuitInRain>
+        <basePowerConsumption>100</basePowerConsumption>
+      </li>
+      <li Class="CompProperties_Flickable"/>
+      <li Class="CompProperties_Glower">
+        <glowRadius>3</glowRadius>
+        <glowColor>(240,180,120,0)</glowColor>
+      </li>
+      <li Class="EntertainingIdeas.CompProperties_AnimatedScreen">
+        <framePath>EntertainingIdeas/Buildings/CocktailClimbScreen</framePath>
+        <frameCount>16</frameCount>
+        <ticksPerFrame>8</ticksPerFrame>
+        <drawSize>(1.15,1.15)</drawSize>
+        <idleFramePath>EntertainingIdeas/Buildings/CocktailClimbTitle</idleFramePath>
+        <idleFrameCount>8</idleFrameCount>
+        <idleTicksPerFrame>20</idleTicksPerFrame>
+        <playJobs>
+          <li>EI_Play_CocktailArcade</li>
+        </playJobs>
+      </li>
+    </comps>
+    <researchPrerequisites>
+      <li>TubeTelevision</li>
+    </researchPrerequisites>
   </ThingDef>
 
 </Defs>

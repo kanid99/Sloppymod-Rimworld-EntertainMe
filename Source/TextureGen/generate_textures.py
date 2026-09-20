@@ -469,10 +469,37 @@ def dreamloop_holotheater():
 # ---------------------------------------------------------------------------
 
 SCREEN = (30, 30, 130, 130)       # glass bounds inside the bezel
-RING = (46, 46, 114, 114)         # corridor the eater and ghosts run
-MAZE = (70, 104, 226, 255)
 SCREEN_BG = (10, 10, 16, 255)
-PELLETS = 24
+RING = (46, 46, 114, 114)         # corridor the miner and the bugs run
+ROCK = (150, 104, 54, 255)        # tunnel walls
+ORE_COUNT = 24
+
+
+def on_screen(x, y, pad=0.0):
+    """True while a sprite is far enough inside the glass to be drawn whole.
+
+    Nothing here is clipped by the renderer - these are plain overlays laid on
+    the cabinet - so anything drawn outside the glass lands on the table top.
+    Every moving part is tested against this before it is drawn."""
+    x0, y0, x1, y1 = SCREEN
+    return x0 + pad <= x <= x1 - pad and y0 + pad <= y <= y1 - pad
+
+
+
+def screen_title(c, string, y, scale, color):
+    """Centre a line inside the glass, or fail loudly if it does not fit.
+
+    Text drawn past the screen edge lands on the cabinet, which is exactly the
+    kind of thing that ships unnoticed. Better to break the build."""
+    from preview import text, text_width
+
+    x0, _, x1, _ = SCREEN
+    width = text_width(string, scale)
+    room = (x1 - x0) - 4
+    if width > room:
+        raise ValueError("%r is %dpx at scale %d but the screen only has %dpx"
+                         % (string, width, scale, room))
+    text(c, string, (x0 + x1) / 2.0 - width / 2.0, y, scale, color)
 
 
 def ring_point(p):
@@ -491,71 +518,241 @@ def ring_point(p):
     return x0, y1 - (d - w), 0, -1
 
 
-def draw_ghost(c, gx, gy, col, dx, dy, wobble):
+# ---------------------------------------------------------------------------
+# Game one: DEEP DRILL. A miner works the tunnels for ore while the things
+# that live down there work their way toward the miner.
+# ---------------------------------------------------------------------------
+
+def draw_bug(c, gx, gy, col, dx, dy, wobble):
+    """A megaspider from above: low body, too many legs, two red eyes."""
     import math
-    c.ellipse(gx, gy - 2, 9, 9, col)
-    c.rect(gx - 9, gy - 2, gx + 9, gy + 7, col)
-    for i in range(3):                                  # skirt, alternating
-        off = 3 if (i + wobble) % 2 else 0
-        c.circle(gx - 6 + i * 6, gy + 7 - off, 3, col)
-    for i in (-1, 1):                                   # eyes track heading
-        ex, ey = gx + i * 4, gy - 3
-        c.circle(ex, ey, 3.2, (246, 246, 252, 255))
-        c.circle(ex + dx * 1.4, ey + dy * 1.4, 1.7, (36, 44, 120, 255))
+    for side in (-1, 1):                                    # legs, scuttling
+        for k in range(3):
+            a = math.radians(38 + k * 52) * side
+            reach = 9 + (2 if (k + wobble) % 2 else 0)
+            c.line(gx, gy, gx + math.sin(a) * reach * side, gy - math.cos(a) * reach * 0.8,
+                   (col[0] // 2, col[1] // 2, col[2] // 2, 255), 2)
+    c.ellipse(gx, gy + 1, 8, 6.5, (col[0] // 2, col[1] // 2, col[2] // 2, 255))
+    c.ellipse(gx, gy, 7, 5.5, col)                          # abdomen
+    hx, hy = gx + dx * 5.5, gy + dy * 5.5
+    c.ellipse(hx, hy, 4.5, 4, col)                          # head
+    for side in (-1, 1):
+        c.circle(hx - dy * side * 2, hy + dx * side * 2, 1.5, (255, 90, 70, 255))
 
 
-def draw_arcade_screen(c, frame=None, total=16):
+def draw_miner(c, x, y, dx, dy, step):
+    """A colonist in a hard hat, lamp pointing the way they are going."""
+    c.circle(x, y, 9.5, (24, 24, 30, 255))
+    c.circle(x, y, 8, (86, 132, 186, 255))                  # jacket
+    c.circle(x, y - 1, 5.5, (226, 190, 156, 255))           # face
+    c.circle(x, y - 3, 6, (236, 198, 64, 255))              # hard hat
+    lx, ly = x + dx * 8, y + dy * 8
+    c.circle(lx, ly, 3.2, (255, 244, 188, 255 if step % 2 else 190))   # lamp
+    c.circle(lx, ly, 1.6, (255, 255, 240, 255))
+
+
+def draw_drill_screen(c, frame=None, total=16):
+    """The play screen: tunnels, ore, one miner, three bugs."""
     import math
     x0, y0, x1, y1 = SCREEN
     c.rect(x0, y0, x1, y1, SCREEN_BG, 8)
 
-    # Maze: outer wall, four blocks, and the ghost pen in the middle.
-    c.frame(37, 37, 123, 123, MAZE, 2.5, 5)
-    c.frame(48, 48, 78, 68, MAZE, 2.5, 3)
-    c.frame(84, 48, 112, 68, MAZE, 2.5, 3)
-    c.frame(48, 92, 78, 112, MAZE, 2.5, 3)
-    c.frame(84, 92, 112, 112, MAZE, 2.5, 3)
-    c.rect(72, 74, 90, 86, MAZE, 3)
+    # Tunnel walls: an outer gallery and four worked-out chambers.
+    c.frame(37, 37, 123, 123, ROCK, 2.5, 5)
+    c.frame(48, 48, 78, 68, ROCK, 2.5, 3)
+    c.frame(84, 48, 112, 68, ROCK, 2.5, 3)
+    c.frame(48, 92, 78, 112, ROCK, 2.5, 3)
+    c.frame(84, 92, 112, 112, ROCK, 2.5, 3)
+    c.rect(72, 74, 90, 86, ROCK, 3)                         # the nest
     c.rect(75, 77, 87, 83, SCREEN_BG, 2)
 
     p = 0.0 if frame is None else float(frame) / total
     step = frame if frame is not None else 0
 
-    # Pellets vanish behind the eater and come back at the top of each lap.
-    for k in range(PELLETS):
-        pk = float(k) / PELLETS
+    # Ore in the corridor, taken as the miner passes it.
+    for k in range(ORE_COUNT):
+        pk = float(k) / ORE_COUNT
         if frame is not None and pk <= p:
             continue
         px, py, _, _ = ring_point(pk)
-        c.circle(px, py, 2.2, (248, 236, 198, 255))
+        c.rect(px - 2, py - 2, px + 2, py + 2, (226, 188, 108, 255), 1)
 
-    # Power pellets in the corners, blinking the way the real ones do.
+    # Rich seams in the corners, glinting the way the big ones do.
     if frame is None or (step // 2) % 2 == 0:
         for corner in (0.0, 0.25, 0.5, 0.75):
             if frame is not None and corner <= p:
                 continue
             px, py, _, _ = ring_point(corner + 0.0001)
-            c.circle(px, py, 4.6, (250, 228, 160, 255))
+            c.circle(px, py, 4.6, (152, 226, 240, 255))
 
-    # Two ghosts chasing around the same corridor, a third waiting in the pen.
-    for lead, col in ((0.30, (226, 74, 70, 255)), (0.58, (238, 150, 196, 255))):
+    # Two bugs working the corridor, a third sat on the nest.
+    for lead, col in ((0.30, (176, 72, 64, 255)), (0.58, (150, 108, 186, 255))):
         gx, gy, gdx, gdy = ring_point(p + lead)
-        draw_ghost(c, gx, gy, col, gdx, gdy, step)
-    draw_ghost(c, 81, 78, (124, 196, 232, 255), 0, 1, step + 1)
+        draw_bug(c, gx, gy, col, gdx, gdy, step)
+    draw_bug(c, 81, 78, (104, 150, 92, 255), 0, 1, step + 1)
 
-    # The eater, mouth chomping open and shut as it goes.
-    ex, ey, edx, edy = ring_point(p)
-    c.circle(ex, ey, 10, (246, 214, 62, 255))
-    mouth = (45, 26, 6, 26)[step % 4] if frame is not None else 38
-    if mouth > 2:
-        heading = math.degrees(math.atan2(-edy, edx))
-        c.wedge(ex, ey, 11, 0, heading - mouth, heading + mouth, SCREEN_BG)
+    mx, my, mdx, mdy = ring_point(p)
+    draw_miner(c, mx, my, mdx, mdy, step)
 
     # Bezel last, so an overlay frame lands exactly on the cabinet's own glass.
     c.frame(x0, y0, x1, y1, (86, 92, 118, 220), 2.5, 8)
 
 
-def cocktail_arcade():
+def draw_drill_title(c, frame, total):
+    """Attract mode. The cast walks back and forth well inside the glass."""
+    import math
+    x0, y0, x1, y1 = SCREEN
+    c.rect(x0, y0, x1, y1, SCREEN_BG, 8)                    # opaque: hides the
+                                                            # maze on the cabinet
+    c.rect(x0, 36, x1, 58, (30, 20, 12, 255))
+    screen_title(c, "ORE RUSH", 40, 2, (236, 198, 64, 255))
+
+    # A pendulum march: the cast crosses the glass, turns, and comes back, so
+    # nobody ever has to be clipped at an edge.
+    # A pack of three, sized and swung so that at no point in the cycle does
+    # any of them need clipping: the glass is only a hundred pixels wide.
+    p = float(frame) / total
+    facing = 1 if math.cos(2 * math.pi * p) >= 0 else -1
+    front = 84 + 13 * math.sin(2 * math.pi * p)
+
+    draw_miner(c, front, 82, facing, 0, frame)
+    for k, col in enumerate(((176, 72, 64, 255), (150, 108, 186, 255))):
+        gx = front - facing * (14 + k * 14)
+        if on_screen(gx, 82, 12):
+            draw_bug(c, gx, 82, col, facing, 0, frame + k)
+
+    for k in range(5):                                      # ore still in the seam
+        ox = x0 + 8 + k * 9
+        if ox < front - 12 and on_screen(ox, 82, 5):
+            c.rect(ox - 2, 80, ox + 2, 84, (226, 188, 108, 255), 1)
+
+    if (frame // 2) % 2 == 0:
+        screen_title(c, "INSERT COIN", 106, 1, (226, 232, 248, 255))
+
+    c.frame(x0, y0, x1, y1, (86, 92, 118, 220), 2.5, 8)
+
+
+# ---------------------------------------------------------------------------
+# Game two: THRUMBO! Something enormous is at the top of the scaffold throwing
+# rocks down it, and there is a colonist up there who would like to come down.
+# ---------------------------------------------------------------------------
+
+GIRDERS = [(40, 112, 118, 106), (42, 92, 120, 98), (40, 72, 118, 66),
+           (42, 52, 120, 58)]
+LADDERS = [(108, 98, 112), (52, 78, 92), (100, 58, 72)]
+
+
+def girder_y(index, x):
+    """Height of a girder at x, since they all slope."""
+    gx0, gy0, gx1, gy1 = GIRDERS[index]
+    t = max(0.0, min(1.0, (x - gx0) / float(gx1 - gx0)))
+    return gy0 + (gy1 - gy0) * t
+
+
+def draw_thrumbo(c, x, y, step):
+    """Big, horned, and extremely cross. Seen from the side, as the game is."""
+    c.ellipse(x, y, 13, 8, (228, 224, 216, 255))            # body
+    c.ellipse(x - 10, y - 4, 6, 5, (236, 232, 226, 255))    # head
+    lift = 2 if step % 4 < 2 else 0
+    c.line(x - 13, y - 7 - lift, x - 20, y - 13 - lift, (240, 236, 228, 255), 2.6)  # horn
+    c.circle(x - 12, y - 5, 1.4, (40, 36, 34, 255))         # eye
+    for k in (-6, 0, 6):                                     # legs
+        c.line(x + k, y + 6, x + k, y + 11, (210, 206, 198, 255), 2.4)
+    c.line(x + 13, y - 2, x + 20, y - 6, (236, 232, 226, 255), 2.2)   # tail
+
+
+def draw_climb_colonist(c, x, y, step, climbing=False):
+    c.circle(x, y - 5, 3.6, (226, 190, 156, 255))           # head
+    c.rect(x - 3, y - 2, x + 3, y + 5, (196, 84, 72, 255), 1)   # torso
+    swing = 2 if step % 2 else -2
+    if climbing:
+        c.line(x - 3, y - 1, x - 6, y - 4 - swing, (226, 190, 156, 255), 1.8)
+        c.line(x + 3, y - 1, x + 6, y - 4 + swing, (226, 190, 156, 255), 1.8)
+        c.line(x - 2, y + 5, x - 3, y + 9, (60, 72, 110, 255), 1.8)
+        c.line(x + 2, y + 5, x + 3, y + 9, (60, 72, 110, 255), 1.8)
+    else:
+        c.line(x - 2, y + 5, x - 4 - swing, y + 9, (60, 72, 110, 255), 1.8)
+        c.line(x + 2, y + 5, x + 4 + swing, y + 9, (60, 72, 110, 255), 1.8)
+
+
+def draw_climb_screen(c, frame=None, total=16):
+    """Scaffolding, rolling rock, a thrumbo at the top and someone to reach."""
+    import math
+    x0, y0, x1, y1 = SCREEN
+    c.rect(x0, y0, x1, y1, SCREEN_BG, 8)
+
+    for gx0, gy0, gx1, gy1 in GIRDERS:                      # steel girders
+        c.line(gx0, gy0, gx1, gy1, (156, 96, 64, 255), 4)
+        c.line(gx0, gy0 - 2, gx1, gy1 - 2, (206, 132, 88, 255), 1.4)
+    for lx, ly0, ly1 in LADDERS:                            # ladders between
+        c.line(lx - 3, ly0, lx - 3, ly1, (120, 206, 226, 255), 1.8)
+        c.line(lx + 3, ly0, lx + 3, ly1, (120, 206, 226, 255), 1.8)
+        rung = ly0
+        while rung < ly1:
+            c.line(lx - 3, rung, lx + 3, rung, (120, 206, 226, 255), 1.4)
+            rung += 5
+
+    p = 0.0 if frame is None else float(frame) / total
+    step = frame if frame is not None else 0
+
+    draw_thrumbo(c, 62, girder_y(3, 62) - 10, step)         # top girder
+    draw_climb_colonist(c, 108, girder_y(3, 108) - 8, step) # the one to reach
+    if frame is None or step % 4 < 2:                       # ...calling for help
+        c.circle(112, girder_y(3, 108) - 18, 2.2, (255, 244, 188, 220))
+
+    # Rocks rolling down the slopes, each on its own girder and phase.
+    for k in range(3):
+        lane = 2 - k
+        t = (p + k / 3.0) % 1.0
+        gx0, _, gx1, _ = GIRDERS[lane]
+        rx = gx1 - t * (gx1 - gx0) if lane % 2 else gx0 + t * (gx1 - gx0)
+        ry = girder_y(lane, rx) - 5
+        if on_screen(rx, ry, 5):
+            c.circle(rx, ry, 4.4, (120, 112, 104, 255))
+            c.circle(rx - 1.4, ry - 1.4, 1.8, (168, 160, 150, 255))
+            spin = math.radians(t * 720 + k * 40)
+            c.line(rx, ry, rx + math.cos(spin) * 3, ry + math.sin(spin) * 3,
+                   (80, 74, 70, 255), 1.2)
+
+    # The player, hopping along the bottom girder.
+    px = 50 + 48 * (0.5 - 0.5 * math.cos(2 * math.pi * p))
+    hop = abs(math.sin(2 * math.pi * p * 4)) * 5
+    draw_climb_colonist(c, px, girder_y(0, px) - 8 - hop, step)
+
+    c.frame(x0, y0, x1, y1, (86, 92, 118, 220), 2.5, 8)
+
+
+def draw_climb_title(c, frame, total):
+    import math
+
+    x0, y0, x1, y1 = SCREEN
+    c.rect(x0, y0, x1, y1, SCREEN_BG, 8)
+    c.rect(x0, 36, x1, 58, (26, 24, 34, 255))
+    screen_title(c, "THRUMBO!", 40, 2, (236, 232, 226, 255))
+
+    c.line(44, 92, 116, 92, (156, 96, 64, 255), 4)          # one girder to stand on
+    c.line(44, 90, 116, 90, (206, 132, 88, 255), 1.4)
+
+    p = float(frame) / total
+    draw_thrumbo(c, 58, 80, frame)
+    px = 92 + 14 * math.sin(2 * math.pi * p)
+    draw_climb_colonist(c, px, 84, frame)
+    rx = 76 + 8 * math.cos(2 * math.pi * p)
+    if on_screen(rx, 86, 5):
+        c.circle(rx, 86, 4.4, (120, 112, 104, 255))
+        c.circle(rx - 1.4, 84.6, 1.8, (168, 160, 150, 255))
+
+    if (frame // 2) % 2 == 0:
+        screen_title(c, "INSERT COIN", 106, 1, (226, 232, 248, 255))
+
+    c.frame(x0, y0, x1, y1, (86, 92, 118, 220), 2.5, 8)
+
+
+# ---------------------------------------------------------------------------
+# The cabinet both games live in.
+# ---------------------------------------------------------------------------
+
+def cocktail_cabinet(name, screen_drawer, trim):
     c = Canvas(160, 160)
     cx = cy = 80
 
@@ -564,77 +761,51 @@ def cocktail_arcade():
     c.rect(20, 20, 140, 140, (34, 32, 40, 255), 14)
     c.frame(20, 20, 140, 140, (150, 146, 168, 70), 2, 14)
 
-    draw_arcade_screen(c, None)                            # attract mode
+    screen_drawer(c, None)                                 # attract mode, baked
 
     # Control clusters on the two seating sides (north and south).
     for sy in (24, 136):
         c.rect(cx - 26, sy - 7, cx + 26, sy + 7, DARK, 6)
         c.rect(cx - 23, sy - 5, cx + 23, sy + 5, (68, 64, 78, 255), 5)
         c.circle(cx - 12, sy, 4.6, (28, 26, 32, 255))      # joystick ball
-        c.circle(cx - 12, sy, 3.2, (214, 70, 62, 255))
+        c.circle(cx - 12, sy, 3.2, trim)
         for i in range(2):
             c.circle(cx + 6 + i * 11, sy, 3.4, (236, 196, 76, 255))
     c.rect(cx + 44, cy - 10, cx + 52, cy + 10, (28, 26, 32, 255), 3)   # coin slot
-    save_single(c, "CocktailArcade")
+    save_single(c, name)
     return c
 
 
-def cocktail_arcade_frames(total=16):
-    """Screen-only overlays; CompAnimatedScreen cycles them while in use."""
+def cocktail_arcade():
+    return cocktail_cabinet("CocktailArcade", draw_drill_screen, (214, 70, 62, 255))
+
+
+def cocktail_climb():
+    return cocktail_cabinet("CocktailClimb", draw_climb_screen, (96, 170, 226, 255))
+
+
+def _screen_strip(name, drawer, total):
     for i in range(total):
         c = Canvas(160, 160)
-        draw_arcade_screen(c, i, total)
-        c.save(os.path.join(OUT, "CocktailArcadeScreen_%d.png" % i))
-    print("  CocktailArcadeScreen_0..%d.png  (160x160)" % (total - 1))
+        drawer(c, i, total)
+        c.save(os.path.join(OUT, "%s_%d.png" % (name, i)))
+    print("  %s_0..%d.png  (160x160)" % (name, total - 1))
 
 
-def draw_arcade_title(c, frame, total):
-    """Attract mode: the cast marches across under the title, coin prompt blinking."""
-    from preview import text, text_width          # shared 5x7 bitmap font
-
-    x0, y0, x1, y1 = SCREEN
-    # Opaque, so the maze baked into the cabinet art is covered while idle.
-    c.rect(x0, y0, x1, y1, SCREEN_BG, 8)
-
-    title = "CHOMPER"
-    c.rect(x0, 38, x1, 58, (18, 16, 40, 255))               # title bar glow
-    tw = text_width(title, 2)
-    text(c, title, 80 - tw / 2.0, 42, 2, (246, 214, 62, 255))
-
-    # The cast walks a lap across the glass, eater in front, ghosts trailing.
-    p = float(frame) / total
-    span = (x1 - x0) + 40
-    for k, col in enumerate(((226, 74, 70, 255), (238, 150, 196, 255),
-                             (124, 196, 232, 255), (244, 170, 92, 255))):
-        gx = x0 - 20 + ((p * span) + (k + 1) * 17) % span
-        draw_ghost(c, gx, 80, col, 1, 0, frame + k)
-    ex = x0 - 20 + (p * span) % span
-    c.circle(ex, 78, 10, (246, 214, 62, 255))
-    mouth = (45, 26, 6, 26)[frame % 4]
-    if mouth > 2:
-        c.wedge(ex, 78, 11, 0, -mouth, mouth, SCREEN_BG)
-
-    # Pellets ahead of the eater, eaten as it passes.
-    for k in range(7):
-        px = x0 + 6 + k * 14
-        if px > ex + 6:
-            c.circle(px, 78, 2.2, (248, 236, 198, 255))
-
-    if (frame // 2) % 2 == 0:                                # coin prompt blinks
-        prompt = "INSERT COIN"
-        pw = text_width(prompt, 1)
-        text(c, prompt, 80 - pw / 2.0, 106, 1, (226, 232, 248, 255))
-
-    c.frame(x0, y0, x1, y1, (86, 92, 118, 220), 2.5, 8)
+def cocktail_arcade_frames(total=16):
+    _screen_strip("CocktailArcadeScreen", draw_drill_screen, total)
 
 
 def cocktail_arcade_title_frames(total=8):
-    """Idle overlays; CompAnimatedScreen runs these when nobody is playing."""
-    for i in range(total):
-        c = Canvas(160, 160)
-        draw_arcade_title(c, i, total)
-        c.save(os.path.join(OUT, "CocktailArcadeTitle_%d.png" % i))
-    print("  CocktailArcadeTitle_0..%d.png  (160x160)" % (total - 1))
+    _screen_strip("CocktailArcadeTitle", draw_drill_title, total)
+
+
+def cocktail_climb_frames(total=16):
+    _screen_strip("CocktailClimbScreen", draw_climb_screen, total)
+
+
+def cocktail_climb_title_frames(total=8):
+    _screen_strip("CocktailClimbTitle", draw_climb_title, total)
 
 
 # ---------------------------------------------------------------------------
@@ -1843,10 +2014,13 @@ def _build_pinball():
 
 
 def _build_cocktail():
-    canvas = cocktail_arcade()
+    drill = cocktail_arcade()
     cocktail_arcade_frames()
     cocktail_arcade_title_frames()
-    return {"CocktailArcade": canvas}
+    climb = cocktail_climb()
+    cocktail_climb_frames()
+    cocktail_climb_title_frames()
+    return {"CocktailArcade": drill, "CocktailClimb": climb}
 
 
 def _build_hologamepod():

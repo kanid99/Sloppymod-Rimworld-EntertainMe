@@ -62,6 +62,7 @@
     <requireChair>true</requireChair>
     <thingDefs>
       <li>EI_CocktailArcadeTable</li>
+      <li>EI_CocktailClimbTable</li>
     </thingDefs>
     <jobDef>EI_Play_CocktailArcade</jobDef>
     <joyKind>Gaming_Dexterity</joyKind>

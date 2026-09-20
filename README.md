@@ -1,6 +1,6 @@
 # Entertaining Ideas
 
-A RimWorld mod that adds **seventeen recreation ideas — twenty-two buildings and
+A RimWorld mod that adds **eighteen recreation ideas — twenty-three buildings and
 a paintable swimming pool** — one for roughly each rung of the tech ladder, so a
 colony always has something worth doing. A tribe gets a hide mat full of
 knucklebones on day one; an archotech lounge gets a room-sized shared
@@ -30,7 +30,8 @@ for each — see [Versions](#versions).
 | Pinball machine | 1×2 | Dexterity | 120W | Electricity |
 | Boomalope blitz pinball | 1×2 | Dexterity | 150W | Electricity |
 | Mech rampage pinball | 1×2 | Dexterity | 180W | Microelectronics basics |
-| Cocktail arcade table | 1×1 | Dexterity | 100W | Tube television |
+| Cocktail arcade table (Ore Rush) | 1×1 | Dexterity | 100W | Tube television |
+| Cocktail arcade table (Thrumbo!) | 1×1 | Dexterity | 100W | Tube television |
 | Massage chair | 1×1 | Solitary relaxation | 90W | Complex furniture + Electricity |
 | Aquarium | 2×1 | Solitary relaxation | 60W | Complex furniture + Electricity |
 | Karaoke machine | 1×1 | Social | 120W | Microelectronics basics |
@@ -41,8 +42,17 @@ for each — see [Versions](#versions).
 | Grand orrery | 2×2 | Solitary relaxation | — | Complex furniture |
 
 All four pinball tables share one cabinet frame and one animation; they differ in
-cost, power, beauty and how much joy they give. The cocktail table seats two —
-put a chair on either side.
+cost, power, beauty and how much joy they give. Each has a proper backglass —
+painted art over two six-digit score reels that climb while somebody is playing.
+
+The two cocktail tables seat two apiece — put a chair on either side — and run
+different games. **Ore Rush** is a maze: you work a mine shaft in a hard hat,
+clearing seams of ore, while the things that live down there come along the same
+corridor from the other direction. **Thrumbo!** is a climb: a colonist is
+stranded at the top of a half-built scaffold and something enormous and
+extremely cross is at the top of it rolling rocks down the girders at you. Left
+alone, either cabinet drops into attract mode rather than sitting on a dead
+screen.
 
 The three orreries are clockwork: they turn whether or not anyone is watching
 and draw no power at all. The grand one lights its own dome.
@@ -94,7 +104,7 @@ session.
 Electricity for the first pinball tables, Tube television for the arcade
 cabinet, Microelectronics and Flatscreen television for the screens, Fabrication
 for the spacer builds and Advanced fabrication for the ultra pair — so the tree
-gains twenty-two buildings and not one extra node. These are the same gates
+gains twenty-three buildings and not one extra node. These are the same gates
 Vanilla Furniture Expanded uses for equivalent things: its arcade machine and
 industrial computer sit on Tube television, its modern computer and spacer radio
 on Flatscreen television. Everything lands in the Recreation tab of the architect menu.
