@@ -137,7 +137,11 @@ namespace EntertainingIdeas
                 return;
             }
 
-            Vector3 drawPos = parent.DrawPos;
+            // Carries the def's own draw offset, so a screen mounted off its
+            // cell (a wall panel) animates where its frame actually is.
+            GraphicData data = parent.def.graphicData;
+            Vector3 drawPos = parent.DrawPos
+                + (data == null ? Vector3.zero : data.DrawOffsetForRot(parent.Rotation));
             drawPos.y = Props.drawOverPawns
                 ? AltitudeLayer.MoteOverhead.AltitudeFor() + Props.altitudeOffset
                 : drawPos.y + Props.altitudeOffset;

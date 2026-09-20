@@ -521,23 +521,41 @@
   <ThingDef ParentName="EI_JoyBuildingBase">
     <defName>EI_VistaPanel</defName>
     <label>vista panel</label>
-    <description>A wall-length display showing somewhere with a horizon in it. The feed runs on the local clock - grey dawn, open daylight, a long sunset, then stars - and the panel throws enough light into the room to cast the right colour of shadow at the right hour.\n\nIt is not a window and nobody is fooled for long, but a room with one in it stops feeling quite so much like a hole in the ground. Colonists in the same room hold off cabin fever for longer, though it will never do the job of actually going outside.</description>
+    <description>A wall-length display that mounts into the wall itself, showing somewhere with a horizon in it. The feed runs on the local clock - grey dawn, open daylight, a long sunset, then stars - and the panel throws enough light into the room to cast the right colour of shadow at the right hour.\n\nIt is not a window and nobody is fooled for long, but a room with one in it stops feeling quite so much like a hole in the ground. Colonists in the room it faces hold off cabin fever for longer, though it will never do the job of actually going outside.\n\nNeeds three tiles of wall to mount on.</description>
     <graphicData>
       <texPath>EntertainingIdeas/Buildings/VistaPanel</texPath>
       <graphicClass>Graphic_Multi</graphicClass>
       <drawSize>(3,1)</drawSize>
-      <shadowData>
-        <volume>(2.6,0.4,0.3)</volume>
-        <offset>(0,0,0.1)</offset>
-      </shadowData>
+      <!-- Mounted in the wall, so it is drawn off its own cell and onto the
+           face the room sees, the way vanilla's wall lamp is. -->
+      <drawOffsetNorth>(0,0,0.5)</drawOffsetNorth>
+      <drawOffsetSouth>(0,0,-0.5)</drawOffsetSouth>
+      <drawOffsetEast>(0.5,0,0)</drawOffsetEast>
+      <drawOffsetWest>(-0.5,0,0)</drawOffsetWest>
+      <damageData>
+        <enabled>false</enabled>
+      </damageData>
     </graphicData>
     <size>(3,1)</size>
     <tickerType>Rare</tickerType>
     <rotatable>true</rotatable>
     <defaultPlacingRot>South</defaultPlacingRot>
-    <fillPercent>0.3</fillPercent>
-    <pathCost>60</pathCost>
+    <!-- An attachment rather than a building in its own right: it shares the
+         wall's cells instead of replacing the wall. -->
+    <altitudeLayer>BuildingOnTop</altitudeLayer>
+    <passability>Standable</passability>
+    <terrainAffordanceNeeded IsNull="True" />
+    <fillPercent>0</fillPercent>
+    <pathCost>0</pathCost>
+    <overrideMinifiedRot>North</overrideMinifiedRot>
     <canOverlapZones>false</canOverlapZones>
+    <building>
+      <isEdifice>false</isEdifice>
+      <isAttachment>true</isAttachment>
+    </building>
+    <placeWorkers>
+      <li>EntertainingIdeas.PlaceWorker_AttachedToWallWide</li>
+    </placeWorkers>
     <constructEffect>ConstructMetal</constructEffect>
     <constructionSkillPrerequisite>8</constructionSkillPrerequisite>
     <statBases>
@@ -620,7 +638,7 @@
   <ThingDef ParentName="EI_JoyBuildingBase">
     <defName>EI_DreamloopHolotheater</defName>
     <label>dreamloop holotheater</label>
-    <description>A bank of five emitters that fills the room in front of it with a shared waking dream - not a picture on a wall, but weather, crowds, and coastline standing in the open floor. Everyone watching gets the same dream, which is why the arguments afterwards are so specific.\n\nA whole room can watch at once, including people lying in bed nearby. It is enormously entertaining and enormously expensive to run.</description>
+    <description>A bank of five emitters that fills the room in front of it with a shared waking dream - not a picture on a wall, but weather, crowds, and coastline standing in the open floor. Everyone watching gets the same dream, which is why the arguments afterwards are so specific.\n\nA whole room can watch at once, including people lying in bed nearby. It is enormously entertaining and enormously expensive to run.\n\nIt needs a wall to throw the picture onto: face it across the room at one, up to twelve tiles away, with the audience in between. While you are placing it, the wall it will use is outlined.</description>
     <graphicData>
       <texPath>EntertainingIdeas/Buildings/DreamloopHolotheater</texPath>
       <graphicClass>Graphic_Multi</graphicClass>
@@ -662,6 +680,7 @@
     </building>
     <placeWorkers>
       <li>PlaceWorker_WatchArea</li>
+      <li>EntertainingIdeas.PlaceWorker_ProjectionTarget</li>
     </placeWorkers>
     <comps>
       <li Class="CompProperties_Power">
@@ -674,15 +693,16 @@
         <glowRadius>8</glowRadius>
         <glowColor>(170,140,240,0)</glowColor>
       </li>
-      <!-- Looks for a wall up to six tiles straight ahead and throws the
-           stream onto it. Nothing in range means no picture, so face it at
-           a wall to get the big screen. -->
+      <!-- Looks straight ahead for a wall and throws the stream onto it.
+           Twelve tiles, because a rec room big enough to want one of these is
+           usually bigger than six, and the place worker draws the wall it will
+           hit while you are positioning it. -->
       <li Class="EntertainingIdeas.CompProperties_WallProjection">
         <framePath>EntertainingIdeas/Buildings/DreamloopProjection</framePath>
         <frameCount>12</frameCount>
         <ticksPerFrame>10</ticksPerFrame>
         <drawSize>(3,1)</drawSize>
-        <projectionRange>6</projectionRange>
+        <projectionRange>12</projectionRange>
       </li>
     </comps>
     <researchPrerequisites>

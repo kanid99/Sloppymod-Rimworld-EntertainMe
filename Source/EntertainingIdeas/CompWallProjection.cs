@@ -151,9 +151,15 @@ namespace EntertainingIdeas
             {
                 return null;
             }
-            return wallCell.IsValid
-                ? "Projecting onto wall ahead."
-                : "No surface ahead to project onto.";
+            if (wallCell.IsValid)
+            {
+                int distance = (wallCell - parent.Position).LengthManhattan;
+                return "Projecting onto the wall " + distance + " tiles to the "
+                       + parent.Rotation.ToStringHuman();
+            }
+            return "Nothing to project onto: no wall within " + Props.projectionRange
+                   + " tiles to the " + parent.Rotation.ToStringHuman()
+                   + ". Rotate it to face one.";
         }
     }
 }

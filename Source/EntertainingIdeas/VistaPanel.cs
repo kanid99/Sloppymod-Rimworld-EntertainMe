@@ -141,6 +141,12 @@ namespace EntertainingIdeas
             return result;
         }
 
+        private Vector3 DrawOffset()
+        {
+            GraphicData data = parent.def.graphicData;
+            return data == null ? Vector3.zero : data.DrawOffsetForRot(parent.Rotation);
+        }
+
         public override void PostDraw()
         {
             base.PostDraw();
@@ -169,7 +175,10 @@ namespace EntertainingIdeas
                 return;
             }
 
-            Vector3 drawPos = parent.DrawPos;
+            // A wall-mounted panel is drawn half a tile off its own cell so it
+            // sits on the face the room can see. DrawPos does not carry that
+            // offset, so without this the picture and its frame come apart.
+            Vector3 drawPos = parent.DrawPos + DrawOffset();
             drawPos.y += Props.altitudeOffset;
             float extraRotation = Props.rotateWithBuilding ? parent.Rotation.AsAngle - 180f : 0f;
             graphic.Draw(drawPos, Rot4.North, parent, extraRotation);
@@ -267,7 +276,7 @@ namespace EntertainingIdeas
                 return;
             }
 
-            Room room = parent.GetRoom();
+            Room room = RoomServed();
             if (room == null || room.PsychologicallyOutdoors)
             {
                 return;
@@ -291,6 +300,22 @@ namespace EntertainingIdeas
             }
         }
 
+        /// <summary>
+        /// Mounted in a wall, the panel's own cell belongs to no room, so the
+        /// room it serves is the one it faces.
+        /// </summary>
+        private Room RoomServed()
+        {
+            Map map = parent.Map;
+            if (map == null)
+            {
+                return null;
+            }
+            IntVec3 front = parent.Position + parent.Rotation.FacingCell;
+            Room room = front.InBounds(map) ? front.GetRoom(map) : null;
+            return room ?? parent.GetRoom();
+        }
+
         public override string CompInspectStringExtra()
         {
             if (!parent.Spawned)
@@ -301,7 +326,7 @@ namespace EntertainingIdeas
             {
                 return "Outdoors simulation: off";
             }
-            Room room = parent.GetRoom();
+            Room room = RoomServed();
             if (room != null && room.PsychologicallyOutdoors)
             {
                 return "Outdoors simulation: not needed here";

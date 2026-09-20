@@ -523,42 +523,50 @@ def cocktail_arcade_frames(total=16):
 # chair are actually visible while it is running.
 # ---------------------------------------------------------------------------
 def massage_chair():
-    """Drawn near-neutral on purpose.
-
-    Stuffable buildings are tinted by their material, and the game multiplies
-    that colour through the texture. A deep red chair built from green cloth
-    would come out muddy, so the upholstery is painted in pale greys and lets
-    the stuff supply the colour, the way vanilla's stuffable furniture does.
-    """
+    """Shaped like vanilla's armchair: soft rounded upholstery seen from above,
+    a tall back, padded arms, and a light neutral palette so the stuff colour
+    carries it. The massage side is the roller seams and the control pad."""
     c = Canvas(128, 128)
-    pale = (208, 202, 198, 255)         # takes the stuff colour
-    pale_dark = (170, 164, 160, 255)
-    seam = (138, 132, 128, 180)
-    frame_col = (120, 118, 120, 255)
+    pale = (212, 206, 202, 255)        # takes the stuff colour
+    pale_lt = (230, 225, 221, 255)
+    pale_dk = (176, 170, 166, 255)
+    shade = (146, 140, 136, 255)
+    seam = (150, 144, 140, 170)
 
-    c.rect(22, 16, 106, 118, DARK, 14)                  # chassis
-    c.rect(25, 19, 103, 115, frame_col, 12)
+    c.ellipse(64, 74, 47, 44, (0, 0, 0, 55))                 # contact shadow
 
-    c.rect(30, 20, 98, 62, DARK, 12)                    # backrest
-    c.rect(33, 23, 95, 60, pale, 10)
-    c.rect(38, 26, 90, 40, pale_dark, 8)                # headrest panel
-    for y in range(30, 58, 7):                          # upholstery seams
-        c.line(36, y, 92, y, seam, 2)
+    # Back, tallest part of the chair, curved at the top.
+    c.rect(26, 16, 102, 74, DARK, 20)
+    c.rect(29, 19, 99, 72, pale_dk, 18)
+    c.rect(34, 24, 94, 66, pale, 15)
+    c.ellipse(64, 30, 28, 11, pale_lt)                        # headrest crown
+    for y in range(36, 64, 8):                                # roller seams
+        c.line(40, y, 88, y, seam, 2.4)
 
-    c.rect(32, 58, 96, 96, DARK, 10)                    # seat
-    c.rect(35, 60, 93, 94, pale, 8)
-    for y in range(68, 92, 8):
-        c.line(40, y, 88, y, seam, 2)
+    # Arms: rounded pads either side, sitting proud of the seat.
+    for ax in (16, 88):
+        c.rect(ax, 52, ax + 24, 104, DARK, 11)
+        c.rect(ax + 2, 54, ax + 22, 102, pale_dk, 10)
+        c.ellipse(ax + 12, 66, 9, 11, pale)
+        c.ellipse(ax + 12, 62, 8, 8, pale_lt)
 
-    c.rect(38, 96, 90, 116, DARK, 9)                    # footrest
-    c.rect(41, 98, 87, 114, pale_dark, 7)
+    # Seat cushion, bulging toward the viewer.
+    c.rect(28, 64, 100, 108, DARK, 16)
+    c.rect(31, 67, 97, 105, pale_dk, 14)
+    c.rect(35, 70, 93, 101, pale, 12)
+    c.ellipse(64, 88, 27, 15, pale_lt)
+    c.line(40, 96, 88, 96, seam, 2.4)
 
-    for ax in (22, 92):                                 # armrests
-        c.rect(ax, 56, ax + 14, 100, DARK, 7)
-        c.rect(ax + 2, 58, ax + 12, 98, pale_dark, 6)
-    c.rect(94, 62, 104, 80, (52, 52, 56, 255), 4)       # control pad
+    # Footrest, folded down at the front - it is a recliner.
+    c.rect(40, 102, 88, 120, DARK, 9)
+    c.rect(43, 104, 85, 118, pale_dk, 8)
+    c.ellipse(64, 110, 18, 5, pale)
+
+    # Control pad on the right arm, and the base shadow under everything.
+    c.rect(92, 78, 108, 98, (58, 56, 60, 255), 5)
     for i in range(3):
-        c.circle(99, 67 + i * 6, 2.2, (236, 228, 210, 255))
+        c.circle(100, 83 + i * 6, 2.3, (238, 232, 216, 255))
+    c.line(30, 112, 98, 112, (146, 140, 136, 60), 1)
     save_rotations(c, "MassageChair")
     return c
 
