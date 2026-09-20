@@ -24,6 +24,75 @@ TERRAIN = os.path.join(ROOT, "Textures", "EntertainingIdeas", "Terrain")
 DARK = (26, 22, 20, 255)          # shared outline colour
 
 
+
+# ---------------------------------------------------------------------------
+# Outlines
+#
+# RimWorld draws an object with one bold line around the whole silhouette and
+# nothing like it inside: interior divisions are a darker tint of the fill at a
+# fraction of the weight. pnglib has no mask and no way to erase, so the way to
+# get that from stacked shapes is two passes - every piece oversized in the
+# outline colour, then every piece again at true size in its fill, which buries
+# the outline wherever two pieces touch and leaves it showing only around the
+# outside.
+#
+# A piece is a tuple: ("rect", x0, y0, x1, y1, radius), ("circle", cx, cy, r),
+# ("ellipse", cx, cy, rx, ry) or ("poly", [(x, y), ...]).
+# ---------------------------------------------------------------------------
+
+
+def darker(color, factor=0.55, alpha=None):
+    """A darker tint of a colour, for interior lines and separations.
+
+    Interior detail in RimWorld art is a shade of the thing it divides, not the
+    black used around the outside. This is what produces that shade."""
+    r, g, b = color[0], color[1], color[2]
+    a = color[3] if len(color) > 3 else 255
+    return (int(r * factor), int(g * factor), int(b * factor),
+            a if alpha is None else alpha)
+
+
+def _grow_poly(points, grow):
+    """Push a polygon's points out from its own centre."""
+    if not points:
+        return points
+    cx = sum(x for x, _ in points) / float(len(points))
+    cy = sum(y for _, y in points) / float(len(points))
+    out = []
+    for x, y in points:
+        dx, dy = x - cx, y - cy
+        d = math.hypot(dx, dy) or 1.0
+        out.append((x + dx / d * grow, y + dy / d * grow))
+    return out
+
+
+def draw_pieces(c, pieces, grow=0.0, color=None):
+    """Draw every piece, optionally grown and forced to one colour."""
+    for piece in pieces:
+        kind = piece[0]
+        fill = color if color is not None else piece[-1]
+        if kind == "rect":
+            _, x0, y0, x1, y1, r = piece[:6]
+            c.rect(x0 - grow, y0 - grow, x1 + grow, y1 + grow, fill, max(0.0, r + grow))
+        elif kind == "circle":
+            _, cx, cy, r = piece[:4]
+            c.circle(cx, cy, r + grow, fill)
+        elif kind == "ellipse":
+            _, cx, cy, rx, ry = piece[:5]
+            c.ellipse(cx, cy, rx + grow, ry + grow, fill)
+        elif kind == "poly":
+            _, pts = piece[:2]
+            c.poly(_grow_poly(pts, grow), fill)
+        else:
+            raise ValueError("unknown piece %r" % (kind,))
+
+
+def silhouette(c, pieces, outline=4.0):
+    """One bold line around the union of the pieces, then the pieces on top."""
+    draw_pieces(c, pieces, outline, DARK)
+    draw_pieces(c, pieces, 0.0)
+
+
 def save_rotations(canvas, name):
     """Write _south/_east/_north/_west from one south-facing drawing."""
     px, w, h = canvas.pixels(), canvas.w, canvas.h
@@ -53,9 +122,9 @@ def knucklebone_mat():
     hide_dark = (118, 90, 62, 255)
 
     # Ragged hide, built from overlapping ellipses so the edge isn't a circle.
-    c.ellipse(64, 66, 52, 46, DARK)
+    c.ellipse(64, 66, 53, 47, DARK)
     for cx, cy, rx, ry in ((44, 52, 26, 22), (86, 58, 24, 21), (60, 92, 30, 20)):
-        c.ellipse(cx, cy, rx + 2, ry + 2, DARK)
+        c.ellipse(cx, cy, rx + 3.5, ry + 3.5, DARK)
     c.ellipse(64, 66, 49, 43, hide_dark)
     for cx, cy, rx, ry in ((44, 52, 24, 20), (86, 58, 22, 19), (60, 92, 28, 18)):
         c.ellipse(cx, cy, rx, ry, hide_dark)
@@ -141,7 +210,7 @@ def draw_shadow_theater(c, frame=None, total=10):
     step = 0 if frame is None else frame
     p = 0.0 if frame is None else float(frame) / total
 
-    c.rect(4, 14, 252, 122, DARK, 10)                       # outer frame
+    c.rect(3, 13, 253, 123, DARK, 10)                       # outer frame
     c.rect(7, 17, 249, 119, (104, 74, 46, 255), 8)
 
     flicker = 0 if frame is None else int(10 * math.sin(2 * math.pi * p * 3))
@@ -266,7 +335,9 @@ def pinball(name, cab, cab_dark, field, accent, accent2, glass, motif):
         c.circle(L + 16 + i * 21.6, PB_BACKBOX - 4, 3.2, (255, 244, 208, 230))
 
     # Playfield, now running further forward than the three-tile cabinet did.
-    c.rect(L + 5, PB_BACKBOX + 4, R - 5, PB_FIELD_BOT + 3, DARK, 6)
+    # The playfield's wooden rim sits inside the cabinet, so it is a tint of
+    # the cabinet rather than the line that goes round the outside.
+    c.rect(L + 5, PB_BACKBOX + 4, R - 5, PB_FIELD_BOT + 3, darker(cab_dark, 0.55), 6)
     c.rect(L + 8, PB_BACKBOX + 7, R - 8, PB_FIELD_BOT, field, 5)
     c.rect(L + 8, PB_BACKBOX + 7, R - 8, PB_BACKBOX + 56, (255, 255, 255, 20), 5)
 
@@ -280,7 +351,7 @@ def pinball(name, cab, cab_dark, field, accent, accent2, glass, motif):
 
     # Pop bumpers.
     for bx, by, rr in BUMPERS:
-        c.circle(bx, by, rr + 2, DARK)
+        c.circle(bx, by, rr + 2, darker(field, 0.5))
         c.circle(bx, by, rr, accent)
         c.circle(bx, by, rr * 0.62, (250, 250, 252, 255))
         c.circle(bx, by, rr * 0.34, accent2)
@@ -290,7 +361,7 @@ def pinball(name, cab, cab_dark, field, accent, accent2, glass, motif):
     for sx in (-1, 1):
         ex = L + 14 if sx < 0 else R - 14
         ix = L + 42 if sx < 0 else R - 42
-        c.poly([(ex, 246), (ix, 236), (ix, 256)], DARK)
+        c.poly([(ex, 246), (ix, 236), (ix, 256)], darker(field, 0.5))
         c.poly([(ex + sx * -3, 246), (ix - sx * -3, 239), (ix - sx * -3, 253)], accent2)
         c.line(ex, 246, ix, 236, (255, 255, 255, 120), 2)     # rubber, catching light
         c.line(ex, 246, ix, 256, (255, 255, 255, 120), 2)
@@ -298,12 +369,12 @@ def pinball(name, cab, cab_dark, field, accent, accent2, glass, motif):
     # Flippers at the player end.
     for sx in (-1, 1):
         x0, x1 = mid + sx * 10, mid + sx * 34
-        c.line(x0, PB_FLIP_Y, x1, PB_FLIP_Y - 9, DARK, 12)
+        c.line(x0, PB_FLIP_Y, x1, PB_FLIP_Y - 9, darker(field, 0.45), 12)
         c.line(x0, PB_FLIP_Y, x1, PB_FLIP_Y - 9, accent, 8)
         c.circle(x0, PB_FLIP_Y, 4.2, (236, 236, 240, 255))
 
     # Ball sitting in the lane.
-    c.circle(R - 20, 218, 6.5, DARK)
+    c.circle(R - 20, 218, 6.5, darker(field, 0.45))
     c.circle(R - 20, 218, 5.2, (226, 228, 236, 255))
     c.circle(R - 21.6, 216.4, 2.0, (255, 255, 255, 220))
 
@@ -311,17 +382,17 @@ def pinball(name, cab, cab_dark, field, accent, accent2, glass, motif):
     c.rect(L, BOT - PB_LOCKBAR, R, BOT, cab, 10)
     c.rect(L + 5, BOT - PB_LOCKBAR + 4, R - 5, BOT - 5, cab_dark, 6)
     for bx in (L + 20, R - 34):
-        c.circle(bx, BOT - 13, 5.2, DARK)
+        c.circle(bx, BOT - 13, 5.2, darker(cab, 0.45))
         c.circle(bx, BOT - 13, 3.8, accent2)
     c.rect(mid - 14, BOT - 20, mid + 14, BOT - 7, (24, 22, 26, 255), 3)   # coin door
     c.circle(mid, BOT - 13, 3.4, accent)
 
     # Shooter rod: through the rail and out the front, with a knob you can see.
     rod_x = R - 12
-    c.rect(rod_x - 5, PB_FIELD_BOT - 6, rod_x + 5, BOT - 4, DARK, 4)
+    c.rect(rod_x - 5, PB_FIELD_BOT - 6, rod_x + 5, BOT - 4, darker(cab_dark, 0.5), 4)
     c.rect(rod_x - 3, PB_FIELD_BOT - 4, rod_x + 3, BOT - 6, (206, 208, 216, 255), 3)
     c.circle(rod_x, PB_FIELD_BOT - 2, 4.2, (176, 180, 190, 255))          # spring collar
-    c.circle(rod_x, BOT - 5, 8.0, DARK)                                   # knob
+    c.circle(rod_x, BOT - 5, 8.0, darker(cab, 0.45))                      # knob
     c.circle(rod_x, BOT - 5, 6.2, accent)
     c.circle(rod_x - 2, BOT - 7, 2.3, (255, 255, 255, 150))
 
@@ -435,7 +506,7 @@ def dreamloop_holotheater():
     # Emitter lenses along the front edge.
     for i in range(5):
         lx = 58 + i * 68
-        c.ellipse(lx, 72, 22, 17, DARK)
+        c.ellipse(lx, 72, 22, 17, darker((48, 46, 66, 255), 0.5))
         c.ellipse(lx, 72, 19, 14, (30, 30, 46, 255))
         c.ellipse(lx, 72, 14, 10, (122, 96, 210, 235))
         c.ellipse(lx, 72, 7, 5, (216, 206, 255, 245))
@@ -764,8 +835,9 @@ def cocktail_cabinet(name, screen_drawer, trim):
     screen_drawer(c, None)                                 # attract mode, baked
 
     # Control clusters on the two seating sides (north and south).
+    panel = (52, 48, 58, 255)
     for sy in (24, 136):
-        c.rect(cx - 26, sy - 7, cx + 26, sy + 7, DARK, 6)
+        c.rect(cx - 26, sy - 7, cx + 26, sy + 7, darker(panel, 0.5), 6)
         c.rect(cx - 23, sy - 5, cx + 23, sy + 5, (68, 64, 78, 255), 5)
         c.circle(cx - 12, sy, 4.6, (28, 26, 32, 255))      # joystick ball
         c.circle(cx - 12, sy, 3.2, trim)
@@ -1049,11 +1121,15 @@ def draw_vista_scene(c, name, frame, total):
 
 
 def vista_panel():
-    """Panel with nothing on it: what you see when the power is out."""
+    """The panel's own texture: a daylight view with the lights down.
+
+    This is what shows in the architect menu and when the power is out. It used
+    to be a black slab, which told a player nothing about what they were
+    building; a dimmed view of the picture reads as a window in the menu and as
+    a dead screen in the room, which is what both want."""
     c = Canvas(384, 128)
-    vista_bezel(c)
-    c.rect(16, 18, 368, 110, (22, 26, 36, 255), 4)
-    c.rect(16, 18, 368, 52, (255, 255, 255, 10), 4)
+    draw_vista_scene(c, "Day", 0, 6)
+    c.rect(12, 14, 372, 114, (10, 12, 22, 150), 5)          # lights down
     for i in range(3):
         c.circle(28 + i * 12, 118, 2.6, (54, 58, 70, 255))
     save_rotations(c, "VistaPanel")
@@ -1142,7 +1218,7 @@ def draw_tub_water(c, frame=None, total=6):
 
 def soaking_tub(name="SoakingTub", electric=False):
     c = Canvas(128, 128)
-    c.circle(64, 62, 48, DARK)
+    c.circle(64, 62, 49, DARK)
     c.circle(64, 62, 45, (112, 78, 48, 255))                    # staves
     for k in range(14):
         import math
@@ -1151,7 +1227,7 @@ def soaking_tub(name="SoakingTub", electric=False):
                64 + math.cos(a) * 46, 62 + math.sin(a) * 46, (74, 48, 28, 255), 5)
     band = (150, 162, 178, 255) if electric else (146, 150, 158, 255)
     c.ring(64, 62, 45, 41, band)                                # hoop
-    c.ring(64, 62, 40, 38, DARK)
+    c.ring(64, 62, 40, 38, darker((112, 78, 48, 255), 0.5))     # inner hoop: a tint
     draw_tub_water(c, None)
 
     if electric:
@@ -1486,12 +1562,13 @@ def karaoke_machine():
     for k in range(5):                                           # idle lyric bars
         c.rect(32, 32 + k * 7, 32 + (18 + (k * 13) % 44), 36 + k * 7,
                (86, 132, 196, 200), 2)
+    case = (48, 44, 62, 255)
     for sx in (24, 88):                                          # speakers
-        c.circle(sx + 8, 90, 15, DARK)
+        c.circle(sx + 8, 90, 15, darker(case, 0.5))
         c.circle(sx + 8, 90, 12.5, (34, 32, 44, 255))
         c.ring(sx + 8, 90, 9, 7.5, (78, 74, 96, 255))
         c.circle(sx + 8, 90, 4, (96, 92, 116, 255))
-    c.rect(54, 78, 74, 104, DARK, 5)                            # mic cradle
+    c.rect(54, 78, 74, 104, darker(case, 0.5), 5)               # mic cradle
     c.rect(57, 81, 71, 101, (62, 58, 76, 255), 4)
     c.circle(64, 86, 6, (196, 198, 210, 255))
     c.circle(64, 86, 4, (120, 124, 140, 255))
@@ -1557,12 +1634,13 @@ def gravball_court():
     c.ring(mid, mid, 34, 30, (104, 224, 232, 150))
     c.line(22, mid, 362, mid, (104, 224, 232, 70), 3)
 
+    court_line = (14, 18, 30, 255)                               # interior tint
     for gy in (54, 330):                                         # goal rings
-        c.ring(mid, gy, 40, 33, DARK)
+        c.ring(mid, gy, 40, 33, court_line)
         c.ring(mid, gy, 38, 35, (126, 236, 240, 220))
         c.ring(mid, gy, 33, 31, (70, 140, 168, 200))
     for cx, cy in ((44, 44), (340, 44), (44, 340), (340, 340)):  # emitter posts
-        c.circle(cx, cy, 20, DARK)
+        c.circle(cx, cy, 20, court_line)
         c.circle(cx, cy, 16, (58, 66, 86, 255))
         c.circle(cx, cy, 9, (140, 240, 244, 210))
         c.circle(cx, cy, 4.5, (236, 252, 252, 240))
@@ -1856,14 +1934,17 @@ def pool_filter():
     c.rect(L, TOP, R, BOT, (96, 104, 112, 255), 8)         # housing
     c.rect(L + 6, TOP + 6, R - 6, BOT - 6, (74, 82, 92, 255), 6)
 
-    c.circle(mid, TOP + 78, 50, DARK)                      # sand filter tank
+    inner = darker((96, 104, 112, 255), 0.48)                # interior lines: a tint of the
+                                                           # housing, not the
+                                                           # line around it
+    c.circle(mid, TOP + 78, 50, inner)                     # sand filter tank
     c.circle(mid, TOP + 78, 46, (128, 136, 146, 255))
     c.ring(mid, TOP + 78, 46, 38, (152, 160, 170, 255))
     c.ring(mid, TOP + 78, 30, 26, (60, 66, 76, 255))
     c.circle(mid, TOP + 78, 24, (46, 52, 62, 255))
     c.circle(mid - 12, TOP + 62, 9, (255, 255, 255, 40))
 
-    c.circle(mid, BOT - 96, 34, DARK)                      # pump volute
+    c.circle(mid, BOT - 96, 34, inner)                     # pump volute
     c.circle(mid, BOT - 96, 30, (108, 116, 126, 255))
     c.ring(mid, BOT - 96, 30, 22, (140, 148, 158, 255))
     for i in range(6):
@@ -1873,9 +1954,9 @@ def pool_filter():
     c.circle(mid, BOT - 96, 7, (44, 50, 60, 255))
 
     for px in (L + 18, R - 18):                            # inlet and outlet
-        c.rect(px - 9, TOP + 128, px + 9, BOT - 120, DARK, 5)
+        c.rect(px - 9, TOP + 128, px + 9, BOT - 120, inner, 5)
         c.rect(px - 6, TOP + 131, px + 6, BOT - 123, (86, 132, 156, 255), 4)
-    c.rect(L + 8, BOT - 52, R - 8, BOT - 16, DARK, 5)      # gauge plate
+    c.rect(L + 8, BOT - 52, R - 8, BOT - 16, inner, 5)     # gauge plate
     c.rect(L + 12, BOT - 48, R - 12, BOT - 20, (40, 46, 56, 255), 4)
     c.circle(L + 34, BOT - 34, 11, (26, 30, 38, 255))
     c.circle(L + 34, BOT - 34, 9, (210, 222, 232, 255))
@@ -1892,47 +1973,62 @@ def pool_filter():
 # ---------------------------------------------------------------------------
 
 def hammock():
-    """Near-neutral, because the stuff colour tints the whole sprite."""
+    """Near-neutral, because the stuff colour tints the whole sprite.
+
+    The sheet and the two posts are separate objects, so each carries its own
+    bold line - that is what a hammock looks like from above. The weave, the
+    sag and the cushion are tints on the sheet, not lines."""
     c = Canvas(160, 320)
     mid = 80
+    OUT = 4.5
+    wood = (126, 112, 98, 255)
+    wood_lt = (158, 144, 128, 255)
+    body = (208, 200, 188, 255)
+    weave = (184, 176, 164, 210)
+    selvedge = (170, 162, 150, 235)
+    cord = (96, 86, 76, 255)
 
-    for py in (26, 294):                                   # end posts
-        c.rect(mid - 26, py - 9, mid + 26, py + 9, DARK, 6)
-        c.rect(mid - 23, py - 6, mid + 23, py + 6, (118, 104, 92, 255), 5)
-        c.circle(mid - 23, py, 5, DARK)
-        c.circle(mid - 23, py, 3.4, (150, 136, 122, 255))
-        c.circle(mid + 23, py, 5, DARK)
-        c.circle(mid + 23, py, 3.4, (150, 136, 122, 255))
+    def sag(y):
+        """Half-width of the sheet at height y: gathered at the ends, slack in
+        the middle, which is the whole shape of the thing."""
+        t = max(0.0, min(1.0, (y - 96) / 128.0))
+        return 40 + 26 * math.sin(math.pi * t)
 
-    for sx in (-1, 1):                                     # gathered cords
+    # Cords, drawn first so both posts and sheet sit on top of them.
+    for sx in (-1, 1):
         for k in range(5):
-            x = mid + sx * (6 + k * 4)
-            c.line(x, 42, mid + sx * 52, 96, (86, 78, 70, 255), 2.2)
-            c.line(x, 278, mid + sx * 52, 224, (86, 78, 70, 255), 2.2)
+            x = mid + sx * (7 + k * 4)
+            c.line(x, 44, mid + sx * 50, 98, cord, 2.6)
+            c.line(x, 276, mid + sx * 50, 222, cord, 2.6)
 
-    # The bed itself: a slack sheet, wider in the middle than at the ends.
-    body = (206, 198, 186, 255)
+    # The sheet: one pass oversized in the outline colour, one at true size.
+    for y in range(96 - int(OUT) - 1, 225 + int(OUT) + 1):
+        w = sag(y) + OUT
+        c.rect(mid - w, y, mid + w, y + 1, DARK)
     for y in range(96, 225):
-        t = (y - 96) / 128.0
-        w = 40 + 26 * math.sin(math.pi * t)
+        w = sag(y)
         c.rect(mid - w, y, mid + w, y + 1, body)
-    c.poly([(mid - 40, 96), (mid + 40, 96), (mid + 52, 96), (mid - 52, 96)], body)
 
     for k in range(9):                                     # weave, following the sag
         t = (k + 0.5) / 9.0
         y = 96 + t * 128
-        w = 40 + 26 * math.sin(math.pi * t)
-        c.line(mid - w + 3, y, mid + w - 3, y, (176, 168, 156, 255), 2.0)
-    c.line(mid, 100, mid, 220, (188, 180, 168, 255), 2.0)
+        w = sag(y)
+        c.line(mid - w + 4, y, mid + w - 4, y, weave, 1.6)
+    c.line(mid, 102, mid, 218, selvedge, 1.4)              # the fold down the middle
 
-    for sx in (-1, 1):                                     # selvedge
-        for y in range(96, 225, 2):
-            t = (y - 96) / 128.0
-            w = 40 + 26 * math.sin(math.pi * t)
-            c.circle(mid + sx * w, y, 2.6, (150, 142, 130, 255))
+    for sx in (-1, 1):                                     # rolled edge, a tint
+        for y in range(98, 223, 2):
+            c.circle(mid + sx * (sag(y) - 2), y, 2.2, selvedge)
 
-    c.rect(mid - 20, 150, mid + 20, 176, (222, 216, 206, 255), 8)   # cushion
-    c.line(mid - 14, 163, mid + 14, 163, (196, 190, 180, 255), 2)
+    c.rect(mid - 20, 150, mid + 20, 176, (226, 220, 210, 255), 8)   # cushion
+    c.line(mid - 14, 163, mid + 14, 163, weave, 1.6)
+
+    # End posts, each its own silhouette.
+    for py in (26, 294):
+        silhouette(c, [("rect", mid - 26, py - 9, mid + 26, py + 9, 6, wood)], OUT)
+        for sx in (-1, 1):
+            c.circle(mid + sx * 23, py, 3.6, wood_lt)      # the eye the cords tie to
+        c.line(mid - 18, py, mid + 18, py, (104, 92, 80, 220), 1.6)
     save_rotations(c, "Hammock")
     return c
 
