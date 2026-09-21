@@ -275,32 +275,63 @@ namespace EntertainingIdeas
         public static bool TryFindOpenSide(Map map, IntVec3 cell, Rot4 current, out Rot4 result)
         {
             result = current;
-            if (Faces(map, cell, current))
+
+            // Rank the four sides rather than taking the first that is merely
+            // not a wall. That was the bug: a wall in a base has open cells on
+            // both faces - a room one way, the weather the other - so "already
+            // faces something open" was true every time and the panel never
+            // turned at all.
+            int best = Score(map, cell, current);
+            if (best >= RoomSide)
             {
-                return false;
+                return false;       // already showing to a room: player's call
             }
+
+            bool found = false;
             for (int i = 0; i < 4; i++)
             {
                 Rot4 rot = new Rot4(i);
-                if (Faces(map, cell, rot))
+                if (rot == current)
                 {
+                    continue;
+                }
+                int score = Score(map, cell, rot);
+                if (score > best)
+                {
+                    best = score;
                     result = rot;
-                    return true;
+                    found = true;
                 }
             }
-            return false;
+            return found;
         }
 
-        /// <summary>Is there somewhere to look at the picture from, this way?</summary>
-        private static bool Faces(Map map, IntVec3 cell, Rot4 rot)
+        private const int BlockedSide = 0;
+        private const int OpenSide = 1;
+        private const int RoomSide = 2;
+
+        /// <summary>
+        /// How good a side is to show a picture to: nothing through a wall,
+        /// little through a doorway to the weather, everything to a room.
+        /// </summary>
+        private static int Score(Map map, IntVec3 cell, Rot4 rot)
         {
             IntVec3 front = cell + rot.FacingCell;
             if (!front.InBounds(map))
             {
-                return false;
+                return BlockedSide;
             }
             Building edifice = front.GetEdifice(map);
-            return edifice == null || edifice.def.passability != Traversability.Impassable;
+            if (edifice != null && edifice.def.passability == Traversability.Impassable)
+            {
+                return BlockedSide;
+            }
+            Room room = front.GetRoom(map);
+            if (room == null || room.PsychologicallyOutdoors)
+            {
+                return OpenSide;
+            }
+            return RoomSide;
         }
 
         private static bool IsWall(Map map, IntVec3 cell, Thing thingToIgnore)
