@@ -197,4 +197,20 @@
     <allowOpportunisticPrefix>true</allowOpportunisticPrefix>
   </JobDef>
 
+
+  <!-- Two ends, so this takes a standing spot in targetB rather than relying on
+       a ThingDef's single interaction cell. -->
+  <JobDef>
+    <defName>EI_Play_Cornhole</defName>
+    <driverClass>EntertainingIdeas.JobDriver_PlayCornhole</driverClass>
+    <reportString>playing cornhole.</reportString>
+    <joyDuration>3600</joyDuration>
+    <joyMaxParticipants>2</joyMaxParticipants>
+    <joySkill>Shooting</joySkill>
+    <joyXpPerTick>0.004</joyXpPerTick>
+    <joyKind>Gaming_Dexterity</joyKind>
+    <taleOnCompletion>PlayedGame</taleOnCompletion>
+    <allowOpportunisticPrefix>true</allowOpportunisticPrefix>
+  </JobDef>
+
 </Defs>

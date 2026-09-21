@@ -236,4 +236,23 @@
     <joyKind>Meditative</joyKind>
   </JoyGiverDef>
 
+
+  <!-- Ours, so the second colonist gets the far end instead of being told the
+       set is taken. -->
+  <JoyGiverDef>
+    <defName>EI_Play_Cornhole</defName>
+    <giverClass>EntertainingIdeas.JoyGiver_Cornhole</giverClass>
+    <baseChance>3</baseChance>
+    <desireSit>false</desireSit>
+    <thingDefs>
+      <li>EI_CornholeSet</li>
+    </thingDefs>
+    <jobDef>EI_Play_Cornhole</jobDef>
+    <joyKind>Gaming_Dexterity</joyKind>
+    <requiredCapacities>
+      <li>Sight</li>
+      <li>Manipulation</li>
+    </requiredCapacities>
+  </JoyGiverDef>
+
 </Defs>

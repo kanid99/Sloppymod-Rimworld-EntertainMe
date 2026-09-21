@@ -1886,4 +1886,57 @@
     </researchPrerequisites>
   </ThingDef>
 
+
+  <!-- ==================== 24. Cornhole set (any tech) ==================== -->
+
+  <ThingDef ParentName="EI_JoyBuildingBase">
+    <defName>EI_CornholeSet</defName>
+    <label>cornhole set</label>
+    <description>Two sloped boards facing each other down five tiles of trodden ground, each with a hole near the high end, and a bag of dried corn for every player. Stand at your board, throw at theirs, argue about whether that one went in.\n\nOne colonist can practise at it alone. Two will take an end each and play properly, with their own colour of sack, which is the only version anybody actually enjoys.\n\nNo power, no research, nothing but planks and cloth. Throwing trains shooting.</description>
+    <graphicData>
+      <texPath>EntertainingIdeas/Buildings/CornholeSet</texPath>
+      <graphicClass>Graphic_Multi</graphicClass>
+      <drawSize>(1,5)</drawSize>
+      <shadowData>
+        <volume>(0.7,0.2,4.4)</volume>
+      </shadowData>
+    </graphicData>
+    <size>(1,5)</size>
+    <rotatable>true</rotatable>
+    <defaultPlacingRot>South</defaultPlacingRot>
+    <fillPercent>0.2</fillPercent>
+    <pathCost>18</pathCost>
+    <canOverlapZones>false</canOverlapZones>
+    <constructionSkillPrerequisite>3</constructionSkillPrerequisite>
+    <statBases>
+      <MaxHitPoints>120</MaxHitPoints>
+      <WorkToBuild>2600</WorkToBuild>
+      <Mass>28</Mass>
+      <Beauty>3</Beauty>
+      <JoyGainFactor>1.1</JoyGainFactor>
+    </statBases>
+    <costList>
+      <WoodLog>60</WoodLog>
+      <Cloth>30</Cloth>
+    </costList>
+    <building>
+      <joyKind>Gaming_Dexterity</joyKind>
+      <paintable>true</paintable>
+    </building>
+    <comps>
+      <!-- The sacks. Drawn every rendered frame rather than stepped through
+           frames, because a bag has to leave one end, arc and land. Who throws
+           comes from who is actually standing at each end. -->
+      <li Class="EntertainingIdeas.CompProperties_CornholeGame">
+        <sackTexPath>EntertainingIdeas/Buildings/CornholeSack</sackTexPath>
+        <sackSize>0.3</sackSize>
+        <secondsPerThrow>2.4</secondsPerThrow>
+        <arcLift>0.45</arcLift>
+        <sacksOnBoard>3</sacksOnBoard>
+        <nearColour>(206,86,72,255)</nearColour>
+        <farColour>(74,118,190,255)</farColour>
+      </li>
+    </comps>
+  </ThingDef>
+
 </Defs>

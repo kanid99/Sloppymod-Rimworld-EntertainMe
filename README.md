@@ -1,6 +1,6 @@
 # Entertaining Ideas
 
-A RimWorld mod that adds **eighteen recreation ideas — twenty-three buildings and
+A RimWorld mod that adds **nineteen recreation ideas — twenty-six buildings and
 a paintable swimming pool** — one for roughly each rung of the tech ladder, so a
 colony always has something worth doing. A tribe gets a hide mat full of
 knucklebones on day one; an archotech lounge gets a room-sized shared
@@ -20,6 +20,7 @@ for each — see [Versions](#versions).
 | Soaking tub | 1×1 | Solitary relaxation | Colonists get *in*. Burns wood (8/day), warms the room, steams while lit, and hides its occupant below the waterline. Holds one soak — see [water](#water). |
 | Skittles lane | 1×7 | Dexterity | Nine pins in a diamond; rolled from the near end. Pins scatter when the ball lands. Trains shooting. |
 | Shadow lantern theater | 2×1 | Social | Watched from 2–5 tiles by up to six colonists. The shadows walk on their own — the drum turns on the lamp's draught. |
+| Cornhole set | 1×5 | Dexterity | Two sloped boards facing each other. One colonist practises alone; two take an end each with their own colour of sack. Wood and cloth, no power, no research. Trains shooting. |
 | Hammock | 1×2 | Solitary relaxation | Rest that is not a bed: no assignment, no sleeping the night, no medical care. Recovers rest at 45% of a plain bed while a colonist lounges. Woven from cloth or leather. |
 | Armillary sphere | 1×1 | Solitary relaxation | Brass rings on a tripod, turning under their own clockwork. Watched from 1–4 tiles. Beauty 16. |
 
@@ -106,7 +107,7 @@ session.
 Electricity for the first pinball tables, Tube television for the arcade
 cabinet, Microelectronics and Flatscreen television for the screens, Fabrication
 for the spacer builds and Advanced fabrication for the ultra pair — so the tree
-gains twenty-three buildings and not one extra node. These are the same gates
+gains twenty-six buildings and not one extra node. These are the same gates
 Vanilla Furniture Expanded uses for equivalent things: its arcade machine and
 industrial computer sit on Tube television, its modern computer and spacer radio
 on Flatscreen television. Everything lands in the Recreation tab of the architect menu.

@@ -209,8 +209,10 @@ for folder, _, files in os.walk(DEFS):
                     fail("%s: missing frame textures %s"
                          % (frame_path, ", ".join(str(i) for i in missing)))
 
-# A texPath outside graphicData belongs to a comp (the aquarium's fish), and
-# the building texture check above never looks at those.
+# A texture path outside graphicData belongs to a comp - the aquarium's fish,
+# the cornhole sacks - and the building check above never looks at those. Any
+# tag ending in texPath counts, so a comp inventing its own name for the field
+# is still covered.
 for folder, _, files in os.walk(DEFS):
     for filename in files:
         if not filename.endswith(".xml"):
@@ -219,11 +221,11 @@ for folder, _, files in os.walk(DEFS):
         for node in root.iter():
             if node.tag == "graphicData":
                 continue
-            for child in node.findall("texPath"):
-                if not child.text:
+            for child in node:
+                if not child.tag.lower().endswith("texpath") or not child.text:
                     continue
                 if not os.path.isfile(os.path.join(TEX, child.text.replace("/", os.sep)) + ".png"):
-                    fail("no texture file for %s" % child.text)
+                    fail("no texture file for %s (<%s>)" % (child.text, child.tag))
 
 for klass in sorted(our_classes_used):
     if klass not in source_classes:

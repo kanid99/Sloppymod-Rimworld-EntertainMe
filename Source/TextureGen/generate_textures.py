@@ -2074,6 +2074,79 @@ def hammock():
     save_rotations(c, "Hammock")
     return c
 
+# ---------------------------------------------------------------------------
+# 24. Cornhole set  (1x5, a board at each end, wood and cloth)
+# ---------------------------------------------------------------------------
+
+def cornhole_set():
+    """Two sloped boards facing each other down a stretch of ground.
+
+    One bold line round each board and nothing like it inside: the plank
+    seams, the slope and the hole's rim are all tints of the timber."""
+    c = Canvas(128, 640)
+    mid = 64
+    OUT = 4.5
+    wood = (176, 132, 82, 255)
+    wood_lt = (204, 166, 116, 255)
+    wood_dk = (140, 100, 60, 255)
+    seam = (156, 114, 70, 220)
+    rail = (120, 86, 52, 255)
+
+    # The pitch between the boards: trodden ground, not part of either board.
+    c.rect(mid - 26, 120, mid + 26, 520, (112, 104, 88, 90), 6)
+    for k in range(9):
+        y = 132 + k * 43
+        c.line(mid - 20, y, mid + 20, y, (128, 120, 102, 70), 2)
+
+    def board(top, bottom, hole_y, flip):
+        """One board. The high end is the far end, so the slope reads."""
+        silhouette(c, [("rect", mid - 40, top, mid + 40, bottom, 7, wood)], OUT)
+
+        # Slope: paler toward the raised end, which is where the hole is.
+        steps = 9
+        for k in range(steps):
+            t = k / float(steps - 1)
+            y0 = top + (bottom - top) * (k / float(steps))
+            y1 = top + (bottom - top) * ((k + 1) / float(steps))
+            shade = tuple(int(wood_dk[i] + (wood_lt[i] - wood_dk[i]) * (t if flip else 1 - t))
+                          for i in range(3))
+            c.rect(mid - 36, y0, mid + 36, y1 + 1, shade + (255,), 0)
+
+        for k in range(4):                                   # plank seams
+            x = mid - 36 + (k + 1) * 14.4
+            c.line(x, top + 5, x, bottom - 5, seam, 1.6)
+
+        c.circle(mid, hole_y, 13, rail)                      # the hole
+        c.circle(mid, hole_y, 10.5, (34, 28, 22, 255))
+        c.circle(mid, hole_y - 2, 8, (22, 18, 14, 255))
+
+        for sx in (-1, 1):                                    # side rails
+            c.line(mid + sx * 36, top + 4, mid + sx * 36, bottom - 4, seam, 1.8)
+
+    board(16, 156, 54, flip=False)                            # far board
+    board(484, 624, 586, flip=True)                           # near board
+    save_rotations(c, "CornholeSet")
+    return c
+
+
+def cornhole_sack():
+    """A bean bag from above. Painted white so the comp can tint it to
+    whichever player threw it."""
+    c = Canvas(64, 64)
+    body = (255, 255, 255, 255)
+    c.rect(10, 14, 54, 50, (60, 54, 48, 255), 13)             # outline
+    c.rect(13, 17, 51, 47, body, 11)
+    # Slumped corners and a seam, so it reads as full of something.
+    for cx, cy in ((20, 24), (44, 24), (20, 40), (44, 40)):
+        c.circle(cx, cy, 7, (238, 238, 238, 255))
+    # One soft seam only. Two crossed ones read as a plus sign once the sack
+    # is drawn a third of a tile across.
+    c.line(18, 33, 46, 31, (222, 222, 222, 150), 2.0)
+    c.circle(26, 25, 5, (255, 255, 255, 170))                 # highlight
+    save_single(c, "CornholeSack")
+    return c
+
+
 BUILDERS = {}
 
 
@@ -2255,10 +2328,17 @@ def _build_hammock():
     return {"Hammock": hammock()}
 
 
+def _build_cornhole():
+    made = {"CornholeSet": cornhole_set()}
+    cornhole_sack()
+    return made
+
+
 _register("gravball", _build_gravball)
 _register("orreries", _build_orreries)
 _register("pool", _build_pool)
 _register("hammock", _build_hammock)
+_register("cornhole", _build_cornhole)
 
 
 if __name__ == "__main__":

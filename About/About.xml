@@ -10,7 +10,7 @@
     <li>1.5</li>
     <li>1.6</li>
   </supportedVersions>
-  <description>Eighteen new recreation ideas - twenty-three buildings and a swimming pool you paint in whatever shape you like - spread across the tech ladder, so a colony has something worth doing whether it is chewing pemmican in a hide tent or running an archotech lounge.
+  <description>Nineteen new recreation ideas - twenty-six buildings and a swimming pool you paint in whatever shape you like - spread across the tech ladder, so a colony has something worth doing whether it is chewing pemmican in a hide tent or running an archotech lounge.
 
 NEOLITHIC AND MEDIEVAL
 - Knucklebone mat - the thinking game a tribe can build on day one. Cast bones, argue, gamble.
@@ -18,6 +18,7 @@ NEOLITHIC AND MEDIEVAL
 - Soaking tub - a wood-fired barrel colonists get into. Warms the room, steams while the firebox is lit, and the water closes round whoever is in it. An electric version follows at industrial tech for anyone tired of hauling logs. A tub holds one soak and somebody carries water out to it between uses, unless Dubs Bad Hygiene is installed and you run a pipe to it.
 - Skittles lane - seven tiles of board and nine pins. Roll from the near end; the pins stay where the ball leaves them until somebody sets them up again.
 - Shadow lantern theater - a lamp, a linen screen, and a drum the flame turns by itself. The shadows walk whether or not anyone is watching.
+- Cornhole set - two sloped boards facing each other down five tiles of ground, each with a hole near the high end. One colonist can practise alone; two take an end each and play properly, with their own colour of sack. Planks and cloth, no power, no research.
 - Armillary sphere - brass rings on a tripod, turning under their own clockwork. It does nothing. It is beautiful.
 
 INDUSTRIAL
@@ -36,7 +37,7 @@ SPACER AND ULTRATECH
 - Gravball court - a 3x3 court with the ball held in a lazy orbit, played from the edges by up to four colonists.
 - Dreamloop holotheater - point it at a wall and it throws a moving picture onto that wall. A whole room can watch, bedridden colonists included.
 
-NO NEW RESEARCH. Everything gates on projects the game already has, so the tree gains twenty-three buildings and not one extra node.
+NO NEW RESEARCH. Everything gates on projects the game already has, so the tree gains twenty-six buildings and not one extra node.
 
 Includes a small assembly for the animated screens, the swimming fish, the wall projection, the sit-in furniture, the pool, the vista panel and the karaoke crowd, built separately for 1.5 and 1.6 because 1.6 changed the joy-tick API. No Harmony and no mod dependencies.
 
