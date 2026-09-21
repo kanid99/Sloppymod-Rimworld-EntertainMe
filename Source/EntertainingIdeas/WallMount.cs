@@ -8,6 +8,50 @@ using Verse;
 namespace EntertainingIdeas
 {
     /// <summary>
+    /// Points the thing being placed a different way.
+    ///
+    /// Designator_Place.placingRot is protected, so this reaches it by
+    /// reflection and quietly gives up if it ever moves - the player can still
+    /// rotate by hand, so the worst case is a cosmetic loss.
+    /// </summary>
+    internal static class PlacingRotation
+    {
+        private static FieldInfo field;
+        private static bool lookedUp;
+
+        public static void SnapTo(Rot4 wanted, Rot4 current)
+        {
+            if (wanted == current)
+            {
+                return;
+            }
+            if (!lookedUp)
+            {
+                lookedUp = true;
+                field = typeof(Designator_Place).GetField(
+                    "placingRot", BindingFlags.Instance | BindingFlags.NonPublic);
+            }
+            if (field == null || Find.DesignatorManager == null)
+            {
+                return;
+            }
+            Designator_Place designator = Find.DesignatorManager.SelectedDesignator as Designator_Place;
+            if (designator == null)
+            {
+                return;
+            }
+            try
+            {
+                field.SetValue(designator, wanted);
+            }
+            catch
+            {
+                field = null;       // stop trying
+            }
+        }
+    }
+
+    /// <summary>
     /// Draws, while placing, the wall the projector will actually hit - or the
     /// beam running off into nothing if there is no wall in range. Aiming a
     /// projector you cannot see the aim of is guesswork otherwise.
@@ -22,32 +66,87 @@ namespace EntertainingIdeas
                 return;
             }
 
-            CompProperties_WallProjection props = def.GetCompProperties<CompProperties_WallProjection>();
-            int range = props != null ? props.projectionRange : 6;
-            IntVec3 facing = rot.FacingCell;
+            int range = RangeOf(def);
+            List<IntVec3> beam;
+            IntVec3 wall;
 
-            List<IntVec3> beam = new List<IntVec3>();
+            if (!TryCastBeam(map, center, rot, range, out wall, out beam))
+            {
+                // This way misses. Turn to a direction that does not, if there
+                // is one - a projector aimed at nothing is the single thing
+                // players get wrong with this building. Only ever corrects a
+                // facing that is already useless: a valid aim is left alone,
+                // because which wall to use is the player's call.
+                Rot4 better;
+                if (TryFindAWall(map, center, range, rot, out better))
+                {
+                    PlacingRotation.SnapTo(better, rot);
+                    return;
+                }
+                GenDraw.DrawFieldEdges(beam, new Color(1f, 0.4f, 0.4f, 0.35f));
+                return;
+            }
+
+            GenDraw.DrawFieldEdges(new List<IntVec3>
+            {
+                wall, wall + rot.RighthandCell, wall - rot.RighthandCell
+            }, Color.cyan);
+        }
+
+        private static int RangeOf(ThingDef def)
+        {
+            CompProperties_WallProjection props = def.GetCompProperties<CompProperties_WallProjection>();
+            return props != null ? props.projectionRange : 6;
+        }
+
+        /// <summary>
+        /// Walks the beam out until it meets something solid. Reports the wall
+        /// it hit, or the cells it crossed on its way to hitting nothing.
+        /// </summary>
+        private static bool TryCastBeam(Map map, IntVec3 center, Rot4 rot, int range,
+                                        out IntVec3 wall, out List<IntVec3> beam)
+        {
+            IntVec3 facing = rot.FacingCell;
+            beam = new List<IntVec3>();
+            wall = IntVec3.Invalid;
+
             for (int distance = 1; distance <= range; distance++)
             {
                 IntVec3 cell = center + facing * distance;
                 if (!cell.InBounds(map))
                 {
-                    break;
+                    return false;
                 }
                 Building edifice = cell.GetEdifice(map);
                 if (edifice != null && edifice.def.passability == Traversability.Impassable)
                 {
-                    List<IntVec3> screen = new List<IntVec3>
-                    {
-                        cell, cell + rot.RighthandCell, cell - rot.RighthandCell
-                    };
-                    GenDraw.DrawFieldEdges(screen, Color.cyan);
-                    return;
+                    wall = cell;
+                    return true;
                 }
                 beam.Add(cell);
             }
-            // Nothing in range: show how far it looked, so the miss is obvious.
-            GenDraw.DrawFieldEdges(beam, new Color(1f, 0.4f, 0.4f, 0.35f));
+            return false;
+        }
+
+        private static bool TryFindAWall(Map map, IntVec3 center, int range, Rot4 skip, out Rot4 result)
+        {
+            result = skip;
+            IntVec3 wall;
+            List<IntVec3> ignored;
+            for (int i = 0; i < 4; i++)
+            {
+                Rot4 rot = new Rot4(i);
+                if (rot == skip)
+                {
+                    continue;
+                }
+                if (TryCastBeam(map, center, rot, range, out wall, out ignored))
+                {
+                    result = rot;
+                    return true;
+                }
+            }
+            return false;
         }
     }
 
@@ -129,44 +228,12 @@ namespace EntertainingIdeas
             GenDraw.DrawFieldEdges(new List<IntVec3> { center + rot.FacingCell }, Color.cyan);
         }
 
-        /// <summary>
-        /// Points the designator at the open side. Designator_Place.placingRot
-        /// is protected, so this reaches it by reflection and quietly does
-        /// nothing if it ever moves - the player can still rotate by hand.
-        /// </summary>
-        private static FieldInfo placingRotField;
-        private static bool placingRotLookedUp;
-
         private static void SnapPlacingRotation(Map map, IntVec3 center, Rot4 current)
         {
-            if (!placingRotLookedUp)
-            {
-                placingRotLookedUp = true;
-                placingRotField = typeof(Designator_Place).GetField(
-                    "placingRot", BindingFlags.Instance | BindingFlags.NonPublic);
-            }
-            if (placingRotField == null || Find.DesignatorManager == null)
-            {
-                return;
-            }
-            Designator_Place designator = Find.DesignatorManager.SelectedDesignator as Designator_Place;
-            if (designator == null)
-            {
-                return;
-            }
-
             Rot4 wanted;
-            if (!TryFindOpenSide(map, center, current, out wanted) || wanted == current)
+            if (TryFindOpenSide(map, center, current, out wanted))
             {
-                return;
-            }
-            try
-            {
-                placingRotField.SetValue(designator, wanted);
-            }
-            catch
-            {
-                placingRotField = null;     // stop trying
+                PlacingRotation.SnapTo(wanted, current);
             }
         }
 

@@ -654,7 +654,7 @@
   <ThingDef ParentName="EI_JoyBuildingBase">
     <defName>EI_DreamloopHolotheater</defName>
     <label>dreamloop holotheater</label>
-    <description>A bank of five emitters that fills the room in front of it with a shared waking dream - not a picture on a wall, but weather, crowds, and coastline standing in the open floor. Everyone watching gets the same dream, which is why the arguments afterwards are so specific.\n\nA whole room can watch at once, including people lying in bed nearby. It is enormously entertaining and enormously expensive to run.\n\nIt needs a wall to throw the picture onto: face it across the room at one, up to twelve tiles away, with the audience in between. While you are placing it, the wall it will use is outlined.</description>
+    <description>A bank of five emitters that fills the room in front of it with a shared waking dream - not a picture on a wall, but weather, crowds, and coastline standing in the open floor. Everyone watching gets the same dream, which is why the arguments afterwards are so specific.\n\nA whole room can watch at once, including people lying in bed nearby. It is enormously entertaining and enormously expensive to run.\n\nIt needs a wall to throw the picture onto: face it across the room at one, up to twelve tiles away, with the audience in between. While you are placing it, the wall it will use is outlined, and if it is pointing at nothing it turns itself toward a wall that is in range. Aim it at a particular wall and it stays aimed there.</description>
     <graphicData>
       <texPath>EntertainingIdeas/Buildings/DreamloopHolotheater</texPath>
       <graphicClass>Graphic_Multi</graphicClass>
