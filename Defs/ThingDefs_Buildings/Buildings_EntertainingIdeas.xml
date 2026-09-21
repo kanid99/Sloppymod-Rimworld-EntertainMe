@@ -531,34 +531,30 @@
   <ThingDef ParentName="EI_JoyBuildingBase">
     <defName>EI_VistaPanel</defName>
     <label>vista panel</label>
-    <description>A wall-length display that mounts into the wall itself, showing somewhere with a horizon in it. The feed runs on the local clock - grey dawn, open daylight, a long sunset, then stars - and the panel throws enough light into the room to cast the right colour of shadow at the right hour.\n\nIt is not a window and nobody is fooled for long, but a room with one in it stops feeling quite so much like a hole in the ground. Colonists in the room it faces hold off cabin fever for longer, though it will never do the job of actually going outside.\n\nHangs on the inside face of a wall: it needs three clear tiles with wall directly behind them. Colonists walk straight through it.</description>
+    <description>A wall-length display that mounts into the wall itself, showing somewhere with a horizon in it. The feed runs on the local clock - grey dawn, open daylight, a long sunset, then stars - and the panel throws enough light into the room to cast the right colour of shadow at the right hour.\n\nIt is not a window and nobody is fooled for long, but a room with one in it stops feeling quite so much like a hole in the ground. Colonists in the room it faces hold off cabin fever for longer, though it will never do the job of actually going outside.\n\nMounts into the wall itself and takes up no floor, so shelves, chairs and anything else can stand right in front of it. It needs three tiles of unbroken wall to span, and turns to face the room on its own.</description>
     <graphicData>
       <texPath>EntertainingIdeas/Buildings/VistaPanel</texPath>
       <graphicClass>Graphic_Multi</graphicClass>
-      <drawSize>(3,1)</drawSize>
-      <!-- It stands on the floor tiles in front of the wall and is drawn half
-           a tile backwards onto the wall's face, so it reads as mounted. The
-           offset is opposite the way it faces: a south-facing panel shows its
-           picture to the room to the south, and hangs on the wall to the
-           north. -->
-      <drawOffsetNorth>(0,0,-0.5)</drawOffsetNorth>
-      <drawOffsetSouth>(0,0,0.5)</drawOffsetSouth>
-      <drawOffsetEast>(-0.5,0,0)</drawOffsetEast>
-      <drawOffsetWest>(0.5,0,0)</drawOffsetWest>
+      <!-- One cell of wall, but the picture is painted three tiles across it.
+           Kept well under a tile deep so it reads as a panel on the wall's
+           face rather than something standing in the room, and so it never
+           covers a shelf or a chair put in front of it. -->
+      <drawSize>(3,0.75)</drawSize>
+      <drawOffsetNorth>(0,0,0.26)</drawOffsetNorth>
+      <drawOffsetSouth>(0,0,-0.26)</drawOffsetSouth>
+      <drawOffsetEast>(0.26,0,0)</drawOffsetEast>
+      <drawOffsetWest>(-0.26,0,0)</drawOffsetWest>
       <damageData>
         <enabled>false</enabled>
       </damageData>
     </graphicData>
-    <size>(3,1)</size>
+    <size>(1,1)</size>
     <tickerType>Rare</tickerType>
     <rotatable>true</rotatable>
     <defaultPlacingRot>South</defaultPlacingRot>
-    <!-- Not an edifice and not in the wall: it takes the floor tiles in front
-         of the wall, but with no fill, no path cost and full standability, so
-         colonists walk straight through it and it costs no usable floor.
-         Vanilla's own wall-attachment support is single-cell - GetWallAttachedTo
-         takes one position - so a three-tile panel cannot live inside the wall
-         the way a wall lamp does. -->
+    <!-- A wall attachment, the same shape of thing as a wall lamp: it shares
+         the wall's own cell and takes no floor. That is the whole point -
+         anything standing in the room in front of it is left alone. -->
     <altitudeLayer>BuildingOnTop</altitudeLayer>
     <passability>Standable</passability>
     <terrainAffordanceNeeded IsNull="True" />
@@ -570,9 +566,10 @@
     <canOverlapZones>true</canOverlapZones>
     <building>
       <isEdifice>false</isEdifice>
+      <isAttachment>true</isAttachment>
     </building>
     <placeWorkers>
-      <li>EntertainingIdeas.PlaceWorker_MountedOnWallFace</li>
+      <li>EntertainingIdeas.PlaceWorker_WallMountedDisplay</li>
     </placeWorkers>
     <constructEffect>ConstructMetal</constructEffect>
     <constructionSkillPrerequisite>8</constructionSkillPrerequisite>
@@ -599,9 +596,10 @@
         <glowRadius>7</glowRadius>
         <glowColor>(250,245,225,0)</glowColor>
       </li>
+      <li Class="EntertainingIdeas.CompProperties_FaceOpenSide"/>
       <li Class="EntertainingIdeas.CompProperties_DayCycleDisplay">
         <ticksPerFrame>14</ticksPerFrame>
-        <drawSize>(3,1)</drawSize>
+        <drawSize>(3,0.75)</drawSize>
         <phases>
           <li>
             <label>a night sky</label>
