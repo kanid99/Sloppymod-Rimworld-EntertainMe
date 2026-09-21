@@ -2078,54 +2078,47 @@ def hammock():
 # 24. Cornhole set  (1x5, a board at each end, wood and cloth)
 # ---------------------------------------------------------------------------
 
-def cornhole_set():
-    """Two sloped boards facing each other down a stretch of ground.
+def cornhole_board():
+    """One sloped plank board with a hole near the high end.
 
-    One bold line round each board and nothing like it inside: the plank
-    seams, the slope and the hole's rim are all tints of the timber."""
-    c = Canvas(128, 640)
+    Two tiles, seen from above: the far edge is the raised end, so the slope
+    runs pale to dark toward the player. One bold line round the board and
+    nothing like it inside - the plank seams, the slope and the hole's rim are
+    all tints of the timber."""
+    c = Canvas(128, 256)
     mid = 64
     OUT = 4.5
-    wood = (176, 132, 82, 255)
     wood_lt = (204, 166, 116, 255)
     wood_dk = (140, 100, 60, 255)
+    wood = (176, 132, 82, 255)
     seam = (156, 114, 70, 220)
     rail = (120, 86, 52, 255)
 
-    # The pitch between the boards: trodden ground, not part of either board.
-    c.rect(mid - 26, 120, mid + 26, 520, (112, 104, 88, 90), 6)
-    for k in range(9):
-        y = 132 + k * 43
-        c.line(mid - 20, y, mid + 20, y, (128, 120, 102, 70), 2)
+    top, bottom = 14, 242
+    silhouette(c, [("rect", mid - 44, top, mid + 44, bottom, 8, wood)], OUT)
 
-    def board(top, bottom, hole_y, flip):
-        """One board. The high end is the far end, so the slope reads."""
-        silhouette(c, [("rect", mid - 40, top, mid + 40, bottom, 7, wood)], OUT)
+    # Slope, paler toward the raised far end where the hole is.
+    steps = 12
+    for k in range(steps):
+        t = k / float(steps - 1)
+        y0 = top + (bottom - top) * (k / float(steps))
+        y1 = top + (bottom - top) * ((k + 1) / float(steps))
+        shade = tuple(int(wood_dk[i] + (wood_lt[i] - wood_dk[i]) * (1 - t))
+                      for i in range(3))
+        c.rect(mid - 40, y0, mid + 40, y1 + 1, shade + (255,), 0)
 
-        # Slope: paler toward the raised end, which is where the hole is.
-        steps = 9
-        for k in range(steps):
-            t = k / float(steps - 1)
-            y0 = top + (bottom - top) * (k / float(steps))
-            y1 = top + (bottom - top) * ((k + 1) / float(steps))
-            shade = tuple(int(wood_dk[i] + (wood_lt[i] - wood_dk[i]) * (t if flip else 1 - t))
-                          for i in range(3))
-            c.rect(mid - 36, y0, mid + 36, y1 + 1, shade + (255,), 0)
+    for k in range(4):                                       # plank seams
+        x = mid - 40 + (k + 1) * 16
+        c.line(x, top + 6, x, bottom - 6, seam, 1.6)
 
-        for k in range(4):                                   # plank seams
-            x = mid - 36 + (k + 1) * 14.4
-            c.line(x, top + 5, x, bottom - 5, seam, 1.6)
+    c.circle(mid, top + 46, 15, rail)                        # the hole
+    c.circle(mid, top + 46, 12, (34, 28, 22, 255))
+    c.circle(mid, top + 44, 9, (22, 18, 14, 255))
 
-        c.circle(mid, hole_y, 13, rail)                      # the hole
-        c.circle(mid, hole_y, 10.5, (34, 28, 22, 255))
-        c.circle(mid, hole_y - 2, 8, (22, 18, 14, 255))
-
-        for sx in (-1, 1):                                    # side rails
-            c.line(mid + sx * 36, top + 4, mid + sx * 36, bottom - 4, seam, 1.8)
-
-    board(16, 156, 54, flip=False)                            # far board
-    board(484, 624, 586, flip=True)                           # near board
-    save_rotations(c, "CornholeSet")
+    for sx in (-1, 1):                                        # side rails
+        c.line(mid + sx * 40, top + 5, mid + sx * 40, bottom - 5, seam, 1.8)
+    c.line(mid - 38, bottom - 10, mid + 38, bottom - 10, seam, 1.6)   # near lip
+    save_rotations(c, "CornholeBoard")
     return c
 
 
@@ -2329,7 +2322,7 @@ def _build_hammock():
 
 
 def _build_cornhole():
-    made = {"CornholeSet": cornhole_set()}
+    made = {"CornholeBoard": cornhole_board()}
     cornhole_sack()
     return made
 

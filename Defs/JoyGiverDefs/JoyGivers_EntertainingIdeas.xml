@@ -237,15 +237,15 @@
   </JoyGiverDef>
 
 
-  <!-- Ours, so the second colonist gets the far end instead of being told the
-       set is taken. -->
+  <!-- Vanilla's watch-building giver with a cap: cornhole is a two-player
+       game and the throwing area holds more than two. -->
   <JoyGiverDef>
     <defName>EI_Play_Cornhole</defName>
     <giverClass>EntertainingIdeas.JoyGiver_Cornhole</giverClass>
     <baseChance>3</baseChance>
     <desireSit>false</desireSit>
     <thingDefs>
-      <li>EI_CornholeSet</li>
+      <li>EI_CornholeBoard</li>
     </thingDefs>
     <jobDef>EI_Play_Cornhole</jobDef>
     <joyKind>Gaming_Dexterity</joyKind>

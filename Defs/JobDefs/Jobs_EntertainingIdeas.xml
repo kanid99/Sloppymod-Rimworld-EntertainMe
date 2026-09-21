@@ -198,21 +198,19 @@
   </JobDef>
 
 
-  <!-- Two ends, so this takes a standing spot in targetB rather than relying on
-       a ThingDef's single interaction cell.
+  <!-- Vanilla's watch-building driver, unchanged: it puts the colonist on a
+       free spot in the throwing area, faces them at the board and runs the joy
+       tick. It reserves that spot and not the board, which is what lets a
+       second colonist join - the same reason several pawns can watch one
+       television. The cap at two lives in the giver.
 
-       What actually caps the game at two players is the reservation: the driver
-       reserves the standing spot and never the set, so a second colonist takes
-       the far end, and a third finds both ends reserved and is offered nothing.
-       That is the same mechanism vanilla uses for a building several pawns can
-       share - JobDriver_WatchBuilding reserves the watch cell, not the
-       television. joyMaxParticipants below is NOT what limits it: the field is
-       declared on JobDef and never read anywhere in Assembly-CSharp. It is set
-       here because vanilla's own defs set it and it documents the intent, but
-       nothing consults it. -->
+       joyMaxParticipants below is NOT what limits it: the field is declared on
+       JobDef and never read anywhere in the game's assembly. It is set because
+       vanilla's own defs set it and it records the intent, but nothing
+       consults it. -->
   <JobDef>
     <defName>EI_Play_Cornhole</defName>
-    <driverClass>EntertainingIdeas.JobDriver_PlayCornhole</driverClass>
+    <driverClass>JobDriver_WatchBuilding</driverClass>
     <reportString>playing cornhole.</reportString>
     <joyDuration>3600</joyDuration>
     <joyMaxParticipants>2</joyMaxParticipants>

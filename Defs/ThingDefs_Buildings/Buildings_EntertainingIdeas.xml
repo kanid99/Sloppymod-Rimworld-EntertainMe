@@ -1887,21 +1887,21 @@
   </ThingDef>
 
 
-  <!-- ==================== 24. Cornhole set (any tech) ==================== -->
+  <!-- =================== 24. Cornhole board (any tech) =================== -->
 
   <ThingDef ParentName="EI_JoyBuildingBase">
-    <defName>EI_CornholeSet</defName>
-    <label>cornhole set</label>
-    <description>Two sloped boards facing each other down five tiles of trodden ground, each with a hole near the high end, and a bag of dried corn for every player. Stand at your board, throw at theirs, argue about whether that one went in.\n\nOne colonist can practise at it alone. Two will take an end each and play properly, with their own colour of sack, which is the only version anybody actually enjoys.\n\nNo power, no research, nothing but planks and cloth. Throwing trains shooting.</description>
+    <defName>EI_CornholeBoard</defName>
+    <label>cornhole board</label>
+    <description>A sloped plank board with a hole near the high end, and a bag of dried corn for every player. Stand back, throw, argue about whether that one went in.\n\nOne colonist can practise at it alone. Two will take turns, each with their own colour of sack, which is the only version anybody actually enjoys. A third is told to wait.\n\nThe throwing line is a few tiles back - it is outlined while you place it, so leave the room clear. No power, no research, nothing but planks and cloth. Throwing trains shooting.</description>
     <graphicData>
-      <texPath>EntertainingIdeas/Buildings/CornholeSet</texPath>
+      <texPath>EntertainingIdeas/Buildings/CornholeBoard</texPath>
       <graphicClass>Graphic_Multi</graphicClass>
-      <drawSize>(1,5)</drawSize>
+      <drawSize>(1,2)</drawSize>
       <shadowData>
-        <volume>(0.7,0.2,4.4)</volume>
+        <volume>(0.7,0.2,1.6)</volume>
       </shadowData>
     </graphicData>
-    <size>(1,5)</size>
+    <size>(1,2)</size>
     <rotatable>true</rotatable>
     <defaultPlacingRot>South</defaultPlacingRot>
     <fillPercent>0.2</fillPercent>
@@ -1909,32 +1909,47 @@
     <canOverlapZones>false</canOverlapZones>
     <constructionSkillPrerequisite>3</constructionSkillPrerequisite>
     <statBases>
-      <MaxHitPoints>120</MaxHitPoints>
-      <WorkToBuild>2600</WorkToBuild>
-      <Mass>28</Mass>
+      <MaxHitPoints>90</MaxHitPoints>
+      <WorkToBuild>1800</WorkToBuild>
+      <Mass>16</Mass>
       <Beauty>3</Beauty>
       <JoyGainFactor>1.1</JoyGainFactor>
     </statBases>
     <costList>
-      <WoodLog>60</WoodLog>
-      <Cloth>30</Cloth>
+      <WoodLog>35</WoodLog>
+      <Cloth>20</Cloth>
     </costList>
     <building>
       <joyKind>Gaming_Dexterity</joyKind>
       <paintable>true</paintable>
+      <!-- The throwing line. This is the same machinery vanilla horseshoes
+           uses: the watch area supplies the standing spots, and the driver
+           reserves a spot rather than the board, which is what lets a second
+           colonist join. Two tiles wide so the pair stand alongside each
+           other rather than strung out across the room. -->
+      <watchBuildingStandDistanceRange>
+        <min>3</min>
+        <max>5</max>
+      </watchBuildingStandDistanceRange>
+      <watchBuildingStandRectWidth>2</watchBuildingStandRectWidth>
     </building>
+    <placeWorkers>
+      <li>PlaceWorker_WatchArea</li>
+    </placeWorkers>
     <comps>
       <!-- The sacks. Drawn every rendered frame rather than stepped through
-           frames, because a bag has to leave one end, arc and land. Who throws
-           comes from who is actually standing at each end. -->
+           frames, because a bag has to leave the thrower, arc and land. Who
+           throws comes from who is actually standing in the throwing area. -->
       <li Class="EntertainingIdeas.CompProperties_CornholeGame">
         <sackTexPath>EntertainingIdeas/Buildings/CornholeSack</sackTexPath>
         <sackSize>0.3</sackSize>
         <secondsPerThrow>2.4</secondsPerThrow>
         <arcLift>0.45</arcLift>
-        <sacksOnBoard>3</sacksOnBoard>
-        <nearColour>(206,86,72,255)</nearColour>
-        <farColour>(74,118,190,255)</farColour>
+        <sacksOnBoard>4</sacksOnBoard>
+        <sackColours>
+          <li>(206,86,72,255)</li>
+          <li>(74,118,190,255)</li>
+        </sackColours>
       </li>
     </comps>
   </ThingDef>
