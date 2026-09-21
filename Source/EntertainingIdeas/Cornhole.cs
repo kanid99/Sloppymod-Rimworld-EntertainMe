@@ -71,11 +71,20 @@ namespace EntertainingIdeas
     /// <summary>
     /// Sends a colonist to whichever end of the cornhole set is free.
     ///
-    /// The vanilla interaction-cell giver would not do: a ThingDef gets exactly
-    /// one interaction cell, and this game has two ends. Both are offered, and
-    /// only the standing spot is reserved rather than the whole set, which is
-    /// what lets a second colonist take the other end and makes it a game
-    /// rather than a queue.
+    /// Neither vanilla giver fits. The interaction-cell one is out because a
+    /// ThingDef gets exactly one interaction cell and this game has two ends.
+    /// The watch-building one - which is how vanilla does recreation several
+    /// pawns can share, horseshoes included - puts them anywhere in a band at a
+    /// distance from the building, so both players would end up shoulder to
+    /// shoulder at the same end throwing at one board. Cornhole wants one
+    /// player at each end, facing each other, which is two particular cells
+    /// rather than a rect.
+    ///
+    /// The part worth copying from vanilla is the reservation: JobDriver_
+    /// WatchBuilding reserves the watch cell and not the television, which is
+    /// what lets several pawns share it. This reserves the standing spot and
+    /// never the set, so the second colonist takes the far end and a third
+    /// finds both ends taken and is offered nothing.
     /// </summary>
     public class JoyGiver_Cornhole : JoyGiver
     {
