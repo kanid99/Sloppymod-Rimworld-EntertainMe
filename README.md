@@ -96,7 +96,9 @@ session.
 |---|---|---|---|---|
 | Archotech dreamtable | 1×2 | Dexterity | 200W | Fabrication + Microelectronics |
 | Hologame pod | 1×1 | Cerebral | 250W | Fabrication |
-| Vista panel | 3×1 | *(outdoors need)* | 150W | Flatscreen television |
+| Vista panel (1 tile) | wall | *(outdoors need)* | 60W | Flatscreen television |
+| Vista panel (2 tiles) | wall | *(outdoors need)* | 105W | Flatscreen television |
+| Vista panel (3 tiles) | wall | *(outdoors need)* | 150W | Flatscreen television |
 | Dreamloop holotheater | 3×1 | Television | 500W | Advanced fabrication |
 | Gravball court | 3×3 | Dexterity | 400W | Advanced fabrication |
 

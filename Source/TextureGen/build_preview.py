@@ -26,7 +26,7 @@ SOURCES = {
     "CocktailArcade": "CocktailArcade.png",
     "MassageChair": "MassageChair_south.png",
     "HologamePod": "HologamePod_south.png",
-    "VistaDay": "VistaPanelDay_2.png",
+    "VistaDay": "VistaPanel3Day_2.png",
     "PinballClassic": "PinballClassic_south.png",
     "PinballBoomalope": "PinballBoomalope_south.png",
     "PinballMechRampage": "PinballMechRampage_south.png",

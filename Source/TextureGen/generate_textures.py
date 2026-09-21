@@ -1051,22 +1051,36 @@ VISTA_SKY = {
 }
 
 
-def vista_bezel(c):
-    # 384 x 96: three tiles wide, three quarters of a tile deep, which is the
-    # shape of a panel sitting on a wall's face rather than in the room.
-    c.rect(2, 3, 382, 93, DARK, 8)
-    c.rect(5, 6, 379, 90, (78, 82, 94, 255), 7)
-    c.frame(5, 6, 379, 90, (146, 152, 170, 90), 2, 7)
-    c.rect(12, 12, 372, 84, (10, 12, 20, 255), 4)           # glass
+# One tile of panel is 128 wide; the depth stays three quarters of a tile
+# whatever the width, because that is what makes it sit on the wall's face.
+VISTA_TILE = 128
+VISTA_H = 96
+
+
+def vista_bezel(c, w):
+    c.rect(2, 3, w - 2, 93, DARK, 8)
+    c.rect(5, 6, w - 5, 90, (78, 82, 94, 255), 7)
+    c.frame(5, 6, w - 5, 90, (146, 152, 170, 90), 2, 7)
+    c.rect(12, 12, w - 12, 84, (10, 12, 20, 255), 4)        # glass
 
 
 def draw_vista_scene(c, name, frame, total):
+    """The view, drawn to fit whatever width the canvas is.
+
+    Everything across the picture is placed as a fraction of the glass rather
+    than at a fixed pixel, so the one-tile panel shows the same landscape as
+    the three-tile one rather than a squashed copy of it."""
     import math
     sky = VISTA_SKY[name]
-    x0, y0, x1, y1 = 12, 12, 372, 84
+    w = c.w
+    x0, y0, x1, y1 = 12, 12, w - 12, 84
+    span = float(x1 - x0)
     p = float(frame) / total
 
-    vista_bezel(c)
+    def at(fraction):
+        return x0 + span * fraction
+
+    vista_bezel(c, w)
 
     # Sky, blended top to horizon in bands.
     bands = 18
@@ -1076,14 +1090,15 @@ def draw_vista_scene(c, name, frame, total):
         c.rect(x0, y0 + t * 50, x1, y0 + (b + 1) * 50.0 / bands + 1, col + (255,), 0)
 
     if sky["stars"]:
-        for k in range(sky["stars"]):
-            sx = x0 + 6 + (k * 61) % (x1 - x0 - 12)
+        count = max(8, int(sky["stars"] * span / 360.0))
+        for k in range(count):
+            sx = x0 + 6 + (k * 61) % max(1, int(span - 12))
             sy = y0 + 3 + (k * 37) % 40
             twinkle = 120 + int(120 * math.sin(2 * math.pi * (p * 2 + k * 0.17)))
             c.circle(sx, sy, 1.5, (240, 244, 255, max(40, min(255, twinkle))))
 
     # Sun or moon, drifting a little across the loop so the view is never still.
-    bx = x0 + (x1 - x0) * (sky["body_x"] + 0.03 * math.sin(2 * math.pi * p))
+    bx = at(sky["body_x"] + 0.03 * math.sin(2 * math.pi * p))
     by = y0 + 58 * sky["body_y"]
     c.circle(bx, by, 17, sky["glow"] + (45,))
     c.circle(bx, by, 10, sky["body"] + (255,))
@@ -1094,60 +1109,73 @@ def draw_vista_scene(c, name, frame, total):
     cloud_col = (250, 250, 255, 150) if name == "Day" else (255, 214, 190, 120)
     if name == "Night":
         cloud_col = (120, 132, 180, 90)
-    for k in range(3):
-        cx = x0 - 40 + ((p + k * 0.34) % 1.0) * (x1 - x0 + 80)
-        cy = y0 + 13 + k * 9
+    clouds = max(1, int(round(3 * span / 360.0)))
+    for k in range(clouds):
+        cx = x0 - 40 + ((p + k / float(clouds)) % 1.0) * (span + 80)
+        cy = y0 + 13 + (k % 3) * 9
         for dx, dy, r in ((-13, 2, 6), (-3, -2, 8), (8, 2, 6), (16, 2, 5)):
             c.ellipse(cx + dx, cy + dy, r, r * 0.62, cloud_col)
 
     # Birds, a long way off.
     for k in range(sky["birds"]):
-        fx = x0 + 20 + ((p * 0.8 + k * 0.3) % 1.0) * (x1 - x0 - 40)
+        fx = at(0.06 + ((p * 0.8 + k * 0.3) % 1.0) * 0.88)
         fy = y0 + 22 + 4 * math.sin(2 * math.pi * (p * 2 + k))
         c.line(fx - 5, fy, fx, fy - 2.5, (40, 40, 56, 190), 1.8)
         c.line(fx, fy - 2.5, fx + 5, fy, (40, 40, 56, 190), 1.8)
 
     # Land: a far ridge and a near one, so there is some depth to look at.
     far = tuple(min(255, v + 26) for v in sky["hills"])
-    c.poly([(x0, 66), (70, 52), (130, 63), (210, 49), (280, 61), (340, 54), (x1, 63),
-            (x1, y1), (x0, y1)], far + (255,))
-    c.poly([(x0, 72), (60, 63), (120, 73), (200, 61), (270, 72), (330, 66), (x1, 74),
-            (x1, y1), (x0, y1)], sky["hills"] + (255,))
+    ridge_far = ((0.0, 66), (0.16, 52), (0.33, 63), (0.55, 49), (0.74, 61),
+                 (0.91, 54), (1.0, 63))
+    ridge_near = ((0.0, 72), (0.13, 63), (0.30, 73), (0.52, 61), (0.72, 72),
+                  (0.88, 66), (1.0, 74))
+    c.poly([(at(f), y) for f, y in ridge_far] + [(x1, y1), (x0, y1)], far + (255,))
+    c.poly([(at(f), y) for f, y in ridge_near] + [(x1, y1), (x0, y1)],
+           sky["hills"] + (255,))
     c.rect(x0, 77, x1, y1, tuple(max(0, v - 8) for v in sky["hills"]) + (255,), 0)
 
     # Scanlines and a faint sheen, to keep it reading as a screen.
     for y in range(y0, y1, 4):
         c.rect(x0, y, x1, y + 1, (8, 10, 18, 40), 0)
     c.rect(x0, y0, x1, y0 + 10, (255, 255, 255, 18), 0)
-    c.frame(12, 12, 372, 84, (150, 160, 190, 90), 1.5, 4)
+    c.frame(x0, y0, x1, y1, (150, 160, 190, 90), 1.5, 4)
+
+
+# The three widths offered in the architect dropdown.
+VISTA_WIDTHS = ((1, "VistaPanel1"), (2, "VistaPanel2"), (3, "VistaPanel3"))
 
 
 def vista_panel():
-    """The panel's own texture: a daylight view with the lights down.
+    """Each panel's own texture: a daylight view with the lights down.
 
     This is what shows in the architect menu and when the power is out. It used
     to be a black slab, which told a player nothing about what they were
     building; a dimmed view of the picture reads as a window in the menu and as
     a dead screen in the room, which is what both want."""
-    c = Canvas(384, 96)
-    draw_vista_scene(c, "Day", 0, 6)
-    c.rect(12, 12, 372, 84, (10, 12, 22, 150), 4)           # lights down
-    for i in range(3):
-        c.circle(28 + i * 12, 89, 2.2, (54, 58, 70, 255))
-    save_rotations(c, "VistaPanel")
-    return c
+    made = {}
+    for tiles, name in VISTA_WIDTHS:
+        c = Canvas(VISTA_TILE * tiles, VISTA_H)
+        draw_vista_scene(c, "Day", 0, 6)
+        c.rect(12, 12, c.w - 12, 84, (10, 12, 22, 150), 4)  # lights down
+        for i in range(min(3, tiles + 1)):
+            c.circle(28 + i * 12, 89, 2.2, (54, 58, 70, 255))
+        save_rotations(c, name)
+        made[name] = c
+    return made
 
 
 def vista_panel_frames(total=6):
     made = {}
-    for name in ("Dawn", "Day", "Dusk", "Night"):
-        for i in range(total):
-            c = Canvas(384, 96)
-            draw_vista_scene(c, name, i, total)
-            c.save(os.path.join(OUT, "VistaPanel%s_%d.png" % (name, i)))
-            if i == 0:
-                made[name] = c
-        print("  VistaPanel%s_0..%d.png  (384x96)" % (name, total - 1))
+    for tiles, name in VISTA_WIDTHS:
+        for phase in ("Dawn", "Day", "Dusk", "Night"):
+            for i in range(total):
+                c = Canvas(VISTA_TILE * tiles, VISTA_H)
+                draw_vista_scene(c, phase, i, total)
+                c.save(os.path.join(OUT, "%s%s_%d.png" % (name, phase, i)))
+                if i == 0 and tiles == 3:
+                    made[phase] = c
+        print("  %s{Dawn,Day,Dusk,Night}_0..%d.png  (%dx%d)"
+              % (name, total - 1, VISTA_TILE * tiles, VISTA_H))
     return made
 
 
@@ -2144,7 +2172,7 @@ def _build_holotheater():
 
 
 def _build_vistapanel():
-    made = {"VistaPanel": vista_panel()}
+    made = dict(vista_panel())
     made.update(("Vista" + k, v) for k, v in vista_panel_frames().items())
     return made
 

@@ -169,15 +169,54 @@ namespace EntertainingIdeas
     /// </summary>
     public class PlaceWorker_WallMountedDisplay : PlaceWorker
     {
-        /// <summary>How many cells either side the drawn picture reaches.</summary>
-        private static int ReachFor(BuildableDef def)
+        /// <summary>
+        /// The cells of wall the drawn picture covers, as offsets along the
+        /// wall from the panel's own cell.
+        ///
+        /// Read off the def rather than hard-coded, because the picture is not
+        /// always centred on its cell: a two-tile panel sits on one cell and
+        /// hangs over its neighbour on one side only, so the span is
+        /// asymmetric. Deriving it from drawSize and the def's own draw offset
+        /// keeps the check right for any width.
+        /// </summary>
+        private static void SpanFor(BuildableDef def, Rot4 rot, out int low, out int high)
         {
+            low = 0;
+            high = 0;
             ThingDef thingDef = def as ThingDef;
             if (thingDef == null || thingDef.graphicData == null)
             {
-                return 0;
+                return;
             }
-            return Mathf.Max(0, (Mathf.RoundToInt(thingDef.graphicData.drawSize.x) - 1) / 2);
+
+            float half = thingDef.graphicData.drawSize.x / 2f;
+
+            // The wall runs left to right as the panel sees it, so that is the
+            // right-hand axis; whatever is left of the offset is the depth onto
+            // the wall's face and does not matter here.
+            Vector3 offset = thingDef.graphicData.DrawOffsetForRot(rot);
+            IntVec3 across = rot.RighthandCell;
+            float lateral = offset.x * across.x + offset.z * across.z;
+
+            // A cell counts as covered when the picture reaches its centre.
+            // Ceil and floor rather than rounding, so a width that happens to
+            // land exactly on a cell boundary cannot fall foul of the
+            // round-half-to-even the rounding helpers use.
+            low = Mathf.CeilToInt(lateral - half);
+            high = Mathf.FloorToInt(lateral + half);
+        }
+
+        private static List<IntVec3> WallRun(BuildableDef def, IntVec3 loc, Rot4 rot)
+        {
+            int low, high;
+            SpanFor(def, rot, out low, out high);
+            IntVec3 across = rot.RighthandCell;
+            List<IntVec3> run = new List<IntVec3>();
+            for (int k = low; k <= high; k++)
+            {
+                run.Add(loc + across * k);
+            }
+            return run;
         }
 
         public override AcceptanceReport AllowsPlacing(BuildableDef checkingDef, IntVec3 loc, Rot4 rot,
@@ -188,17 +227,15 @@ namespace EntertainingIdeas
                 return new AcceptanceReport("Must be mounted in a wall.");
             }
 
-            // The picture is wider than the cell, so the wall has to keep going
-            // or it would hang over open air.
-            IntVec3 across = rot.RighthandCell;
-            int reach = ReachFor(checkingDef);
-            for (int i = 1; i <= reach; i++)
+            // The picture can be wider than the cell it sits on, so the wall has
+            // to keep going or it would hang over open air.
+            List<IntVec3> run = WallRun(checkingDef, loc, rot);
+            for (int i = 0; i < run.Count; i++)
             {
-                if (!IsWall(map, loc + across * i, thingToIgnore)
-                    || !IsWall(map, loc - across * i, thingToIgnore))
+                if (!IsWall(map, run[i], thingToIgnore))
                 {
                     return new AcceptanceReport(
-                        "Needs " + (reach * 2 + 1) + " tiles of unbroken wall to span.");
+                        "Needs " + run.Count + " tiles of unbroken wall to span.");
                 }
             }
             return true;
@@ -217,14 +254,7 @@ namespace EntertainingIdeas
             // the ghost shows the truth while it is being placed.
             SnapPlacingRotation(map, center, rot);
 
-            List<IntVec3> run = new List<IntVec3> { center };
-            IntVec3 across = rot.RighthandCell;
-            for (int i = 1; i <= ReachFor(def); i++)
-            {
-                run.Add(center + across * i);
-                run.Add(center - across * i);
-            }
-            GenDraw.DrawFieldEdges(run, ghostCol);
+            GenDraw.DrawFieldEdges(WallRun(def, center, rot), ghostCol);
             GenDraw.DrawFieldEdges(new List<IntVec3> { center + rot.FacingCell }, Color.cyan);
         }
 

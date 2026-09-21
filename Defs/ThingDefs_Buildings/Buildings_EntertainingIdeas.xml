@@ -528,33 +528,24 @@
 
   <!-- ==================== 8. Vista panel (spacer) ======================== -->
 
-  <ThingDef ParentName="EI_JoyBuildingBase">
-    <defName>EI_VistaPanel</defName>
-    <label>vista panel</label>
-    <description>A wall-length display that mounts into the wall itself, showing somewhere with a horizon in it. The feed runs on the local clock - grey dawn, open daylight, a long sunset, then stars - and the panel throws enough light into the room to cast the right colour of shadow at the right hour.\n\nIt is not a window and nobody is fooled for long, but a room with one in it stops feeling quite so much like a hole in the ground. Colonists in the room it faces hold off cabin fever for longer, though it will never do the job of actually going outside.\n\nMounts into the wall itself and takes up no floor, so shelves, chairs and anything else can stand right in front of it. It needs three tiles of unbroken wall to span, and turns to face the room on its own.</description>
-    <graphicData>
-      <texPath>EntertainingIdeas/Buildings/VistaPanel</texPath>
-      <graphicClass>Graphic_Multi</graphicClass>
-      <!-- One cell of wall, but the picture is painted three tiles across it.
-           Kept well under a tile deep so it reads as a panel on the wall's
-           face rather than something standing in the room, and so it never
-           covers a shelf or a chair put in front of it. -->
-      <drawSize>(3,0.75)</drawSize>
-      <drawOffsetNorth>(0,0,0.26)</drawOffsetNorth>
-      <drawOffsetSouth>(0,0,-0.26)</drawOffsetSouth>
-      <drawOffsetEast>(0.26,0,0)</drawOffsetEast>
-      <drawOffsetWest>(-0.26,0,0)</drawOffsetWest>
-      <damageData>
-        <enabled>false</enabled>
-      </damageData>
-    </graphicData>
-    <size>(1,1)</size>
+  <!-- One entry in the architect menu with a dropdown, the way vanilla groups
+       its own variants. The three panels differ only in how much wall they
+       cover; everything else - cost, power, light, how much of the outdoors
+       need they cover - scales with that. -->
+  <DesignatorDropdownGroupDef>
+    <defName>EI_VistaPanels</defName>
+  </DesignatorDropdownGroupDef>
+
+  <ThingDef Name="EI_VistaPanelBase" ParentName="EI_JoyBuildingBase" Abstract="True">
+    <thingClass>Building</thingClass>
     <tickerType>Rare</tickerType>
     <rotatable>true</rotatable>
     <defaultPlacingRot>South</defaultPlacingRot>
+    <designatorDropdown>EI_VistaPanels</designatorDropdown>
     <!-- A wall attachment, the same shape of thing as a wall lamp: it shares
          the wall's own cell and takes no floor. That is the whole point -
          anything standing in the room in front of it is left alone. -->
+    <size>(1,1)</size>
     <altitudeLayer>BuildingOnTop</altitudeLayer>
     <passability>Standable</passability>
     <terrainAffordanceNeeded IsNull="True" />
@@ -573,6 +564,220 @@
     </placeWorkers>
     <constructEffect>ConstructMetal</constructEffect>
     <constructionSkillPrerequisite>8</constructionSkillPrerequisite>
+    <researchPrerequisites>
+      <li>FlatscreenTelevision</li>
+    </researchPrerequisites>
+  </ThingDef>
+
+
+  <ThingDef ParentName="EI_VistaPanelBase">
+    <defName>EI_VistaPanelSmall</defName>
+    <label>vista panel (1 tile)</label>
+    <description>A wall-mounted display showing somewhere with a horizon in it. The feed runs on the local clock - grey dawn, open daylight, a long sunset, then stars - and the panel throws enough light into the room to cast the right colour of shadow at the right hour.\n\nIt is not a window and nobody is fooled for long, but a room with one in it stops feeling quite so much like a hole in the ground. Colonists in the room it faces hold off cabin fever for longer, though it will never do the job of actually going outside.\n\nMounts into the wall itself and takes up no floor, so shelves, chairs and anything else can stand right in front of it. It turns to face the room on its own. Needs one tile of wall.</description>
+    <graphicData>
+      <texPath>EntertainingIdeas/Buildings/VistaPanel1</texPath>
+      <graphicClass>Graphic_Multi</graphicClass>
+      <!-- One cell of wall, but the picture is painted 1 tile across it.
+           Kept well under a tile deep so it reads as a panel on the wall's
+           face rather than something standing in the room, and so it never
+           covers a shelf or a chair put in front of it. -->
+      <drawSize>(1,0.75)</drawSize>
+      <drawOffsetNorth>(0,0,0.26)</drawOffsetNorth>
+      <drawOffsetSouth>(0,0,-0.26)</drawOffsetSouth>
+      <drawOffsetEast>(0.26,0,0)</drawOffsetEast>
+      <drawOffsetWest>(-0.26,0,0)</drawOffsetWest>
+      <damageData>
+        <enabled>false</enabled>
+      </damageData>
+    </graphicData>
+    <statBases>
+      <MaxHitPoints>90</MaxHitPoints>
+      <WorkToBuild>7000</WorkToBuild>
+      <Mass>15</Mass>
+      <Beauty>6</Beauty>
+    </statBases>
+    <costList>
+      <Steel>50</Steel>
+      <ComponentIndustrial>3</ComponentIndustrial>
+      <ComponentSpacer>1</ComponentSpacer>
+    </costList>
+    <comps>
+      <li Class="CompProperties_Power">
+        <compClass>CompPowerTrader</compClass>
+        <shortCircuitInRain>true</shortCircuitInRain>
+        <basePowerConsumption>60</basePowerConsumption>
+      </li>
+      <li Class="CompProperties_Flickable"/>
+      <!-- Colour is overwritten at runtime to match whatever is on screen. -->
+      <li Class="CompProperties_Glower">
+        <glowRadius>5</glowRadius>
+        <glowColor>(250,245,225,0)</glowColor>
+      </li>
+      <li Class="EntertainingIdeas.CompProperties_FaceOpenSide"/>
+      <li Class="EntertainingIdeas.CompProperties_DayCycleDisplay">
+        <ticksPerFrame>14</ticksPerFrame>
+        <drawSize>(1,0.75)</drawSize>
+        <phases>
+          <li>
+            <label>a night sky</label>
+            <startDayPercent>0</startDayPercent>
+            <framePath>EntertainingIdeas/Buildings/VistaPanel1Night</framePath>
+            <frameCount>6</frameCount>
+            <glowColor>(96,124,200,0)</glowColor>
+          </li>
+          <li>
+            <label>a grey dawn</label>
+            <startDayPercent>0.2</startDayPercent>
+            <framePath>EntertainingIdeas/Buildings/VistaPanel1Dawn</framePath>
+            <frameCount>6</frameCount>
+            <glowColor>(250,196,146,0)</glowColor>
+          </li>
+          <li>
+            <label>open daylight</label>
+            <startDayPercent>0.3</startDayPercent>
+            <framePath>EntertainingIdeas/Buildings/VistaPanel1Day</framePath>
+            <frameCount>6</frameCount>
+            <glowColor>(250,245,225,0)</glowColor>
+          </li>
+          <li>
+            <label>a long sunset</label>
+            <startDayPercent>0.7</startDayPercent>
+            <framePath>EntertainingIdeas/Buildings/VistaPanel1Dusk</framePath>
+            <frameCount>6</frameCount>
+            <glowColor>(250,172,112,0)</glowColor>
+          </li>
+          <li>
+            <label>a night sky</label>
+            <startDayPercent>0.8</startDayPercent>
+            <framePath>EntertainingIdeas/Buildings/VistaPanel1Night</framePath>
+            <frameCount>6</frameCount>
+            <glowColor>(96,124,200,0)</glowColor>
+          </li>
+        </phases>
+      </li>
+      <!-- Tops the outdoors need up to a ceiling well short of full. A wider
+           window covers a little more of it. -->
+      <li Class="EntertainingIdeas.CompProperties_OutdoorsSimulator">
+        <maxNeedLevel>0.25</maxNeedLevel>
+        <gainPerPulse>0.018</gainPerPulse>
+      </li>
+    </comps>
+  </ThingDef>
+
+  <ThingDef ParentName="EI_VistaPanelBase">
+    <defName>EI_VistaPanelWide</defName>
+    <label>vista panel (2 tiles)</label>
+    <description>A wall-mounted display showing somewhere with a horizon in it. The feed runs on the local clock - grey dawn, open daylight, a long sunset, then stars - and the panel throws enough light into the room to cast the right colour of shadow at the right hour.\n\nIt is not a window and nobody is fooled for long, but a room with one in it stops feeling quite so much like a hole in the ground. Colonists in the room it faces hold off cabin fever for longer, though it will never do the job of actually going outside.\n\nMounts into the wall itself and takes up no floor, so shelves, chairs and anything else can stand right in front of it. It turns to face the room on its own. Needs two tiles of unbroken wall; it hangs to one side of the tile you place it on.</description>
+    <graphicData>
+      <texPath>EntertainingIdeas/Buildings/VistaPanel2</texPath>
+      <graphicClass>Graphic_Multi</graphicClass>
+      <!-- One cell of wall, but the picture is painted 2 tiles across it.
+           Kept well under a tile deep so it reads as a panel on the wall's
+           face rather than something standing in the room, and so it never
+           covers a shelf or a chair put in front of it. -->
+      <drawSize>(2,0.75)</drawSize>
+      <drawOffsetNorth>(-0.5,0,0.26)</drawOffsetNorth>
+      <drawOffsetSouth>(0.5,0,-0.26)</drawOffsetSouth>
+      <drawOffsetEast>(0.26,0,0.5)</drawOffsetEast>
+      <drawOffsetWest>(-0.26,0,-0.5)</drawOffsetWest>
+      <damageData>
+        <enabled>false</enabled>
+      </damageData>
+    </graphicData>
+    <statBases>
+      <MaxHitPoints>120</MaxHitPoints>
+      <WorkToBuild>11500</WorkToBuild>
+      <Mass>30</Mass>
+      <Beauty>10</Beauty>
+    </statBases>
+    <costList>
+      <Steel>85</Steel>
+      <ComponentIndustrial>5</ComponentIndustrial>
+      <ComponentSpacer>1</ComponentSpacer>
+    </costList>
+    <comps>
+      <li Class="CompProperties_Power">
+        <compClass>CompPowerTrader</compClass>
+        <shortCircuitInRain>true</shortCircuitInRain>
+        <basePowerConsumption>105</basePowerConsumption>
+      </li>
+      <li Class="CompProperties_Flickable"/>
+      <!-- Colour is overwritten at runtime to match whatever is on screen. -->
+      <li Class="CompProperties_Glower">
+        <glowRadius>6</glowRadius>
+        <glowColor>(250,245,225,0)</glowColor>
+      </li>
+      <li Class="EntertainingIdeas.CompProperties_FaceOpenSide"/>
+      <li Class="EntertainingIdeas.CompProperties_DayCycleDisplay">
+        <ticksPerFrame>14</ticksPerFrame>
+        <drawSize>(2,0.75)</drawSize>
+        <phases>
+          <li>
+            <label>a night sky</label>
+            <startDayPercent>0</startDayPercent>
+            <framePath>EntertainingIdeas/Buildings/VistaPanel2Night</framePath>
+            <frameCount>6</frameCount>
+            <glowColor>(96,124,200,0)</glowColor>
+          </li>
+          <li>
+            <label>a grey dawn</label>
+            <startDayPercent>0.2</startDayPercent>
+            <framePath>EntertainingIdeas/Buildings/VistaPanel2Dawn</framePath>
+            <frameCount>6</frameCount>
+            <glowColor>(250,196,146,0)</glowColor>
+          </li>
+          <li>
+            <label>open daylight</label>
+            <startDayPercent>0.3</startDayPercent>
+            <framePath>EntertainingIdeas/Buildings/VistaPanel2Day</framePath>
+            <frameCount>6</frameCount>
+            <glowColor>(250,245,225,0)</glowColor>
+          </li>
+          <li>
+            <label>a long sunset</label>
+            <startDayPercent>0.7</startDayPercent>
+            <framePath>EntertainingIdeas/Buildings/VistaPanel2Dusk</framePath>
+            <frameCount>6</frameCount>
+            <glowColor>(250,172,112,0)</glowColor>
+          </li>
+          <li>
+            <label>a night sky</label>
+            <startDayPercent>0.8</startDayPercent>
+            <framePath>EntertainingIdeas/Buildings/VistaPanel2Night</framePath>
+            <frameCount>6</frameCount>
+            <glowColor>(96,124,200,0)</glowColor>
+          </li>
+        </phases>
+      </li>
+      <!-- Tops the outdoors need up to a ceiling well short of full. A wider
+           window covers a little more of it. -->
+      <li Class="EntertainingIdeas.CompProperties_OutdoorsSimulator">
+        <maxNeedLevel>0.3</maxNeedLevel>
+        <gainPerPulse>0.018</gainPerPulse>
+      </li>
+    </comps>
+  </ThingDef>
+
+  <ThingDef ParentName="EI_VistaPanelBase">
+    <defName>EI_VistaPanel</defName>
+    <label>vista panel (3 tiles)</label>
+    <description>A wall-mounted display showing somewhere with a horizon in it. The feed runs on the local clock - grey dawn, open daylight, a long sunset, then stars - and the panel throws enough light into the room to cast the right colour of shadow at the right hour.\n\nIt is not a window and nobody is fooled for long, but a room with one in it stops feeling quite so much like a hole in the ground. Colonists in the room it faces hold off cabin fever for longer, though it will never do the job of actually going outside.\n\nMounts into the wall itself and takes up no floor, so shelves, chairs and anything else can stand right in front of it. It turns to face the room on its own. Needs three tiles of unbroken wall.</description>
+    <graphicData>
+      <texPath>EntertainingIdeas/Buildings/VistaPanel3</texPath>
+      <graphicClass>Graphic_Multi</graphicClass>
+      <!-- One cell of wall, but the picture is painted 3 tiles across it.
+           Kept well under a tile deep so it reads as a panel on the wall's
+           face rather than something standing in the room, and so it never
+           covers a shelf or a chair put in front of it. -->
+      <drawSize>(3,0.75)</drawSize>
+      <drawOffsetNorth>(0,0,0.26)</drawOffsetNorth>
+      <drawOffsetSouth>(0,0,-0.26)</drawOffsetSouth>
+      <drawOffsetEast>(0.26,0,0)</drawOffsetEast>
+      <drawOffsetWest>(-0.26,0,0)</drawOffsetWest>
+      <damageData>
+        <enabled>false</enabled>
+      </damageData>
+    </graphicData>
     <statBases>
       <MaxHitPoints>160</MaxHitPoints>
       <WorkToBuild>16000</WorkToBuild>
@@ -604,49 +809,47 @@
           <li>
             <label>a night sky</label>
             <startDayPercent>0</startDayPercent>
-            <framePath>EntertainingIdeas/Buildings/VistaPanelNight</framePath>
+            <framePath>EntertainingIdeas/Buildings/VistaPanel3Night</framePath>
             <frameCount>6</frameCount>
             <glowColor>(96,124,200,0)</glowColor>
           </li>
           <li>
             <label>a grey dawn</label>
             <startDayPercent>0.2</startDayPercent>
-            <framePath>EntertainingIdeas/Buildings/VistaPanelDawn</framePath>
+            <framePath>EntertainingIdeas/Buildings/VistaPanel3Dawn</framePath>
             <frameCount>6</frameCount>
             <glowColor>(250,196,146,0)</glowColor>
           </li>
           <li>
             <label>open daylight</label>
             <startDayPercent>0.3</startDayPercent>
-            <framePath>EntertainingIdeas/Buildings/VistaPanelDay</framePath>
+            <framePath>EntertainingIdeas/Buildings/VistaPanel3Day</framePath>
             <frameCount>6</frameCount>
             <glowColor>(250,245,225,0)</glowColor>
           </li>
           <li>
             <label>a long sunset</label>
             <startDayPercent>0.7</startDayPercent>
-            <framePath>EntertainingIdeas/Buildings/VistaPanelDusk</framePath>
+            <framePath>EntertainingIdeas/Buildings/VistaPanel3Dusk</framePath>
             <frameCount>6</frameCount>
             <glowColor>(250,172,112,0)</glowColor>
           </li>
           <li>
             <label>a night sky</label>
             <startDayPercent>0.8</startDayPercent>
-            <framePath>EntertainingIdeas/Buildings/VistaPanelNight</framePath>
+            <framePath>EntertainingIdeas/Buildings/VistaPanel3Night</framePath>
             <frameCount>6</frameCount>
             <glowColor>(96,124,200,0)</glowColor>
           </li>
         </phases>
       </li>
-      <!-- Tops the outdoors need up to a ceiling well short of full. -->
+      <!-- Tops the outdoors need up to a ceiling well short of full. A wider
+           window covers a little more of it. -->
       <li Class="EntertainingIdeas.CompProperties_OutdoorsSimulator">
         <maxNeedLevel>0.35</maxNeedLevel>
         <gainPerPulse>0.018</gainPerPulse>
       </li>
     </comps>
-    <researchPrerequisites>
-      <li>FlatscreenTelevision</li>
-    </researchPrerequisites>
   </ThingDef>
 
   <!-- ================ 5. Dreamloop holotheater (ultratech) =============== -->

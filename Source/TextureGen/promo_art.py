@@ -64,7 +64,7 @@ def lineup():
           ("KaraokeMachine_south.png", "KARAOKE"), ("SoakingTubElectric.png", "HEATED TUB")]),
         ("SPACER AND ULTRA",
          [("PinballArchotech_south.png", "DREAMTABLE"), ("HologamePod_south.png", "HOLOGAME POD"),
-          ("VistaPanelDay_2.png", "VISTA PANEL"), ("DreamloopHolotheater_south.png", "HOLOTHEATER"),
+          ("VistaPanel3Day_2.png", "VISTA PANEL"), ("DreamloopHolotheater_south.png", "HOLOTHEATER"),
           ("GravballCourt_south.png", "GRAVBALL COURT")]),
     ]
     y = 120
@@ -127,8 +127,8 @@ def vista():
     c.rect(0, 0, W, 545, BG)
     header(c, W, "A WINDOW THAT IS NOT A WINDOW", "THE VISTA PANEL FOLLOWS THE LOCAL CLOCK AND EASES CABIN FEVER FOR THE ROOM")
     y = section(c, W, 120, "SAME PANEL - DAWN - DAYLIGHT - SUNSET - NIGHT")
-    for i, (f, cap) in enumerate((("VistaPanelDawn_0.png", "DAWN"), ("VistaPanelDay_2.png", "DAYLIGHT"),
-                                  ("VistaPanelDusk_2.png", "SUNSET"), ("VistaPanelNight_1.png", "NIGHT"))):
+    for i, (f, cap) in enumerate((("VistaPanel3Dawn_0.png", "DAWN"), ("VistaPanel3Day_2.png", "DAYLIGHT"),
+                                  ("VistaPanel3Dusk_2.png", "SUNSET"), ("VistaPanel3Night_1.png", "NIGHT"))):
         x = 20 + i * 292
         place(c, f, x, y, 280, 100)
         preview.text(c, cap, x + 6, y + 104, 1, DIM)
