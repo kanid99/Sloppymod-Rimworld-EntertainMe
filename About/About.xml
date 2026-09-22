@@ -3,7 +3,7 @@
   <name>Entertaining Ideas</name>
   <author>kanid99</author>
   <packageId>kanid99.entertainingideas</packageId>
-  <!-- Stamped with the build number, date and commit by Source/package.sh
+  <!-- Stamped with the build number, date and commit by Tools/package.sh
        when a zip is cut, so an installed copy says which build it is. -->
   <modVersion>0.9.0-dev</modVersion>
   <supportedVersions>

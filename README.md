@@ -299,9 +299,9 @@ Source/              tooling and code, not loaded by the game directly
 ## Working on it
 
 ```bash
-python3 Source/validate.py                      # def sanity checks
-./Source/build.sh                               # rebuild both assemblies
-./Source/check_api.sh                           # XML classes, per game version
+python3 Tools/validate.py                      # def sanity checks
+./Tools/build.sh                               # rebuild both assemblies
+./Tools/check_api.sh                           # XML classes, per game version
 python3 Source/TextureGen/generate_textures.py  # redraw everything (~5 min)
 ```
 
@@ -314,7 +314,7 @@ every vanilla def name the mod uses actually exists — research, joy kinds, stu
 categories, items, capacities:
 
 ```bash
-RIMWORLD_CORE_DEFS="/path/to/RimWorld/Data/Core/Defs" python3 Source/validate.py
+RIMWORLD_CORE_DEFS="/path/to/RimWorld/Data/Core/Defs" python3 Tools/validate.py
 ```
 
 That is worth running before a release: a research prerequisite that does not

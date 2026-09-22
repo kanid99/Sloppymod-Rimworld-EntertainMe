@@ -6,12 +6,14 @@
 # JoyUtility.JoyTickCheckEnd, which would have thrown at runtime on a 1.5-built
 # assembly), and a class named from XML that no longer exists.
 #
-#   ./Source/check_api.sh
+#   ./Tools/check_api.sh
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-WORK="${TMPDIR:-/tmp}/rimworld-refs"
-VERSIONS="${VERSIONS:-1.5.4409 1.6.4871}"
+WORK="${RIMWORLD_REFS:-${TMPDIR:-/tmp}/rimworld-refs}"
+# Every RimWorld version Tools/modtool.conf says this mod builds against.
+VERSIONS="${VERSIONS:-$(python3 "$ROOT/Tools/modtool.py" build | awk '{print $2}' | sort -u | tr '\n' ' ')}"
+NAMESPACE="$(python3 "$ROOT/Tools/modtool.py" namespace)"
 fail=0
 
 for version in $VERSIONS; do
@@ -32,7 +34,7 @@ for version in $VERSIONS; do
   strings -n 3 "$refs/Assembly-CSharp.dll" > "$dir/strings.txt"
   while read -r name; do
     [ -z "$name" ] && continue
-    case "$name" in EntertainingIdeas.*) continue ;; esac
+    case "$name" in "$NAMESPACE".*) continue ;; esac
     short="${name##*.}"
     if ! grep -qx "$short" "$dir/strings.txt"; then
       echo "  MISSING CLASS: $name"
@@ -47,5 +49,5 @@ if [ "$fail" -ne 0 ]; then
   echo "FAILED"
   exit 1
 fi
-echo "All versions check out. (Source/build.sh compiling cleanly for each"
+echo "All versions check out. (Tools/build.sh compiling cleanly for each"
 echo "version is the matching check for the C# side.)"
