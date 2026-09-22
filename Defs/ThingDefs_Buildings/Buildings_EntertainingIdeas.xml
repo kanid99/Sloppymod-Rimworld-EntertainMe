@@ -125,7 +125,15 @@
 
   <!-- =================== 3. Pinball machines (industrial) ================= -->
 
+  <!-- Four tables behind one architect entry. Vanilla groups its own variants
+       this way; a dropdown element checks its own research, so the tables
+       appear as each becomes available rather than all at once. -->
+  <DesignatorDropdownGroupDef>
+    <defName>EI_PinballTables</defName>
+  </DesignatorDropdownGroupDef>
+
   <ThingDef Name="EI_PinballMachineBase" ParentName="EI_JoyBuildingBase" Abstract="True">
+    <designatorDropdown>EI_PinballTables</designatorDropdown>
     <graphicData>
       <graphicClass>Graphic_Multi</graphicClass>
       <shaderType>CutoutComplex</shaderType>
@@ -313,12 +321,21 @@
 
   <!-- ============== 6. Cocktail arcade table (industrial) ================ -->
 
-  <ThingDef ParentName="EI_JoyBuildingBase">
-    <defName>EI_CocktailArcadeTable</defName>
-    <label>cocktail arcade table (Ore Rush)</label>
-    <description>A sit-down arcade cabinet with the screen lying face up under a sheet of glass and a joystick at each of two seats. ORE RUSH: you are down a mine shaft with a hard hat and a lamp, clearing seams of ore one corridor at a time, and the things that live down there are coming along the same corridor from the other direction. The picture flips between turns so both seats play it the right way up.\n\nLeft alone it drops into attract mode and sits there running its title screen at nobody, which is somehow the most convincing thing about it.\n\nSeats two - set a chair on either side. Quick reflexes help, and the ribbing that comes with them is half the point.</description>
+  <!-- Two games in one architect entry, and one place for everything the
+       cabinets share. Only what actually differs per game lives in the
+       children: the art, the glower colour and the two frame strips.
+
+       Note that def inheritance APPENDS list entries. The power and flick
+       comps are here and the glower and screen comps are in each child, which
+       totals four - declaring any of them in both places would give a cabinet
+       two of it. The validator fails the build if that ever happens. -->
+  <DesignatorDropdownGroupDef>
+    <defName>EI_CocktailTables</defName>
+  </DesignatorDropdownGroupDef>
+
+  <ThingDef Name="EI_CocktailTableBase" ParentName="EI_JoyBuildingBase" Abstract="True">
+    <designatorDropdown>EI_CocktailTables</designatorDropdown>
     <graphicData>
-      <texPath>EntertainingIdeas/Buildings/CocktailArcade</texPath>
       <graphicClass>Graphic_Single</graphicClass>
       <drawSize>(1.15,1.15)</drawSize>
       <shadowData>
@@ -355,15 +372,27 @@
         <basePowerConsumption>100</basePowerConsumption>
       </li>
       <li Class="CompProperties_Flickable"/>
+    </comps>
+    <researchPrerequisites>
+      <li>TubeTelevision</li>
+    </researchPrerequisites>
+  </ThingDef>
+
+  <ThingDef ParentName="EI_CocktailTableBase">
+    <defName>EI_CocktailArcadeTable</defName>
+    <label>Ore Rush arcade table</label>
+    <description>A sit-down arcade cabinet with the screen lying face up under a sheet of glass and a joystick at each of two seats. ORE RUSH: you are down a mine shaft with a hard hat and a lamp, clearing seams of ore one corridor at a time, and the things that live down there are coming along the same corridor from the other direction. The picture flips between turns so both seats play it the right way up.\n\nLeft alone it drops into attract mode and sits there running its title screen at nobody, which is somehow the most convincing thing about it.\n\nSeats two - set a chair on either side. Quick reflexes help, and the ribbing that comes with them is half the point.</description>
+    <graphicData>
+      <texPath>EntertainingIdeas/Buildings/CocktailArcade</texPath>
+    </graphicData>
+    <comps>
       <li Class="CompProperties_Glower">
         <glowRadius>3</glowRadius>
         <glowColor>(120,150,240,0)</glowColor>
       </li>
-      <!-- Runs the screen animation while someone is actually playing, and
-           only while the table has power. 16 frames at 8 ticks each is one
-           lap of the maze every ~2 seconds at normal speed. With nobody at it
-           the cabinet falls back to its attract loop - title, the cast walking
-           past, and a coin prompt - rather than sitting on a dead screen. -->
+      <!-- Runs the screen while somebody is playing: 16 frames at 8 ticks
+           each is one lap every couple of seconds. With nobody at it the
+           cabinet falls back to its attract loop rather than a dead screen. -->
       <li Class="EntertainingIdeas.CompProperties_AnimatedScreen">
         <framePath>EntertainingIdeas/Buildings/CocktailArcadeScreen</framePath>
         <frameCount>16</frameCount>
@@ -377,10 +406,8 @@
         </playJobs>
       </li>
     </comps>
-    <researchPrerequisites>
-      <li>TubeTelevision</li>
-    </researchPrerequisites>
   </ThingDef>
+
 
   <!-- ==================== 7. Massage chair (industrial) ================== -->
 
@@ -1822,48 +1849,14 @@
 
 
   <!-- Second cabinet: same table, a different game in the glass. -->
-  <ThingDef ParentName="EI_JoyBuildingBase">
+  <ThingDef ParentName="EI_CocktailTableBase">
     <defName>EI_CocktailClimbTable</defName>
-    <label>cocktail arcade table (Thrumbo!)</label>
+    <label>Thrumbo! arcade table</label>
     <description>The same sit-down cabinet running a different board. THRUMBO!: there is a colonist stranded at the top of a half-built scaffold and something enormous and extremely cross at the top of it throwing rocks down the girders at you. You climb. The rocks do not stop coming.\n\nNobody has ever reached the top. The high score is a matter of some dispute in the rec room.\n\nLeft alone it drops into attract mode and sits there running its title screen at nobody, which is somehow the most convincing thing about it.\n\nSeats two - set a chair on either side. Quick reflexes help, and the ribbing that comes with them is half the point.</description>
     <graphicData>
       <texPath>EntertainingIdeas/Buildings/CocktailClimb</texPath>
-      <graphicClass>Graphic_Single</graphicClass>
-      <drawSize>(1.15,1.15)</drawSize>
-      <shadowData>
-        <volume>(0.8,0.35,0.8)</volume>
-      </shadowData>
-      <damageData>
-        <rect>(0.08,0.08,0.84,0.84)</rect>
-      </damageData>
     </graphicData>
-    <rotatable>false</rotatable>
-    <fillPercent>0.4</fillPercent>
-    <pathCost>50</pathCost>
-    <constructEffect>ConstructMetal</constructEffect>
-    <constructionSkillPrerequisite>7</constructionSkillPrerequisite>
-    <statBases>
-      <MaxHitPoints>120</MaxHitPoints>
-      <WorkToBuild>11000</WorkToBuild>
-      <Mass>35</Mass>
-      <Beauty>5</Beauty>
-      <JoyGainFactor>1.3</JoyGainFactor>
-    </statBases>
-    <costList>
-      <Steel>55</Steel>
-      <ComponentIndustrial>4</ComponentIndustrial>
-    </costList>
-    <building>
-      <joyKind>Gaming_Dexterity</joyKind>
-      <paintable>true</paintable>
-    </building>
     <comps>
-      <li Class="CompProperties_Power">
-        <compClass>CompPowerTrader</compClass>
-        <shortCircuitInRain>true</shortCircuitInRain>
-        <basePowerConsumption>100</basePowerConsumption>
-      </li>
-      <li Class="CompProperties_Flickable"/>
       <li Class="CompProperties_Glower">
         <glowRadius>3</glowRadius>
         <glowColor>(240,180,120,0)</glowColor>
@@ -1881,10 +1874,8 @@
         </playJobs>
       </li>
     </comps>
-    <researchPrerequisites>
-      <li>TubeTelevision</li>
-    </researchPrerequisites>
   </ThingDef>
+
 
 
   <!-- =================== 24. Cornhole board (any tech) =================== -->
