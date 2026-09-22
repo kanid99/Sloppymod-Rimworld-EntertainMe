@@ -103,7 +103,7 @@ namespace EntertainingIdeas
 
             yield return Toils_Goto.GotoThing(TargetIndex.A, PathEndMode.OnCell);
 
-            Toil relax = new Toil();
+            Toil relax = ToilMaker.MakeToil("EI_SitInBuilding");
             relax.initAction = delegate
             {
                 // One soak per filling, unless the tub is plumbed.

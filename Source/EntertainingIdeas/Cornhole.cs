@@ -1,5 +1,5 @@
+using System;
 using System.Collections.Generic;
-using System.Linq;
 using RimWorld;
 using UnityEngine;
 using Verse;
@@ -7,45 +7,6 @@ using Verse.AI;
 
 namespace EntertainingIdeas
 {
-    /// <summary>
-    /// The cells just past each end of a long building, along its own length.
-    /// Used by the hammock, which needs a support beyond each end.
-    /// </summary>
-    public static class BuildingEnds
-    {
-        public static IEnumerable<IntVec3> Beyond(BuildableDef def, IntVec3 loc, Rot4 rot)
-        {
-            IntVec3 axis = rot.FacingCell;
-            List<IntVec3> cells = GenAdj.CellsOccupiedBy(loc, rot, def.Size).ToList();
-            int low = int.MaxValue;
-            int high = int.MinValue;
-            for (int i = 0; i < cells.Count; i++)
-            {
-                int along = Along(cells[i], axis);
-                low = Mathf.Min(low, along);
-                high = Mathf.Max(high, along);
-            }
-            for (int i = 0; i < cells.Count; i++)
-            {
-                int along = Along(cells[i], axis);
-                if (along == low)
-                {
-                    yield return cells[i] - axis;
-                }
-                if (along == high)
-                {
-                    yield return cells[i] + axis;
-                }
-            }
-        }
-
-        /// <summary>How far along the building's own length a cell sits.</summary>
-        public static int Along(IntVec3 cell, IntVec3 axis)
-        {
-            return cell.x * axis.x + cell.z * axis.z;
-        }
-    }
-
     [DefOf]
     public static class EI_CornholeDefOf
     {
@@ -67,13 +28,22 @@ namespace EntertainingIdeas
     /// </summary>
     public static class CornholePlayers
     {
-        public static List<Pawn> At(Thing board, Pawn ignore = null)
+        private static readonly List<Pawn> counting = new List<Pawn>();
+        private static readonly Comparison<Pawn> byId =
+            delegate(Pawn a, Pawn b) { return a.thingIDNumber.CompareTo(b.thingIDNumber); };
+
+        /// <summary>
+        /// Fills a list the caller already has rather than handing back a new
+        /// one: the giver asks this of every board a colonist might walk to,
+        /// and the animation asks it of every board on screen.
+        /// </summary>
+        public static void At(Thing board, List<Pawn> players, Pawn ignore = null)
         {
-            List<Pawn> players = new List<Pawn>();
+            players.Clear();
             Map map = board.Map;
             if (map == null)
             {
-                return players;
+                return;
             }
 
             foreach (IntVec3 cell in WatchBuildingUtility.CalculateWatchCells(
@@ -99,8 +69,16 @@ namespace EntertainingIdeas
                     }
                 }
             }
-            players.Sort((a, b) => a.thingIDNumber.CompareTo(b.thingIDNumber));
-            return players;
+            players.Sort(byId);
+        }
+
+        /// <summary>How many are pitching, when that is all the caller wants.</summary>
+        public static int CountAt(Thing board, Pawn ignore)
+        {
+            At(board, counting, ignore);
+            int count = counting.Count;
+            counting.Clear();       // do not hold pawns alive between asks
+            return count;
         }
     }
 
@@ -133,7 +111,7 @@ namespace EntertainingIdeas
             }
             // Everyone except this pawn: a colonist deciding to carry on playing
             // must not count as blocking their own place.
-            return CornholePlayers.At(t, pawn).Count < MaxPlayers;
+            return CornholePlayers.CountAt(t, pawn) < MaxPlayers;
         }
     }
 
@@ -195,7 +173,18 @@ namespace EntertainingIdeas
         private Graphic sackShadow;
         private float clock;
         private int nextRecheckTick = -99999;
-        private List<Pawn> players = new List<Pawn>();
+        private readonly List<Pawn> players = new List<Pawn>();
+
+        // Where the sacks already on the board lie. Worked out once per throw
+        // rather than once per frame: the scatter comes out of the seeded RNG,
+        // and pushing and popping that state nine times every frame to
+        // recompute numbers that had not changed was most of what this comp
+        // cost to draw.
+        private Vector3[] landedAt;
+        private float[] landedSpin;
+        private int[] landedOwner;
+        private int cachedThrow = int.MinValue;
+        private int cachedPlayers;
 
         public override void PostSpawnSetup(bool respawningAfterLoad)
         {
@@ -250,7 +239,7 @@ namespace EntertainingIdeas
             if (now >= nextRecheckTick)
             {
                 nextRecheckTick = now + Props.recheckInterval;
-                players = CornholePlayers.At(parent);
+                CornholePlayers.At(parent, players);
             }
             if (players.Count == 0)
             {
@@ -267,8 +256,13 @@ namespace EntertainingIdeas
             int throwIndex = Mathf.FloorToInt(clock / perThrow);
             float t = (clock / perThrow) - throwIndex;
 
+            if (throwIndex != cachedThrow || players.Count != cachedPlayers)
+            {
+                CacheLanded(throwIndex);
+            }
+
             DrawFlight(throwIndex, t);
-            DrawLanded(throwIndex);
+            DrawLanded();
         }
 
         /// <summary>
@@ -326,19 +320,55 @@ namespace EntertainingIdeas
                  Props.sackSize * (1f + Props.arcLift * lift));
         }
 
-        /// <summary>The sacks already thrown, lying where they landed.</summary>
-        private void DrawLanded(int throwIndex)
+        /// <summary>
+        /// Recomputes where the landed sacks lie. Only the newest is actually
+        /// new each time, but the whole set is cheap to redo once every couple
+        /// of seconds and it keeps the bookkeeping to one array index.
+        /// </summary>
+        private void CacheLanded(int throwIndex)
         {
-            for (int back = 1; back <= Props.sacksOnBoard; back++)
+            cachedThrow = throwIndex;
+            cachedPlayers = players.Count;
+
+            int want = Mathf.Max(0, Props.sacksOnBoard);
+            if (landedAt == null || landedAt.Length != want)
+            {
+                landedAt = new Vector3[want];
+                landedSpin = new float[want];
+                landedOwner = new int[want];
+            }
+
+            for (int back = 1; back <= want; back++)
             {
                 int index = throwIndex - back;
-                if (index < 0)
+                int slot = back - 1;
+                if (index < 0 || cachedPlayers == 0)
                 {
-                    break;
+                    landedOwner[slot] = -1;
+                    continue;
                 }
                 Vector3 spot = LandingFor(index);
                 spot.y = AltitudeLayer.BuildingOnTop.AltitudeFor();
-                Blit(SackFor(index % players.Count), spot, SpinFor(index), Props.sackSize);
+                landedAt[slot] = spot;
+                landedSpin[slot] = SpinFor(index);
+                landedOwner[slot] = index % cachedPlayers;
+            }
+        }
+
+        /// <summary>The sacks already thrown, lying where they landed.</summary>
+        private void DrawLanded()
+        {
+            if (landedOwner == null)
+            {
+                return;
+            }
+            for (int slot = 0; slot < landedOwner.Length; slot++)
+            {
+                if (landedOwner[slot] < 0)
+                {
+                    continue;
+                }
+                Blit(SackFor(landedOwner[slot]), landedAt[slot], landedSpin[slot], Props.sackSize);
             }
         }
 

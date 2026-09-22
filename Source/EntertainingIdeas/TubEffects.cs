@@ -156,9 +156,32 @@ namespace EntertainingIdeas
 
     public class CompBathing : ThingComp
     {
+        private CompRefuelable fuel;
+        private CompPowerTrader power;
+        private bool heatResolved;
+        private NeedDef hygieneNeed;
+        private bool hygieneLookedUp;
+
         private CompProperties_Bathing Props
         {
             get { return (CompProperties_Bathing)props; }
+        }
+
+        /// <summary>
+        /// Resolved on first use rather than on every ask. The inspect pane
+        /// rebuilds its text every frame the tub is selected, and walking the
+        /// comp list twice a frame to answer a question whose answer cannot
+        /// change is waste.
+        /// </summary>
+        private void ResolveHeatSource()
+        {
+            if (heatResolved)
+            {
+                return;
+            }
+            heatResolved = true;
+            fuel = parent.TryGetComp<CompRefuelable>();
+            power = parent.TryGetComp<CompPowerTrader>();
         }
 
         /// <summary>
@@ -170,13 +193,30 @@ namespace EntertainingIdeas
         {
             get
             {
-                CompRefuelable fuel = parent.TryGetComp<CompRefuelable>();
+                ResolveHeatSource();
                 if (fuel != null)
                 {
                     return fuel.HasFuel;
                 }
-                CompPowerTrader power = parent.TryGetComp<CompPowerTrader>();
                 return power != null && power.PowerOn;
+            }
+        }
+
+        /// <summary>
+        /// Dubs Bad Hygiene's need, looked up once per tub rather than on every
+        /// frame the inspect pane is open. Null when that mod is not installed,
+        /// which is the case this has to stay cheap in.
+        /// </summary>
+        private NeedDef HygieneNeed
+        {
+            get
+            {
+                if (!hygieneLookedUp)
+                {
+                    hygieneLookedUp = true;
+                    hygieneNeed = DefDatabase<NeedDef>.GetNamedSilentFail(Props.needDefName);
+                }
+                return hygieneNeed;
             }
         }
 
@@ -187,7 +227,7 @@ namespace EntertainingIdeas
                 return;
             }
 
-            NeedDef needDef = DefDatabase<NeedDef>.GetNamedSilentFail(Props.needDefName);
+            NeedDef needDef = HygieneNeed;
             if (needDef != null)
             {
                 Need need = pawn.needs.TryGetNeed(needDef);
@@ -212,7 +252,7 @@ namespace EntertainingIdeas
         public override string CompInspectStringExtra()
         {
             // Only worth saying when there is a hygiene need to serve.
-            if (DefDatabase<NeedDef>.GetNamedSilentFail(Props.needDefName) == null)
+            if (HygieneNeed == null)
             {
                 return null;
             }

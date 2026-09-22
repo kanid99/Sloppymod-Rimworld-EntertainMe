@@ -52,6 +52,13 @@ namespace EntertainingIdeas
         private float litres;
         private CompPowerTrader power;
 
+        // Resolved once: a thing's comps are fixed when it is constructed, so
+        // whether this building is piped cannot change while it exists. Plumbed
+        // is asked on the work-giver scan and again every frame the pool is
+        // selected, and each ask used to walk every comp comparing type names.
+        private ThingComp pipe;
+        private bool pipeResolved;
+
         // The pool's cells, in the order the flood fill reached them, so the
         // pool fills outward from the filter and drains back toward it.
         private List<IntVec3> cells = new List<IntVec3>();
@@ -72,9 +79,32 @@ namespace EntertainingIdeas
             get { return cells.Count * Props.litresPerTile; }
         }
 
+        private ThingComp Pipe
+        {
+            get
+            {
+                if (!pipeResolved)
+                {
+                    pipeResolved = true;
+                    pipe = DubsPlumbing.PipeOn(parent);
+                }
+                return pipe;
+            }
+        }
+
         public bool Plumbed
         {
-            get { return DubsPlumbing.PipeOn(parent) != null; }
+            get { return Pipe != null; }
+        }
+
+        /// <summary>
+        /// The pool's own tiles, in fill order. Handed out so the swimming
+        /// giver can look at the pool itself rather than sweeping every cell
+        /// within twenty-four tiles of the filter hunting for water.
+        /// </summary>
+        public List<IntVec3> Cells
+        {
+            get { return cells; }
         }
 
         /// <summary>Powered pump plus enough water to swim in.</summary>
@@ -168,8 +198,8 @@ namespace EntertainingIdeas
                     : 0f;
             }
 
-            ThingComp pipe = DubsPlumbing.PipeOn(parent);
-            if (pipe != null && DubsPlumbing.NetHasWater(pipe))
+            ThingComp plumbing = Pipe;
+            if (plumbing != null && DubsPlumbing.NetHasWater(plumbing))
             {
                 litres = Capacity;              // plumbed in: it tops itself up
             }
@@ -373,36 +403,63 @@ namespace EntertainingIdeas
         {
             result = IntVec3.Invalid;
             Map map = pawn.Map;
-            // The pool is the water around the filter; a radial sweep finds it
-            // without the comp having to hand out its cell list.
-            List<IntVec3> candidates = new List<IntVec3>();
-            foreach (IntVec3 cell in GenRadial.RadialCellsAround(filter.Position, 24f, true))
+            CompPoolController pool = filter.TryGetComp<CompPoolController>();
+            if (map == null || pool == null)
             {
-                if (!cell.InBounds(map))
-                {
-                    continue;
-                }
+                return false;
+            }
+
+            // The pool knows its own tiles, so ask it. This used to sweep every
+            // cell within twenty-four tiles of the filter - about eighteen
+            // hundred of them - and run a reachability check on each one that
+            // held water. A swim picks a fresh spot six times, so that was six
+            // sweeps per session, per swimmer.
+            List<IntVec3> cells = pool.Cells;
+            scratch.Clear();
+            for (int i = 0; i < cells.Count; i++)
+            {
+                IntVec3 cell = cells[i];
                 if (map.terrainGrid.TerrainAt(cell) != EI_TerrainDefOf.EI_PoolWater)
                 {
-                    continue;
+                    continue;       // the shallow end of a half-filled pool
                 }
                 if (!cell.Standable(map) || cell.IsForbidden(pawn))
                 {
                     continue;
                 }
-                if (!pawn.CanReserveAndReach(cell, PathEndMode.OnCell, Danger.None))
-                {
-                    continue;
-                }
-                candidates.Add(cell);
+                scratch.Add(cell);
             }
-            if (candidates.Count == 0)
+            if (scratch.Count == 0)
             {
                 return false;
             }
-            result = candidates[Rand.Range(0, candidates.Count)];
-            return true;
+
+            // Reachability is the expensive part, so it is left until a cell
+            // has been picked. Walking a shuffled list rather than testing them
+            // all means the usual case costs one check instead of one per tile,
+            // while a pool that is genuinely cut off still gets ruled out.
+            for (int i = scratch.Count - 1; i > 0; i--)
+            {
+                int j = Rand.RangeInclusive(0, i);
+                IntVec3 swap = scratch[i];
+                scratch[i] = scratch[j];
+                scratch[j] = swap;
+            }
+            for (int i = 0; i < scratch.Count; i++)
+            {
+                if (pawn.CanReserveAndReach(scratch[i], PathEndMode.OnCell, Danger.None))
+                {
+                    result = scratch[i];
+                    scratch.Clear();
+                    return true;
+                }
+            }
+            scratch.Clear();
+            return false;
         }
+
+        /// <summary>Reused between calls; job giving is single-threaded.</summary>
+        private static readonly List<IntVec3> scratch = new List<IntVec3>();
     }
 
     /// <summary>

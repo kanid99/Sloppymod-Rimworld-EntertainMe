@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Linq;
 using RimWorld;
 using UnityEngine;
 using Verse;
@@ -211,9 +210,16 @@ namespace EntertainingIdeas
             // A user may stand on the interaction cell, sit in a chair beside
             // the building, sit in the building itself, or - for things a crowd
             // gathers around - stand a few tiles back.
-            IEnumerable<IntVec3> cells = Props.scanRadius > 0f
-                ? GenRadial.RadialCellsAround(parent.Position, Props.scanRadius, true)
-                : GenAdj.CellsOccupiedBy(parent).Concat(GenAdj.CellsAdjacent8Way(parent));
+            if (Props.scanRadius > 0f)
+            {
+                return AnyPlayerIn(map, GenRadial.RadialCellsAround(parent.Position, Props.scanRadius, true));
+            }
+            return AnyPlayerIn(map, GenAdj.CellsOccupiedBy(parent))
+                   || AnyPlayerIn(map, GenAdj.CellsAdjacent8Way(parent));
+        }
+
+        private bool AnyPlayerIn(Map map, IEnumerable<IntVec3> cells)
+        {
             foreach (IntVec3 cell in cells)
             {
                 if (!cell.InBounds(map))

@@ -143,6 +143,12 @@ namespace EntertainingIdeas
     {
         private bool filled;
 
+        // A thing's comps are fixed when it is constructed, so whether this tub
+        // is piped never changes. Worth resolving once: NeedsService is asked
+        // for every tub on the map whenever a colonist looks for work.
+        private ThingComp pipe;
+        private bool pipeResolved;
+
         private CompProperties_WaterBasin Props
         {
             get { return (CompProperties_WaterBasin)props; }
@@ -163,17 +169,30 @@ namespace EntertainingIdeas
             Scribe_Values.Look(ref filled, "EI_filled", false);
         }
 
+        private ThingComp Pipe
+        {
+            get
+            {
+                if (!pipeResolved)
+                {
+                    pipeResolved = true;
+                    pipe = DubsPlumbing.PipeOn(parent);
+                }
+                return pipe;
+            }
+        }
+
         public bool Plumbed
         {
-            get { return DubsPlumbing.PipeOn(parent) != null; }
+            get { return Pipe != null; }
         }
 
         public bool HasWater
         {
             get
             {
-                ThingComp pipe = DubsPlumbing.PipeOn(parent);
-                return pipe != null ? DubsPlumbing.NetHasWater(pipe) : filled;
+                ThingComp plumbing = Pipe;
+                return plumbing != null ? DubsPlumbing.NetHasWater(plumbing) : filled;
             }
         }
 
@@ -222,6 +241,49 @@ namespace EntertainingIdeas
         }
     }
 
+    /// <summary>
+    /// Which defs can ever need servicing, worked out once from the comps they
+    /// declare rather than kept as a hand-written list that would go stale the
+    /// next time a building gains a basin.
+    /// </summary>
+    public static class ServiceableDefs
+    {
+        private static List<ThingDef> cached;
+
+        /// <summary>
+        /// Worked out on first use rather than in a field initialiser, so it
+        /// cannot possibly be built before the defs it reads are loaded.
+        /// </summary>
+        public static List<ThingDef> All
+        {
+            get { return cached ?? (cached = Gather()); }
+        }
+
+        private static List<ThingDef> Gather()
+        {
+            List<ThingDef> found = new List<ThingDef>();
+            List<ThingDef> all = DefDatabase<ThingDef>.AllDefsListForReading;
+            for (int i = 0; i < all.Count; i++)
+            {
+                List<CompProperties> comps = all[i].comps;
+                if (comps == null)
+                {
+                    continue;
+                }
+                for (int c = 0; c < comps.Count; c++)
+                {
+                    if (comps[c].compClass != null
+                        && typeof(IServiceable).IsAssignableFrom(comps[c].compClass))
+                    {
+                        found.Add(all[i]);
+                        break;
+                    }
+                }
+            }
+            return found;
+        }
+    }
+
     public class WorkGiver_ServiceBuilding : WorkGiver_Scanner
     {
         public override ThingRequest PotentialWorkThingRequest
@@ -232,6 +294,56 @@ namespace EntertainingIdeas
         public override PathEndMode PathEndMode
         {
             get { return PathEndMode.Touch; }
+        }
+
+        /// <summary>
+        /// Only this mod's serviceable buildings, rather than every artificial
+        /// building on the map. The request above still says BuildingArtificial
+        /// because that is what these things are, but handing the scanner an
+        /// explicit set keeps a colonist looking for work from asking a
+        /// thousand walls and workbenches whether they need topping up. This is
+        /// how WorkGiver_FixBrokenDownBuilding narrows the same group.
+        /// </summary>
+        public override IEnumerable<Thing> PotentialWorkThingsGlobal(Pawn pawn)
+        {
+            if (pawn == null || pawn.Map == null)
+            {
+                yield break;
+            }
+            List<ThingDef> defs = ServiceableDefs.All;
+            for (int i = 0; i < defs.Count; i++)
+            {
+                List<Thing> things = pawn.Map.listerThings.ThingsOfDef(defs[i]);
+                for (int t = 0; t < things.Count; t++)
+                {
+                    yield return things[t];
+                }
+            }
+        }
+
+        /// <summary>
+        /// Nothing anywhere needs filling or resetting, which is the normal
+        /// state of affairs, so drop the whole work giver before it scans.
+        /// </summary>
+        public override bool ShouldSkip(Pawn pawn, bool forced = false)
+        {
+            if (pawn == null || pawn.Map == null)
+            {
+                return true;
+            }
+            List<ThingDef> defs = ServiceableDefs.All;
+            for (int i = 0; i < defs.Count; i++)
+            {
+                List<Thing> things = pawn.Map.listerThings.ThingsOfDef(defs[i]);
+                for (int t = 0; t < things.Count; t++)
+                {
+                    if (ServiceableOn(things[t]) != null)
+                    {
+                        return false;
+                    }
+                }
+            }
+            return true;
         }
 
         private static IServiceable ServiceableOn(Thing t)

@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
 using RimWorld;
 using UnityEngine;
@@ -58,6 +57,13 @@ namespace EntertainingIdeas
     /// </summary>
     public class PlaceWorker_ProjectionTarget : PlaceWorker
     {
+        // DrawGhost runs every rendered frame while a projector is on the
+        // cursor, so the cells it needs are held in lists that are cleared and
+        // refilled rather than allocated afresh sixty times a second.
+        private static readonly List<IntVec3> beamCells = new List<IntVec3>();
+        private static readonly List<IntVec3> probeCells = new List<IntVec3>();
+        private static readonly List<IntVec3> highlight = new List<IntVec3>();
+
         public override void DrawGhost(ThingDef def, IntVec3 center, Rot4 rot, Color ghostCol, Thing thing = null)
         {
             Map map = Find.CurrentMap;
@@ -67,10 +73,9 @@ namespace EntertainingIdeas
             }
 
             int range = RangeOf(def);
-            List<IntVec3> beam;
             IntVec3 wall;
 
-            if (!TryCastBeam(map, center, rot, range, out wall, out beam))
+            if (!TryCastBeam(map, center, rot, range, beamCells, out wall))
             {
                 // This way misses. Turn to a direction that does not, if there
                 // is one - a projector aimed at nothing is the single thing
@@ -83,14 +88,15 @@ namespace EntertainingIdeas
                     PlacingRotation.SnapTo(better, rot);
                     return;
                 }
-                GenDraw.DrawFieldEdges(beam, new Color(1f, 0.4f, 0.4f, 0.35f));
+                GenDraw.DrawFieldEdges(beamCells, new Color(1f, 0.4f, 0.4f, 0.35f));
                 return;
             }
 
-            GenDraw.DrawFieldEdges(new List<IntVec3>
-            {
-                wall, wall + rot.RighthandCell, wall - rot.RighthandCell
-            }, Color.cyan);
+            highlight.Clear();
+            highlight.Add(wall);
+            highlight.Add(wall + rot.RighthandCell);
+            highlight.Add(wall - rot.RighthandCell);
+            GenDraw.DrawFieldEdges(highlight, Color.cyan);
         }
 
         private static int RangeOf(ThingDef def)
@@ -104,10 +110,10 @@ namespace EntertainingIdeas
         /// it hit, or the cells it crossed on its way to hitting nothing.
         /// </summary>
         private static bool TryCastBeam(Map map, IntVec3 center, Rot4 rot, int range,
-                                        out IntVec3 wall, out List<IntVec3> beam)
+                                        List<IntVec3> beam, out IntVec3 wall)
         {
             IntVec3 facing = rot.FacingCell;
-            beam = new List<IntVec3>();
+            beam.Clear();
             wall = IntVec3.Invalid;
 
             for (int distance = 1; distance <= range; distance++)
@@ -132,7 +138,6 @@ namespace EntertainingIdeas
         {
             result = skip;
             IntVec3 wall;
-            List<IntVec3> ignored;
             for (int i = 0; i < 4; i++)
             {
                 Rot4 rot = new Rot4(i);
@@ -140,7 +145,7 @@ namespace EntertainingIdeas
                 {
                     continue;
                 }
-                if (TryCastBeam(map, center, rot, range, out wall, out ignored))
+                if (TryCastBeam(map, center, rot, range, probeCells, out wall))
                 {
                     result = rot;
                     return true;
@@ -206,17 +211,23 @@ namespace EntertainingIdeas
             high = Mathf.FloorToInt(lateral + half);
         }
 
+        // Both AllowsPlacing and DrawGhost want the run, both are called every
+        // frame while the panel is on the cursor, and they are never in flight
+        // at the same time, so one reused list serves both.
+        private static readonly List<IntVec3> wallRun = new List<IntVec3>();
+        private static readonly List<IntVec3> facing = new List<IntVec3>();
+
         private static List<IntVec3> WallRun(BuildableDef def, IntVec3 loc, Rot4 rot)
         {
             int low, high;
             SpanFor(def, rot, out low, out high);
             IntVec3 across = rot.RighthandCell;
-            List<IntVec3> run = new List<IntVec3>();
+            wallRun.Clear();
             for (int k = low; k <= high; k++)
             {
-                run.Add(loc + across * k);
+                wallRun.Add(loc + across * k);
             }
-            return run;
+            return wallRun;
         }
 
         public override AcceptanceReport AllowsPlacing(BuildableDef checkingDef, IntVec3 loc, Rot4 rot,
@@ -255,7 +266,9 @@ namespace EntertainingIdeas
             SnapPlacingRotation(map, center, rot);
 
             GenDraw.DrawFieldEdges(WallRun(def, center, rot), ghostCol);
-            GenDraw.DrawFieldEdges(new List<IntVec3> { center + rot.FacingCell }, Color.cyan);
+            facing.Clear();
+            facing.Add(center + rot.FacingCell);
+            GenDraw.DrawFieldEdges(facing, Color.cyan);
         }
 
         private static void SnapPlacingRotation(Map map, IntVec3 center, Rot4 current)
@@ -394,12 +407,18 @@ namespace EntertainingIdeas
     /// </summary>
     public class PlaceWorker_SlungBetweenSupports : PlaceWorker
     {
+        // Refilled rather than reallocated: both callers run every frame while
+        // a hammock is on the cursor.
+        private static readonly List<IntVec3> anchors = new List<IntVec3>();
+        private static readonly List<IntVec3> oneCell = new List<IntVec3>();
+
         public override AcceptanceReport AllowsPlacing(BuildableDef checkingDef, IntVec3 loc, Rot4 rot,
                                                        Map map, Thing thingToIgnore = null, Thing thing = null)
         {
-            foreach (IntVec3 anchor in AnchorsFor(checkingDef, loc, rot))
+            AnchorsFor(checkingDef, loc, rot, anchors);
+            for (int i = 0; i < anchors.Count; i++)
             {
-                if (!Supports(map, anchor, thingToIgnore))
+                if (!Supports(map, anchors[i], thingToIgnore))
                 {
                     return new AcceptanceReport(
                         "Needs a wall or a column at both ends to hang from.");
@@ -417,10 +436,13 @@ namespace EntertainingIdeas
             }
             // Colour each end for what is actually there, so a hammock one tile
             // short of its wall is obvious before you commit to it.
-            foreach (IntVec3 anchor in AnchorsFor(def, center, rot))
+            AnchorsFor(def, center, rot, anchors);
+            for (int i = 0; i < anchors.Count; i++)
             {
-                GenDraw.DrawFieldEdges(new List<IntVec3> { anchor },
-                                       Supports(map, anchor, null) ? Color.cyan : Color.red);
+                oneCell.Clear();
+                oneCell.Add(anchors[i]);
+                GenDraw.DrawFieldEdges(oneCell,
+                                       Supports(map, anchors[i], null) ? Color.cyan : Color.red);
             }
         }
 
@@ -428,28 +450,29 @@ namespace EntertainingIdeas
         /// The cells just beyond each end of the hammock. Written for any size,
         /// so a wider or longer version would still ask the right question.
         /// </summary>
-        private static IEnumerable<IntVec3> AnchorsFor(BuildableDef def, IntVec3 loc, Rot4 rot)
+        private static void AnchorsFor(BuildableDef def, IntVec3 loc, Rot4 rot, List<IntVec3> into)
         {
+            into.Clear();
             IntVec3 axis = rot.FacingCell;
-            List<IntVec3> cells = GenAdj.CellsOccupiedBy(loc, rot, def.Size).ToList();
+            CellRect occupied = GenAdj.OccupiedRect(loc, rot, def.Size);
             int low = int.MaxValue;
             int high = int.MinValue;
-            for (int i = 0; i < cells.Count; i++)
+            foreach (IntVec3 cell in occupied)
             {
-                int along = Along(cells[i], axis);
+                int along = Along(cell, axis);
                 low = Mathf.Min(low, along);
                 high = Mathf.Max(high, along);
             }
-            for (int i = 0; i < cells.Count; i++)
+            foreach (IntVec3 cell in occupied)
             {
-                int along = Along(cells[i], axis);
+                int along = Along(cell, axis);
                 if (along == low)
                 {
-                    yield return cells[i] - axis;
+                    into.Add(cell - axis);
                 }
                 if (along == high)
                 {
-                    yield return cells[i] + axis;
+                    into.Add(cell + axis);
                 }
             }
         }
