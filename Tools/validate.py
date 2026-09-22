@@ -54,6 +54,45 @@ ASSEMBLIES = [os.path.join(ROOT, outdir, ASSEMBLY + ".dll")
 PREFIXES = tuple(modtool.many(CONF, "prefix"))
 FOREIGN = set(modtool.many(CONF, "foreign"))
 
+# Graphic classes load a texPath in three different shapes, so checking one
+# shape for all of them reports missing files that are not missing.
+#
+#   Graphic_Single      <path>.png
+#   Graphic_Multi       <path>_north/_south/_east/_west.png - and only three of
+#                       those need exist, because Graphic_Multi carries
+#                       westFlipped/eastFlipped and mirrors one side onto the
+#                       other when the file for it is absent.
+#   Graphic_Collection  <path>/ as a FOLDER of variants, enumerated at load.
+#                       Graphic_Random and Graphic_StackCount are both this.
+#
+# Anything else is a graphic class from another mod whose layout is not ours to
+# guess, so those are only reported when neither shape is present at all.
+COLLECTION_GRAPHICS = ("Graphic_Random", "Graphic_StackCount", "Graphic_Appearances")
+
+
+def has_folder(base):
+    return os.path.isdir(base) and any(f.endswith(".png") for f in os.listdir(base))
+
+
+def texture_problem(klass, base):
+    """What is wrong with this texture path, or None if nothing is."""
+    if klass == "Graphic_Multi":
+        have = {r: os.path.isfile("%s_%s.png" % (base, r))
+                for r in ("north", "east", "south", "west")}
+        missing = [r for r in ("north", "south") if not have[r]]
+        if not have["east"] and not have["west"]:
+            missing.append("east or west")
+        return "Graphic_Multi missing " + ", ".join(missing) if missing else None
+    if klass in COLLECTION_GRAPHICS:
+        return None if has_folder(base) else "%s needs a folder of textures, and there is none" % klass
+    if klass in (None, "", "Graphic_Single"):
+        return None if os.path.isfile(base + ".png") else "no texture file"
+    # A graphic class we do not know. Accept either shape.
+    if os.path.isfile(base + ".png") or has_folder(base):
+        return None
+    return "no texture file or folder (graphic class %s)" % klass
+
+
 problems = []
 thing_defs = {}      # defName -> element (concrete buildings)
 named = {}           # Name="..." -> element (including Abstract parents)
@@ -159,14 +198,9 @@ for name, node in thing_defs.items():
     if not tex:
         continue
     base = os.path.join(TEX, tex.replace("/", os.sep))
-    if klass == "Graphic_Multi":
-        missing = [r for r in ("north", "east", "south", "west")
-                   if not os.path.isfile("%s_%s.png" % (base, r))]
-        if missing:
-            fail("%s: Graphic_Multi missing %s for %s"
-                 % (name, ", ".join(missing), tex))
-    elif not os.path.isfile(base + ".png"):
-        fail("%s: no texture file for %s" % (name, tex))
+    problem = texture_problem(klass, base)
+    if problem:
+        fail("%s: %s for %s" % (name, problem, tex))
 
 # --- internal references ----------------------------------------------------
 for name, node in thing_defs.items():
@@ -279,7 +313,8 @@ for path in xml_files(DEFS):
         for child in node:
             if not child.tag.lower().endswith("texpath") or not child.text:
                 continue
-            if not os.path.isfile(os.path.join(TEX, child.text.replace("/", os.sep)) + ".png"):
+            comp_base = os.path.join(TEX, child.text.replace("/", os.sep))
+            if not os.path.isfile(comp_base + ".png") and not has_folder(comp_base):
                 fail("no texture file for %s (<%s>)" % (child.text, child.tag))
 
 for klass in sorted(our_classes_used):
