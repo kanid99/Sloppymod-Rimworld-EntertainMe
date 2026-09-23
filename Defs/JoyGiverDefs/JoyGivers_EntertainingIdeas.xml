@@ -273,4 +273,37 @@
     </requiredCapacities>
   </JoyGiverDef>
 
+
+  <!-- The stump has two roles, so two givers: one colonist tells, the rest
+       listen - and the listeners' giver only offers the stump while a story
+       is actually under way. -->
+  <JoyGiverDef>
+    <defName>EI_TellStory</defName>
+    <giverClass>EntertainingIdeas.JoyGiver_TellStory</giverClass>
+    <baseChance>1.5</baseChance>
+    <thingDefs>
+      <li>EI_StorytellerStump</li>
+    </thingDefs>
+    <jobDef>EI_TellStory</jobDef>
+    <joyKind>Social</joyKind>
+    <requiredCapacities>
+      <li>Talking</li>
+    </requiredCapacities>
+  </JoyGiverDef>
+
+  <JoyGiverDef>
+    <defName>EI_ListenToStory</defName>
+    <giverClass>EntertainingIdeas.JoyGiver_ListenToStory</giverClass>
+    <baseChance>4</baseChance>
+    <desireSit>true</desireSit>
+    <thingDefs>
+      <li>EI_StorytellerStump</li>
+    </thingDefs>
+    <jobDef>EI_ListenToStory</jobDef>
+    <joyKind>Social</joyKind>
+    <requiredCapacities>
+      <li>Hearing</li>
+    </requiredCapacities>
+  </JoyGiverDef>
+
 </Defs>

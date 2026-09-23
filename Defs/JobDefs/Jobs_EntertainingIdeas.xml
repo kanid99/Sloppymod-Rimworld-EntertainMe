@@ -241,4 +241,24 @@
     <reportString>framing the finished jigsaw at TargetA.</reportString>
   </JobDef>
 
+
+  <JobDef>
+    <defName>EI_TellStory</defName>
+    <driverClass>EntertainingIdeas.JobDriver_TellStory</driverClass>
+    <reportString>telling a story.</reportString>
+    <joyDuration>3000</joyDuration>
+    <joySkill>Social</joySkill>
+    <joyXpPerTick>0.002</joyXpPerTick>
+    <joyKind>Social</joyKind>
+  </JobDef>
+
+  <JobDef>
+    <defName>EI_ListenToStory</defName>
+    <driverClass>EntertainingIdeas.JobDriver_ListenToStory</driverClass>
+    <reportString>listening to a story.</reportString>
+    <joyDuration>3000</joyDuration>
+    <joyKind>Social</joyKind>
+    <allowOpportunisticPrefix>true</allowOpportunisticPrefix>
+  </JobDef>
+
 </Defs>

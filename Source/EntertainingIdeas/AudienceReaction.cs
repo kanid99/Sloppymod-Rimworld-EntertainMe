@@ -25,6 +25,12 @@ namespace EntertainingIdeas
         public int intervalTicks = 1250;
         /// <summary>How far to look for the performer.</summary>
         public float scanRadius = 5f;
+        /// <summary>
+        /// How far the performance carries, in tiles. 0 means the whole room,
+        /// which is right indoors; outdoors the "room" is the entire outside of
+        /// the map, so anything performed out there needs a real limit.
+        /// </summary>
+        public float audienceRadius = 0f;
         /// <summary>Skill that decides whether the performance is any good.</summary>
         public SkillDef performanceSkill;
         /// <summary>Skill level at which a performance is a coin flip.</summary>
@@ -134,11 +140,16 @@ namespace EntertainingIdeas
                 return;
             }
 
+            float reach = Props.audienceRadius * Props.audienceRadius;
             List<Pawn> pawns = parent.Map.mapPawns.FreeColonistsAndPrisonersSpawned;
             for (int i = 0; i < pawns.Count; i++)
             {
                 Pawn listener = pawns[i];
                 if (listener == performer || listener.GetRoom() != room)
+                {
+                    continue;
+                }
+                if (reach > 0f && listener.Position.DistanceToSquared(parent.Position) > reach)
                 {
                     continue;
                 }

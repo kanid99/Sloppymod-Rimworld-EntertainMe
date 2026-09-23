@@ -2158,4 +2158,86 @@
     </graphicData>
   </ThingDef>
 
+
+  <!-- ======================================================================
+       Storyteller's stump. A colonist stands on it and tells stories beside a
+       fire; others gather in front to listen, and the stories take shape in
+       the fire's smoke. Needs a lit fire within six tiles - vanilla's
+       campfire, or any fire pit another mod adds.
+       ====================================================================== -->
+  <ThingDef ParentName="EI_JoyBuildingBase">
+    <defName>EI_StorytellerStump</defName>
+    <label>storyteller's stump</label>
+    <description>A broad stump with a step cut into the front, for standing on. Put it beside a campfire, facing the side the listeners will sit.\n\nWhen someone climbs up and starts telling a story, the rest of the colony drifts over to hear it - and while the story runs, its shapes rise out of the smoke: a thrumbo on a ridge, a raider with a rifle, a ship going up, a mechanoid coming down the hill. Everyone within earshot forms an opinion. A good talker, or a well-liked one, has the fire hanging on every word; a poor one is remembered for going on a bit.\n\nNeeds a lit fire within six tiles.</description>
+    <graphicData>
+      <texPath>EntertainingIdeas/Buildings/StorytellerStump</texPath>
+      <graphicClass>Graphic_Multi</graphicClass>
+      <drawSize>(1,1)</drawSize>
+      <damageData>
+        <rect>(0.15,0.1,0.7,0.8)</rect>
+      </damageData>
+    </graphicData>
+    <rotatable>true</rotatable>
+    <tickerType>Rare</tickerType>
+    <fillPercent>0.2</fillPercent>
+    <pathCost>30</pathCost>
+    <statBases>
+      <MaxHitPoints>80</MaxHitPoints>
+      <WorkToBuild>700</WorkToBuild>
+      <Mass>12</Mass>
+      <Beauty>1</Beauty>
+      <JoyGainFactor>1</JoyGainFactor>
+    </statBases>
+    <!-- Not stuffable: it is a tree stump, and the art is the colour of one. -->
+    <costList>
+      <WoodLog>30</WoodLog>
+    </costList>
+    <building>
+      <joyKind>Social</joyKind>
+      <!-- Listeners gather in front, the way a crowd watches the shadow
+           theater. Not sittable on purpose: vanilla reserves a sittable
+           building itself, which would lock the listeners out. -->
+      <watchBuildingStandDistanceRange>
+        <min>2</min>
+        <max>5</max>
+      </watchBuildingStandDistanceRange>
+      <watchBuildingStandRectWidth>5</watchBuildingStandRectWidth>
+    </building>
+    <placeWorkers>
+      <li>PlaceWorker_WatchArea</li>
+      <li>EntertainingIdeas.PlaceWorker_StoryFire</li>
+    </placeWorkers>
+    <comps>
+      <li Class="EntertainingIdeas.CompProperties_Storyteller">
+        <fireRadius>6</fireRadius>
+        <ticksPerFrame>20</ticksPerFrame>
+        <drawSize>(1,1.5)</drawSize>
+        <motifs>
+          <li><framePath>EntertainingIdeas/Buildings/StorySmokeThrumbo</framePath><frameCount>10</frameCount></li>
+          <li><framePath>EntertainingIdeas/Buildings/StorySmokeRaider</framePath><frameCount>10</frameCount></li>
+          <li><framePath>EntertainingIdeas/Buildings/StorySmokeShip</framePath><frameCount>10</frameCount></li>
+          <li><framePath>EntertainingIdeas/Buildings/StorySmokeMech</framePath><frameCount>10</frameCount></li>
+        </motifs>
+      </li>
+      <!-- The same audience comp karaoke uses, keyed to the teller's social
+           skill rather than artistic, and limited to earshot: outdoors the
+           "room" is the entire outside of the map. -->
+      <li Class="EntertainingIdeas.CompProperties_AudienceReaction">
+        <userJobs>
+          <li>EI_TellStory</li>
+        </userJobs>
+        <goodThought>EI_EnjoyedStory</goodThought>
+        <badThought>EI_SatThroughStory</badThought>
+        <performanceSkill>Social</performanceSkill>
+        <neutralSkill>6</neutralSkill>
+        <skillWeight>3</skillWeight>
+        <opinionWeight>0.6</opinionWeight>
+        <tasteSpread>20</tasteSpread>
+        <intervalTicks>1250</intervalTicks>
+        <scanRadius>1.5</scanRadius>
+        <audienceRadius>8</audienceRadius>
+      </li>
+    </comps>
+  </ThingDef>
+
 </Defs>

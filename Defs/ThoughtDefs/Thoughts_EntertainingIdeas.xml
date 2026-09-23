@@ -48,4 +48,36 @@
     </stages>
   </ThoughtDef>
 
+
+  <!-- Everyone within earshot of the stump, judged the way karaoke is: the
+       teller's social skill, what the listener thinks of them, and a fixed
+       streak of taste. -->
+  <ThoughtDef>
+    <defName>EI_EnjoyedStory</defName>
+    <durationDays>0.5</durationDays>
+    <stackLimit>3</stackLimit>
+    <stackedEffectMultiplier>0.7</stackedEffectMultiplier>
+    <stages>
+      <li>
+        <label>a good story by the fire</label>
+        <description>Someone told a story tonight, and for a while nobody was thinking about raids or rations or anything else at all.</description>
+        <baseMoodEffect>4</baseMoodEffect>
+      </li>
+    </stages>
+  </ThoughtDef>
+
+  <ThoughtDef>
+    <defName>EI_SatThroughStory</defName>
+    <durationDays>0.5</durationDays>
+    <stackLimit>3</stackLimit>
+    <stackedEffectMultiplier>0.7</stackedEffectMultiplier>
+    <stages>
+      <li>
+        <label>sat through a rambling story</label>
+        <description>It went on and on. There was a thrumbo in it at some point, I think.</description>
+        <baseMoodEffect>-3</baseMoodEffect>
+      </li>
+    </stages>
+  </ThoughtDef>
+
 </Defs>

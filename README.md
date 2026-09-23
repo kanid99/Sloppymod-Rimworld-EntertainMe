@@ -24,6 +24,7 @@ for each — see [Versions](#versions).
 | Hammock | 1×2 | Solitary relaxation | Rest that is not a bed: no assignment, no sleeping the night, no medical care. Recovers rest at 45% of a plain bed while a colonist lounges. Woven from cloth or leather. |
 | Armillary sphere | 1×1 | Solitary relaxation | Brass rings on a tripod, turning under their own clockwork. Watched from 1–4 tiles. Beauty 16. |
 | Jigsaw table | 2×2 | Cerebral | A puzzle that stays where it was left. Anyone who pulls up a chair adds pieces — as many at once as there are chairs — and it fills in visibly over several sittings. Everyone who worked on it is pleased when the last piece goes in; the finished picture is framed, boxed, and hung on a wall like a lamp (Beauty 8), and the next puzzle comes out of the box. Four pictures. Wood, metal or stone. |
+| Storyteller's stump | 1×1 | Social | One colonist stands on it and tells stories beside a fire; the rest gather in front to listen, and the stories take shape in the fire's smoke — a thrumbo, a raider, a ship, a mechanoid. Everyone within earshot likes it or doesn't, by the teller's social skill and what they think of them. Needs a lit campfire (or any modded fire pit) within six tiles. Wood logs. |
 
 ### Industrial — powered
 

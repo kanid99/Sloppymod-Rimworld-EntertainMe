@@ -2703,5 +2703,109 @@ def _build_jigsaw():
 
 _register("jigsaw", _build_jigsaw)
 
+
+# ---------------------------------------------------------------------------
+# Storyteller's stump  (neolithic, 1x1, faces its audience)
+#
+# The teller cannot be posed without Harmony, so the stump itself is plain and
+# the show happens in the smoke of the nearest fire: while a story is being
+# told, shapes out of it - a thrumbo, a raider, a ship, a mechanoid - form in
+# the smoke, climb and fade. Drawn lit by the fire rather than by the room, so
+# they read at night, which is when stories get told.
+# ---------------------------------------------------------------------------
+
+STORY_MOTIFS = ("Thrumbo", "Raider", "Ship", "Mech")
+STORY_FRAMES = 10
+
+
+def storyteller_stump():
+    c = Canvas(128, 128)
+    bark, bark_dk = (104, 74, 50, 255), (76, 52, 34, 255)
+    wood, wood_dk = (206, 172, 124, 255), (170, 136, 92, 255)
+    # A wide stump with a root flare at the back and a step cut into the
+    # front, which is the side the teller faces and the audience sits.
+    pieces = [("ellipse", 64, 60, 40, 38, bark),
+              ("ellipse", 36, 34, 14, 10, bark), ("ellipse", 94, 36, 13, 10, bark),
+              ("rect", 44, 88, 84, 110, 6, bark)]
+    silhouette(c, pieces, 4.0)
+    c.ellipse(36, 34, 11, 7, bark_dk)
+    c.ellipse(94, 36, 10, 7, bark_dk)
+    c.ellipse(64, 60, 33, 31, wood)
+    for r in (26, 19, 12, 6):                                  # growth rings
+        c.ring(64, 60, r + 0.9, r, darker(wood, 0.82, 200))
+    c.line(64, 60, 88, 44, darker(wood, 0.7, 160), 1.6)        # a dry crack
+    c.rect(47, 92, 81, 107, wood_dk, 4)                        # the carved step
+    c.line(49, 99, 79, 99, darker(wood_dk, 0.8, 200), 1.4)
+    save_rotations(c, "StorytellerStump")
+    return c
+
+
+def _story_shape(c, motif, x, y, sc, col):
+    """One story, as a smoke-shape centred on (x, y)."""
+    if motif == "Thrumbo":
+        c.ellipse(x, y, 22 * sc, 12 * sc, col)
+        c.ellipse(x + 22 * sc, y - 5 * sc, 9 * sc, 7 * sc, col)
+        c.poly([(x + 26 * sc, y - 10 * sc), (x + 38 * sc, y - 24 * sc), (x + 30 * sc, y - 7 * sc)], col)
+        for lx in (-15, -6, 6, 14):
+            c.line(x + lx * sc, y + 8 * sc, x + lx * sc, y + 20 * sc, col, 4 * sc)
+    elif motif == "Raider":
+        c.ellipse(x, y - 16 * sc, 6 * sc, 6 * sc, col)                  # head
+        c.ellipse(x, y, 8 * sc, 12 * sc, col)                           # body
+        c.line(x - 4 * sc, y + 10 * sc, x - 8 * sc, y + 26 * sc, col, 4 * sc)
+        c.line(x + 4 * sc, y + 10 * sc, x + 8 * sc, y + 26 * sc, col, 4 * sc)
+        c.line(x - 14 * sc, y - 2 * sc, x + 22 * sc, y - 8 * sc, col, 3 * sc)  # the rifle
+    elif motif == "Ship":
+        c.rect(x - 7 * sc, y - 24 * sc, x + 7 * sc, y + 14 * sc, col, 3 * sc)
+        c.poly([(x - 7 * sc, y - 22 * sc), (x, y - 34 * sc), (x + 7 * sc, y - 22 * sc)], col)
+        for side in (-1, 1):
+            c.poly([(x + side * 7 * sc, y + 4 * sc), (x + side * 15 * sc, y + 18 * sc),
+                    (x + side * 7 * sc, y + 14 * sc)], col)
+        c.ellipse(x, y + 22 * sc, 5 * sc, 9 * sc, col)                  # exhaust
+    else:  # Mech: a centipede, the thing every colony's stories end up about
+        for k in range(5):
+            c.ellipse(x - 24 * sc + k * 12 * sc, y + (k % 2) * 3 * sc, 7 * sc, 6 * sc, col)
+            c.line(x - 24 * sc + k * 12 * sc, y + 4 * sc, x - 27 * sc + k * 12 * sc,
+                   y + 13 * sc, col, 2 * sc)
+            c.line(x - 24 * sc + k * 12 * sc, y + 4 * sc, x - 21 * sc + k * 12 * sc,
+                   y + 13 * sc, col, 2 * sc)
+        c.ellipse(x + 34 * sc, y - 3 * sc, 8 * sc, 7 * sc, col)
+        c.circle(x + 37 * sc, y - 5 * sc, 1.8 * sc, (255, 120, 90, int(col[3] * 1.6) if col[3] < 150 else 255))
+
+
+def storyteller_smoke_frames(total=STORY_FRAMES):
+    """Each shape forms low in the smoke, climbs, and thins away, over a
+    column of ordinary smoke that keeps rising underneath it."""
+    import math
+    import random
+    for motif in STORY_MOTIFS:
+        rng = random.Random(motif)
+        wisps = [(rng.uniform(-14, 14), rng.uniform(0, 1), rng.uniform(7, 13)) for _ in range(7)]
+        for f in range(total):
+            t = f / float(total)
+            c = Canvas(128, 192)
+            # Plain smoke, always drifting up, wrapping round.
+            for wx, phase, r in wisps:
+                u = (t + phase) % 1.0
+                a = int(70 * math.sin(math.pi * u))
+                c.circle(64 + wx + 8 * math.sin(6.28 * u + phase * 6), 176 - 150 * u,
+                         r * (0.7 + 0.8 * u), (210, 204, 198, max(0, a)))
+            # The story's shape: fades in, peaks a third of the way up, fades out.
+            alpha = int(150 * math.sin(math.pi * min(1.0, t * 1.1)))
+            y = 130 - 76 * t
+            sc = 0.85 + 0.3 * t
+            if alpha > 6:
+                _story_shape(c, motif, 64, y, sc, (246, 232, 212, alpha))
+            write_png(os.path.join(OUT, "StorySmoke%s_%d.png" % (motif, f)), c.w, c.h, c.pixels())
+        print("  StorySmoke%s_{0..%d}.png  (128x192)" % (motif, total - 1))
+
+
+def _build_storyteller():
+    made = {"StorytellerStump": storyteller_stump()}
+    storyteller_smoke_frames()
+    return made
+
+
+_register("storyteller", _build_storyteller)
+
 if __name__ == "__main__":
     main()
