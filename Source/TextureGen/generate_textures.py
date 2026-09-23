@@ -2334,5 +2334,374 @@ _register("hammock", _build_hammock)
 _register("cornhole", _build_cornhole)
 
 
+
+# ---------------------------------------------------------------------------
+# Jigsaw table  (2x2, non-rotatable) and the framed puzzles it turns out
+#
+# The table is plain furniture, drawn in pale neutrals so the stuff it is made
+# from tints it the way vanilla furniture is tinted. The puzzle is not part of
+# that texture: it is a separate overlay the comp draws on top, one of seven
+# stages per picture, so the picture keeps its own colours whatever the table
+# is made of and visibly fills in as colonists work on it.
+#
+# Pieces go in the way people actually do a jigsaw: a run of edge pieces from
+# a corner first, then the rest of the border, then the middle filling inward
+# from the frame in blobs.
+# ---------------------------------------------------------------------------
+
+JIGSAW_COLS, JIGSAW_ROWS = 12, 9
+JIGSAW_PIECE = 15
+JIGSAW_X, JIGSAW_Y = 38, 38                      # puzzle area on the table
+JIGSAW_W = JIGSAW_COLS * JIGSAW_PIECE             # 180
+JIGSAW_H = JIGSAW_ROWS * JIGSAW_PIECE             # 135
+# Fraction of pieces in place at each stage. The last stage is only ever shown
+# when the puzzle is finished; the one before it is "nearly there".
+JIGSAW_STAGES = (0.0, 0.15, 0.35, 0.55, 0.72, 0.88, 1.0)
+JIGSAW_PICTURES = ("ThrumboDawn", "MuffaloCrossing", "LaunchDay", "BoomalopePicnic")
+
+
+def _sky(c, x0, y0, w, h, top, bottom, bands=16):
+    for b in range(bands):
+        t = b / float(bands - 1)
+        col = tuple(int(top[k] + (bottom[k] - top[k]) * t) for k in range(3))
+        c.rect(x0, y0 + h * b / float(bands), x0 + w, y0 + h * (b + 1) / float(bands) + 1,
+               col + (255,), 0)
+
+
+def _ridge(c, x0, y0, w, h, points, color):
+    """A filled band of land from a list of (x fraction, y fraction) points
+    down to the bottom of the picture."""
+    c.poly([(x0 + w * fx, y0 + h * fy) for fx, fy in points]
+           + [(x0 + w, y0 + h), (x0, y0 + h)], color)
+
+
+def draw_jigsaw_scene(c, name, x0, y0, w, h):
+    """One of the puzzle pictures, laid out in fractions of the area given so
+    the same scene serves the table-sized puzzle and the small framed one."""
+    import random
+    rng = random.Random(name)
+
+    def X(f):
+        return x0 + w * f
+
+    def Y(f):
+        return y0 + h * f
+
+    s = min(w / 180.0, h / 135.0)                  # detail scale
+
+    if name == "ThrumboDawn":
+        _sky(c, x0, y0, w, h * 0.62, (92, 104, 168), (250, 182, 136))
+        c.circle(X(0.24), Y(0.5), 22 * s, (255, 214, 160, 70))
+        c.circle(X(0.24), Y(0.5), 12 * s, (255, 232, 186, 255))
+        _ridge(c, x0, y0, w, h, ((0, .52), (.18, .40), (.36, .50), (.58, .36),
+                                 (.8, .48), (1, .42)), (206, 204, 226, 255))
+        _ridge(c, x0, y0, w, h, ((0, .70), (.25, .62), (.5, .70), (.75, .60),
+                                 (1, .68)), (238, 240, 248, 255))
+        c.poly([(X(.5), Y(.74)), (X(1), Y(.64)), (X(1), Y(1)), (X(.62), Y(1))],
+               (212, 218, 238, 255))                                    # snow shadow
+        for fx, fy, sc in ((.06, .62, 1.0), (.13, .66, .8), (.9, .6, .9)):   # pines
+            px, py, pw = X(fx), Y(fy), 9 * s * sc
+            c.poly([(px, py - 26 * s * sc), (px + pw, py), (px - pw, py)], (44, 70, 64, 255))
+            c.poly([(px, py - 34 * s * sc), (px + pw * .7, py - 12 * s * sc),
+                    (px - pw * .7, py - 12 * s * sc)], (54, 84, 74, 255))
+        # The thrumbo, side on, one horn swept forward.
+        tx, ty = X(.6), Y(.62)
+        fur, fur_dk = (244, 244, 250, 255), (196, 198, 214, 255)
+        for lx in (-20, -9, 8, 19):
+            c.rect(tx + lx * s, ty + 4 * s, tx + (lx + 6) * s, ty + 18 * s, fur_dk, 2 * s)
+        c.ellipse(tx, ty, 30 * s, 15 * s, fur_dk)
+        c.ellipse(tx - 1 * s, ty - 1 * s, 28 * s, 13.5 * s, fur)
+        c.ellipse(tx + 29 * s, ty - 6 * s, 11 * s, 9 * s, fur_dk)
+        c.ellipse(tx + 29 * s, ty - 7 * s, 10 * s, 8 * s, fur)
+        c.poly([(tx + 34 * s, ty - 12 * s), (tx + 50 * s, ty - 28 * s),
+                (tx + 38 * s, ty - 9 * s)], (236, 214, 150, 255))      # horn
+        c.circle(tx + 33 * s, ty - 8 * s, 1.6 * s, (60, 60, 80, 255))
+
+    elif name == "MuffaloCrossing":
+        _sky(c, x0, y0, w, h * 0.5, (160, 190, 220), (228, 232, 226))
+        _ridge(c, x0, y0, w, h, ((0, .44), (.3, .38), (.55, .45), (.8, .36), (1, .42)),
+               (150, 160, 170, 255))
+        _ridge(c, x0, y0, w, h, ((0, .5), (1, .48)), (164, 158, 112, 255))
+        c.poly([(X(0), Y(.66)), (X(1), Y(.58)), (X(1), Y(.72)), (X(0), Y(.8))],
+               (104, 146, 186, 255))                                     # the river
+        c.poly([(X(0), Y(.7)), (X(1), Y(.62)), (X(1), Y(.64)), (X(0), Y(.72))],
+               (160, 196, 226, 255))
+        _ridge(c, x0, y0, w, h, ((0, .82), (.5, .78), (1, .74)), (128, 132, 86, 255))
+        # A herd wading across, smaller as they go into the distance.
+        for fx, fy, sc in ((.2, .77, 1.0), (.44, .7, .8), (.64, .65, .64), (.82, .61, .5)):
+            mx, my, r = X(fx), Y(fy), 17 * s * sc
+            coat, coat_dk = (122, 86, 56, 255), (84, 58, 38, 255)
+            c.ellipse(mx, my, r * 1.3, r * .78, coat_dk)
+            c.ellipse(mx - r * .05, my - r * .08, r * 1.2, r * .68, coat)
+            c.ellipse(mx - r * .45, my - r * .5, r * .75, r * .5, coat)              # hump
+            for k in range(5):                                                   # shag
+                c.line(mx - r * (0.9 - k * .35), my + r * .35, mx - r * (0.95 - k * .35),
+                       my + r * .72, coat_dk, max(1.0, r * .12))
+            c.ellipse(mx + r * 1.2, my - r * .05, r * .5, r * .44, coat_dk)          # head
+            c.ellipse(mx + r * 1.36, my + r * .02, r * .26, r * .24, (206, 184, 150, 255))
+            for side in (-1, 1):                                                 # horns
+                c.line(mx + r * 1.1, my - r * .35, mx + r * (1.1 + .35 * side), my - r * .8,
+                       (236, 226, 196, 255), max(1.2, r * .14))
+            c.rect(mx - r * 1.35, my + r * .5, mx + r * 1.6, my + r * .72,
+                   (160, 198, 228, 190), r * .2)                                  # wake
+
+    elif name == "LaunchDay":
+        _sky(c, x0, y0, w, h, (10, 14, 38), (46, 56, 104))
+        for k in range(40):
+            c.circle(X(rng.random()), Y(rng.random() * .6), (0.6 + rng.random()) * s,
+                     (236, 240, 255, 110 + rng.randint(0, 140)))
+        _ridge(c, x0, y0, w, h, ((0, .7), (.2, .56), (.4, .66), (.66, .5), (.86, .64), (1, .58)),
+               (30, 32, 52, 255))
+        # The plume first, so the ship sits in front of its own fire.
+        sx = X(.55)
+        c.ellipse(sx, Y(.6), 26 * s, 50 * s, (255, 150, 60, 60))
+        c.ellipse(sx, Y(.62), 9 * s, 30 * s, (255, 176, 80, 220))
+        c.ellipse(sx, Y(.58), 5 * s, 20 * s, (255, 240, 190, 255))
+        for k in range(7):
+            fx = .38 + k * .05
+            c.circle(X(fx), Y(.82 + 0.03 * (k % 2)), (10 + (k % 3) * 3) * s, (132, 128, 140, 230))
+        hull, hull_dk = (206, 210, 222, 255), (150, 156, 172, 255)
+        c.rect(sx - 7 * s, Y(.1), sx + 7 * s, Y(.44), hull_dk, 3 * s)
+        c.rect(sx - 5.5 * s, Y(.11), sx + 5 * s, Y(.43), hull, 2 * s)
+        c.poly([(sx - 7 * s, Y(.11)), (sx, Y(.02)), (sx + 7 * s, Y(.11))], hull)
+        for fin in (-1, 1):
+            c.poly([(sx + fin * 7 * s, Y(.34)), (sx + fin * 14 * s, Y(.46)),
+                    (sx + fin * 7 * s, Y(.44))], hull_dk)
+        c.circle(sx, Y(.2), 2.4 * s, (120, 200, 255, 255))
+        # The colony it is leaving behind, lights still on.
+        _ridge(c, x0, y0, w, h, ((0, .86), (1, .84)), (22, 22, 34, 255))
+        for bx, bw, bh in ((.06, .1, .1), (.18, .08, .14), (.72, .12, .09), (.86, .09, .12)):
+            c.rect(X(bx), Y(.86 - bh), X(bx + bw), Y(.87), (26, 26, 40, 255), 0)
+            for wx in range(2):
+                c.rect(X(bx + bw * (0.25 + 0.4 * wx)), Y(.86 - bh * .7),
+                       X(bx + bw * (0.25 + 0.4 * wx)) + 3 * s, Y(.86 - bh * .7) + 3 * s,
+                       (255, 214, 120, 255), 0)
+
+    elif name == "BoomalopePicnic":
+        _sky(c, x0, y0, w, h * .5, (104, 164, 228), (198, 226, 246))
+        c.ellipse(X(.2), Y(.16), 16 * s, 6 * s, (255, 255, 255, 200))
+        c.ellipse(X(.28), Y(.14), 12 * s, 6 * s, (255, 255, 255, 200))
+        _ridge(c, x0, y0, w, h, ((0, .48), (.4, .42), (.7, .5), (1, .44)), (120, 176, 96, 255))
+        _ridge(c, x0, y0, w, h, ((0, .6), (.5, .56), (1, .62)), (142, 196, 104, 255))
+        # Something went off in the distance. Nobody at the picnic has noticed.
+        bx, by = X(.82), Y(.44)
+        c.circle(bx, by - 6 * s, 12 * s, (150, 146, 140, 200))
+        c.circle(bx, by, 9 * s, (255, 180, 70, 255))
+        c.circle(bx, by, 5 * s, (255, 240, 170, 255))
+        for k in range(26):
+            c.circle(X(rng.random()), Y(.6 + rng.random() * .38), 1.4 * s,
+                     rng.choice(((250, 240, 120, 255), (250, 250, 250, 255), (236, 140, 180, 255))))
+        # The blanket, checked.
+        px, py, pw, ph = X(.12), Y(.76), 40 * s, 18 * s
+        c.poly([(px, py), (px + pw, py - 4 * s), (px + pw + 6 * s, py + ph), (px + 4 * s, py + ph + 3 * s)],
+               (238, 238, 232, 255))
+        for i in range(4):
+            for j in range(2):
+                if (i + j) % 2 == 0:
+                    c.rect(px + 3 * s + i * 10 * s, py + 1 * s + j * 8 * s,
+                           px + 3 * s + (i + 1) * 10 * s, py + 1 * s + (j + 1) * 8 * s,
+                           (206, 64, 58, 255), 0)
+        # Boomalopes grazing, sacs glowing.
+        for fx, fy, sc in ((.52, .76, 1.0), (.72, .68, .78), (.36, .64, .62)):
+            mx, my, r = X(fx), Y(fy), 15 * s * sc
+            hide, hide_dk = (190, 170, 138, 255), (138, 120, 96, 255)
+            for lx in (-.8, -.35, .3, .7):                                        # legs
+                c.rect(mx + r * lx - r * .12, my + r * .35, mx + r * lx + r * .12, my + r * 1.0,
+                       hide_dk, r * .08)
+            c.ellipse(mx, my, r * 1.2, r * .7, hide_dk)
+            c.ellipse(mx - r * .05, my - r * .06, r * 1.1, r * .6, hide)
+            c.ellipse(mx - r * .15, my - r * .55, r * .62, r * .42, (220, 86, 40, 255))   # sac
+            c.ellipse(mx - r * .28, my - r * .66, r * .26, r * .15, (255, 200, 120, 255))
+            c.ellipse(mx + r * 1.05, my + r * .28, r * .34, r * .3, hide_dk)             # head,
+            c.ellipse(mx + r * 1.05, my + r * .25, r * .28, r * .24, hide)               # down grazing
+            c.circle(mx + r * 1.12, my + r * .18, max(0.8, r * .06), (40, 34, 30, 255))
+    else:
+        raise ValueError(name)
+
+
+def _order_pieces(name):
+    """The order pieces go in: edge run, rest of the border, then inward."""
+    import random
+    rng = random.Random("order-" + name)
+    cols, rows = JIGSAW_COLS, JIGSAW_ROWS
+    ring = ([(i, 0) for i in range(cols)] + [(cols - 1, j) for j in range(1, rows)]
+            + [(i, rows - 1) for i in range(cols - 2, -1, -1)]
+            + [(0, j) for j in range(rows - 2, 0, -1)])
+    start = rng.choice((0, cols - 1, cols + rows - 2, 2 * cols + rows - 3))   # a corner
+    ring = ring[start:] + ring[:start]
+    order = list(ring)
+    placed = set(order)
+    inner = [(i, j) for i in range(1, cols - 1) for j in range(1, rows - 1)]
+    frontier = [cell for cell in inner
+                if any((cell[0] + dx, cell[1] + dy) in placed
+                       for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)))]
+    while len(order) < cols * rows:
+        # Grow from wherever is already done, in small blobs.
+        rng.shuffle(frontier)
+        cell = frontier.pop()
+        if cell in placed:
+            continue
+        order.append(cell)
+        placed.add(cell)
+        for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+            n = (cell[0] + dx, cell[1] + dy)
+            if n in inner and n not in placed:
+                frontier.append(n)
+    return order
+
+
+def _paste(dst, dw, src, sw, sh, ox, oy, shade=None):
+    """Copy an RGBA block into a bigger buffer. `shade(x, y)` may darken
+    individual pixels, which is how the seams between pieces are drawn."""
+    for y in range(sh):
+        for x in range(sw):
+            si = (y * sw + x) * 4
+            if src[si + 3] == 0:
+                continue
+            di = ((oy + y) * dw + ox + x) * 4
+            f = shade(x, y) if shade else 1.0
+            dst[di] = int(src[si] * f)
+            dst[di + 1] = int(src[si + 1] * f)
+            dst[di + 2] = int(src[si + 2] * f)
+            dst[di + 3] = src[si + 3]
+
+
+def _over(dst, src):
+    """Alpha-composite one full-size RGBA buffer onto another, in place."""
+    for i in range(0, len(dst), 4):
+        a = src[i + 3]
+        if a == 0:
+            continue
+        if a == 255 or dst[i + 3] == 0:
+            dst[i:i + 4] = src[i:i + 4]
+            continue
+        fa, ba = a / 255.0, dst[i + 3] / 255.0
+        oa = fa + ba * (1 - fa)
+        for k in range(3):
+            dst[i + k] = int((src[i + k] * fa + dst[i + k] * ba * (1 - fa)) / oa)
+        dst[i + 3] = int(oa * 255)
+
+
+def jigsaw_table():
+    """The table alone, pale so stuff colour tints it like vanilla furniture."""
+    c = Canvas(256, 256)
+    top, edge = (236, 230, 220, 255), (206, 198, 186, 255)
+    silhouette(c, [("rect", 12, 14, 244, 242, 14, edge)], 5.0)
+    c.rect(20, 22, 236, 234, top, 10)
+    for k in range(7):                                    # boards, as tints
+        y = 22 + (k + 1) * 30
+        c.line(22, y, 234, y, darker(top, 0.9, 150), 1.4)
+    c.frame(20, 22, 236, 234, darker(edge, 0.85, 200), 2.0, 10)
+    save_single(c, "JigsawTable")
+    return c
+
+
+def jigsaw_stages():
+    import random
+    size = 256
+    for name in JIGSAW_PICTURES:
+        scene = Canvas(JIGSAW_W, JIGSAW_H)
+        draw_jigsaw_scene(scene, name, 0, 0, JIGSAW_W, JIGSAW_H)
+        sp = scene.pixels()
+        lid = Canvas(60, 45)
+        draw_jigsaw_scene(lid, name, 0, 0, 60, 45)
+        lp = lid.pixels()
+        order = _order_pieces(name)
+        total = len(order)
+
+        def colour_of(cell):
+            cx = cell[0] * JIGSAW_PIECE + JIGSAW_PIECE // 2
+            cy = cell[1] * JIGSAW_PIECE + JIGSAW_PIECE // 2
+            i = (cy * JIGSAW_W + cx) * 4
+            return (sp[i], sp[i + 1], sp[i + 2], 255)
+
+        for stage, fraction in enumerate(JIGSAW_STAGES):
+            count = int(round(fraction * total))
+            placed = set(order[:count])
+            buf = bytearray(size * size * 4)
+
+            # Pieces in place, each with a seam that is a shade of the picture
+            # rather than a line on top of it.
+            for (i, j) in placed:
+                block = bytearray(JIGSAW_PIECE * JIGSAW_PIECE * 4)
+                for y in range(JIGSAW_PIECE):
+                    row = ((j * JIGSAW_PIECE + y) * JIGSAW_W + i * JIGSAW_PIECE) * 4
+                    block[y * JIGSAW_PIECE * 4:(y + 1) * JIGSAW_PIECE * 4] = \
+                        sp[row:row + JIGSAW_PIECE * 4]
+
+                def seam(x, y, i=i, j=j):
+                    edge = x == 0 or y == 0
+                    # A tab on each edge's middle, so it reads as a jigsaw.
+                    tab = (x == 0 and 6 <= y <= 8 and i > 0) or (y == 0 and 6 <= x <= 8 and j > 0)
+                    return 0.93 if tab else (0.8 if edge else 1.0)
+                _paste(buf, size, block, JIGSAW_PIECE, JIGSAW_PIECE,
+                       JIGSAW_X + i * JIGSAW_PIECE, JIGSAW_Y + j * JIGSAW_PIECE, seam)
+
+            # Loose pieces, box and lid drawn as ordinary shapes on top.
+            over = Canvas(size, size)
+            rng = random.Random("%s-%d" % (name, stage))
+            if count < total:
+                remaining = order[count:]
+                empty = [cell for cell in order if cell not in placed]
+                shown = remaining[:min(len(remaining), 30)]
+                for k, cell in enumerate(shown):
+                    if k % 3 == 0:                     # a heap by the box
+                        px = 40 + rng.random() * 90
+                        py = 190 + rng.random() * 36
+                    else:
+                        # Strewn over whatever of the table is still empty -
+                        # not over each piece's own slot, which would trace
+                        # out the frame, since the edge pieces are next up.
+                        spot = rng.choice(empty)
+                        px = JIGSAW_X + (spot[0] + 0.5) * JIGSAW_PIECE + rng.uniform(-6, 6)
+                        py = JIGSAW_Y + (spot[1] + 0.5) * JIGSAW_PIECE + rng.uniform(-6, 6)
+                    ang = rng.uniform(0, math.pi)
+                    col = colour_of(cell)
+                    half = 6.2
+                    pts = [(px + math.cos(ang + a) * half * 1.41, py + math.sin(ang + a) * half * 1.41)
+                           for a in (math.pi / 4, 3 * math.pi / 4, 5 * math.pi / 4, 7 * math.pi / 4)]
+                    over.poly(_grow_poly(pts, 1.1), darker(col, 0.55))
+                    over.poly(pts, col)
+                    over.circle(px + math.cos(ang) * 7, py + math.sin(ang) * 7, 2.6, col)
+            # The box lid, standing in for the picture on the front of it.
+            silhouette(over, [("rect", 160, 186, 228, 238, 3, (226, 220, 206, 255))], 3.0)
+            ob = over.pixels()
+            _over(buf, ob)
+            _paste(buf, size, lp, 60, 45, 164, 190)
+            write_png(os.path.join(OUT, "Jigsaw%s_%d.png" % (name, stage)), size, size, buf)
+        print("  Jigsaw%s_{0..%d}.png  (%dx%d)" % (name, len(JIGSAW_STAGES) - 1, size, size))
+
+
+def framed_jigsaws():
+    """Each finished puzzle glued down and framed, to hang on a wall. Drawn
+    to the one-tile vista panel's proportions, since it mounts the same way."""
+    made = {}
+    for name in JIGSAW_PICTURES:
+        c = Canvas(128, 96)
+        frame_col = (132, 92, 56, 255)
+        silhouette(c, [("rect", 4, 6, 124, 90, 4, frame_col)], 4.0)
+        c.frame(9, 11, 119, 85, darker(frame_col, 0.72), 2.0, 2)
+        draw_jigsaw_scene(c, name, 13, 15, 102, 66)
+        for k in range(1, JIGSAW_COLS):                       # faint seams
+            x = 13 + 102.0 * k / JIGSAW_COLS
+            c.line(x, 15, x, 81, (0, 0, 0, 34), 0.8)
+        for k in range(1, JIGSAW_ROWS):
+            y = 15 + 66.0 * k / JIGSAW_ROWS
+            c.line(13, y, 115, y, (0, 0, 0, 34), 0.8)
+        c.rect(13, 15, 115, 21, (255, 255, 255, 22), 0)      # glass sheen
+        save_rotations(c, "FramedJigsaw%s" % name)
+        made["FramedJigsaw%s" % name] = c
+    return made
+
+
+def _build_jigsaw():
+    made = {"JigsawTable": jigsaw_table()}
+    jigsaw_stages()
+    made.update(framed_jigsaws())
+    return made
+
+
+_register("jigsaw", _build_jigsaw)
+
 if __name__ == "__main__":
     main()

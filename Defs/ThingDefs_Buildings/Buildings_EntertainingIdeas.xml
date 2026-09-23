@@ -1966,4 +1966,196 @@
     </comps>
   </ThingDef>
 
+
+  <!-- ======================================================================
+       Jigsaw table. The puzzle on it is shared, saved state: anyone who sits
+       down adds to it, it takes several sittings to finish, and the finished
+       picture is framed and hung. The table texture is only the furniture;
+       the puzzle is drawn over it by CompJigsaw, one stage per seventh done.
+       ====================================================================== -->
+  <ThingDef ParentName="EI_JoyBuildingBase">
+    <defName>EI_JigsawTable</defName>
+    <label>jigsaw table</label>
+    <description>A broad low table with a jigsaw puzzle spread across it and the box lid propped at one end. The puzzle stays where it was left: anyone with a free evening pulls up a chair and adds a few pieces, and over several sittings the picture comes together.\n\nWhen the last piece goes in, everyone who worked on it takes some quiet satisfaction from it. The finished puzzle can then be framed and hung on a wall, and the next one comes out of the box.\n\nNeeds chairs pulled up to its sides - as many colonists can work on it at once as there are chairs.</description>
+    <graphicData>
+      <texPath>EntertainingIdeas/Buildings/JigsawTable</texPath>
+      <graphicClass>Graphic_Single</graphicClass>
+      <drawSize>(2,2)</drawSize>
+      <damageData>
+        <rect>(0.05,0.05,1.9,1.9)</rect>
+      </damageData>
+    </graphicData>
+    <size>(2,2)</size>
+    <rotatable>false</rotatable>
+    <fillPercent>0.4</fillPercent>
+    <pathCost>42</pathCost>
+    <castEdgeShadows>true</castEdgeShadows>
+    <staticSunShadowHeight>0.2</staticSunShadowHeight>
+    <statBases>
+      <MaxHitPoints>100</MaxHitPoints>
+      <WorkToBuild>2200</WorkToBuild>
+      <Mass>20</Mass>
+      <Beauty>2</Beauty>
+      <JoyGainFactor>1</JoyGainFactor>
+    </statBases>
+    <stuffCategories>
+      <li>Woody</li>
+      <li>Metallic</li>
+      <li>Stony</li>
+    </stuffCategories>
+    <costStuffCount>60</costStuffCount>
+    <building>
+      <joyKind>Gaming_Cerebral</joyKind>
+    </building>
+    <comps>
+      <li Class="EntertainingIdeas.CompProperties_Jigsaw">
+        <!-- An average colonist's sitting is worth about 3000; four at a
+             table finish one in an afternoon, one alone takes most of a
+             week of evenings. -->
+        <workToFinish>18000</workToFinish>
+        <frameWorkTicks>600</frameWorkTicks>
+        <drawSize>(2,2)</drawSize>
+        <pictures>
+          <li>
+            <label>Thrumbo at Dawn</label>
+            <framePath>EntertainingIdeas/Buildings/JigsawThrumboDawn</framePath>
+            <frameCount>7</frameCount>
+            <framedDef>EI_FramedJigsaw_ThrumboDawn</framedDef>
+          </li>
+          <li>
+            <label>Muffalo Crossing</label>
+            <framePath>EntertainingIdeas/Buildings/JigsawMuffaloCrossing</framePath>
+            <frameCount>7</frameCount>
+            <framedDef>EI_FramedJigsaw_MuffaloCrossing</framedDef>
+          </li>
+          <li>
+            <label>Launch Day</label>
+            <framePath>EntertainingIdeas/Buildings/JigsawLaunchDay</framePath>
+            <frameCount>7</frameCount>
+            <framedDef>EI_FramedJigsaw_LaunchDay</framedDef>
+          </li>
+          <li>
+            <label>Boomalope Picnic</label>
+            <framePath>EntertainingIdeas/Buildings/JigsawBoomalopePicnic</framePath>
+            <frameCount>7</frameCount>
+            <framedDef>EI_FramedJigsaw_BoomalopePicnic</framedDef>
+          </li>
+        </pictures>
+      </li>
+    </comps>
+  </ThingDef>
+
+  <!-- What a finished puzzle becomes. Not buildable: the only way to get one
+       is to finish the puzzle. Mounts in a wall exactly as the one-tile vista
+       panel does, with the same place worker and auto-facing. -->
+  <ThingDef Name="EI_FramedJigsawBase" ParentName="BuildingBase" Abstract="True">
+    <thingClass>Building</thingClass>
+    <rotatable>true</rotatable>
+    <defaultPlacingRot>South</defaultPlacingRot>
+    <size>(1,1)</size>
+    <altitudeLayer>BuildingOnTop</altitudeLayer>
+    <passability>Standable</passability>
+    <terrainAffordanceNeeded IsNull="True" />
+    <fillPercent>0</fillPercent>
+    <pathCost>0</pathCost>
+    <blockWind>false</blockWind>
+    <castEdgeShadows>false</castEdgeShadows>
+    <overrideMinifiedRot>North</overrideMinifiedRot>
+    <canOverlapZones>true</canOverlapZones>
+    <minifiedDef>MinifiedThing</minifiedDef>
+    <thingCategories>
+      <li>BuildingsArt</li>
+    </thingCategories>
+    <building>
+      <isEdifice>false</isEdifice>
+      <isAttachment>true</isAttachment>
+    </building>
+    <placeWorkers>
+      <li>EntertainingIdeas.PlaceWorker_WallMountedDisplay</li>
+    </placeWorkers>
+    <statBases>
+      <MaxHitPoints>40</MaxHitPoints>
+      <WorkToBuild>250</WorkToBuild>
+      <Mass>1.5</Mass>
+      <Beauty>8</Beauty>
+      <MarketValue>40</MarketValue>
+      <Flammability>1.0</Flammability>
+    </statBases>
+    <comps>
+      <li Class="EntertainingIdeas.CompProperties_FaceOpenSide"/>
+    </comps>
+  </ThingDef>
+
+  <ThingDef ParentName="EI_FramedJigsawBase">
+    <defName>EI_FramedJigsaw_ThrumboDawn</defName>
+    <label>framed jigsaw (Thrumbo at Dawn)</label>
+    <description>A finished jigsaw puzzle, glued to a board and framed: a white thrumbo on a snowbound ridge, the sun coming up behind it. Every seam still shows if you look closely, which is rather the point.\n\nHangs on a wall like a lamp does and takes up no floor.</description>
+    <graphicData>
+      <texPath>EntertainingIdeas/Buildings/FramedJigsawThrumboDawn</texPath>
+      <graphicClass>Graphic_Multi</graphicClass>
+      <drawSize>(1,0.75)</drawSize>
+      <drawOffsetNorth>(0,0,0.26)</drawOffsetNorth>
+      <drawOffsetSouth>(0,0,-0.26)</drawOffsetSouth>
+      <drawOffsetEast>(0.26,0,0)</drawOffsetEast>
+      <drawOffsetWest>(-0.26,0,0)</drawOffsetWest>
+      <damageData>
+        <enabled>false</enabled>
+      </damageData>
+    </graphicData>
+  </ThingDef>
+
+  <ThingDef ParentName="EI_FramedJigsawBase">
+    <defName>EI_FramedJigsaw_MuffaloCrossing</defName>
+    <label>framed jigsaw (Muffalo Crossing)</label>
+    <description>A finished jigsaw puzzle, glued to a board and framed: a muffalo herd wading a tundra river in single file. Every seam still shows if you look closely, which is rather the point.\n\nHangs on a wall like a lamp does and takes up no floor.</description>
+    <graphicData>
+      <texPath>EntertainingIdeas/Buildings/FramedJigsawMuffaloCrossing</texPath>
+      <graphicClass>Graphic_Multi</graphicClass>
+      <drawSize>(1,0.75)</drawSize>
+      <drawOffsetNorth>(0,0,0.26)</drawOffsetNorth>
+      <drawOffsetSouth>(0,0,-0.26)</drawOffsetSouth>
+      <drawOffsetEast>(0.26,0,0)</drawOffsetEast>
+      <drawOffsetWest>(-0.26,0,0)</drawOffsetWest>
+      <damageData>
+        <enabled>false</enabled>
+      </damageData>
+    </graphicData>
+  </ThingDef>
+
+  <ThingDef ParentName="EI_FramedJigsawBase">
+    <defName>EI_FramedJigsaw_LaunchDay</defName>
+    <label>framed jigsaw (Launch Day)</label>
+    <description>A finished jigsaw puzzle, glued to a board and framed: a ship climbing out of a sleeping colony on a column of fire. Every seam still shows if you look closely, which is rather the point.\n\nHangs on a wall like a lamp does and takes up no floor.</description>
+    <graphicData>
+      <texPath>EntertainingIdeas/Buildings/FramedJigsawLaunchDay</texPath>
+      <graphicClass>Graphic_Multi</graphicClass>
+      <drawSize>(1,0.75)</drawSize>
+      <drawOffsetNorth>(0,0,0.26)</drawOffsetNorth>
+      <drawOffsetSouth>(0,0,-0.26)</drawOffsetSouth>
+      <drawOffsetEast>(0.26,0,0)</drawOffsetEast>
+      <drawOffsetWest>(-0.26,0,0)</drawOffsetWest>
+      <damageData>
+        <enabled>false</enabled>
+      </damageData>
+    </graphicData>
+  </ThingDef>
+
+  <ThingDef ParentName="EI_FramedJigsawBase">
+    <defName>EI_FramedJigsaw_BoomalopePicnic</defName>
+    <label>framed jigsaw (Boomalope Picnic)</label>
+    <description>A finished jigsaw puzzle, glued to a board and framed: a picnic in a spring meadow among grazing boomalopes, while something goes up in the distance and nobody notices. Every seam still shows if you look closely, which is rather the point.\n\nHangs on a wall like a lamp does and takes up no floor.</description>
+    <graphicData>
+      <texPath>EntertainingIdeas/Buildings/FramedJigsawBoomalopePicnic</texPath>
+      <graphicClass>Graphic_Multi</graphicClass>
+      <drawSize>(1,0.75)</drawSize>
+      <drawOffsetNorth>(0,0,0.26)</drawOffsetNorth>
+      <drawOffsetSouth>(0,0,-0.26)</drawOffsetSouth>
+      <drawOffsetEast>(0.26,0,0)</drawOffsetEast>
+      <drawOffsetWest>(-0.26,0,0)</drawOffsetWest>
+      <damageData>
+        <enabled>false</enabled>
+      </damageData>
+    </graphicData>
+  </ThingDef>
+
 </Defs>

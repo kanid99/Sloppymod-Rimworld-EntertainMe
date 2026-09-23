@@ -255,4 +255,22 @@
     </requiredCapacities>
   </JoyGiverDef>
 
+  <!-- Any number can work on the same puzzle, one per chair pulled up to the
+       table, so only the chair is claimed. Written as its own giver for that
+       reason: vanilla's sit-adjacent giver reserves the table itself. -->
+  <JoyGiverDef>
+    <defName>EI_DoJigsaw</defName>
+    <giverClass>EntertainingIdeas.JoyGiver_Jigsaw</giverClass>
+    <baseChance>2</baseChance>
+    <thingDefs>
+      <li>EI_JigsawTable</li>
+    </thingDefs>
+    <jobDef>EI_DoJigsaw</jobDef>
+    <joyKind>Gaming_Cerebral</joyKind>
+    <requiredCapacities>
+      <li>Sight</li>
+      <li>Manipulation</li>
+    </requiredCapacities>
+  </JoyGiverDef>
+
 </Defs>

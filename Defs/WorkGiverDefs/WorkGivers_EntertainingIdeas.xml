@@ -1,11 +1,15 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <Defs>
 
-  <!-- Topping a building back up: carrying water to a tub that is not plumbed
-       in, or standing the pins up at a skittles lane. Filed under hauling,
-       below the usual hauling work so it never competes with moving food or
+  <!-- Seeing to a recreation building that is waiting on somebody: carrying
+       water to a tub or a pool that is not plumbed in, standing the pins up at
+       a skittles lane, framing a finished jigsaw. Filed under hauling, below
+       the usual hauling work so it never competes with moving food or
        ammunition, and it never appears for a tub Dubs Bad Hygiene has piped or
-       a bowling lane whose pinsetter does the job itself. -->
+       a bowling lane whose pinsetter does the job itself.
+
+       The defName is older than the wording and is kept as it is, so nothing
+       that refers to it by name breaks. -->
 
   <JobDef>
     <defName>EI_FillWaterBasin</defName>
@@ -15,12 +19,12 @@
 
   <WorkGiverDef>
     <defName>EI_FillWaterBasin</defName>
-    <label>fill tubs and set pins</label>
+    <label>tend recreation buildings</label>
     <giverClass>EntertainingIdeas.WorkGiver_ServiceBuilding</giverClass>
     <workType>Hauling</workType>
     <priorityInType>30</priorityInType>
-    <verb>fill</verb>
-    <gerund>filling</gerund>
+    <verb>tend</verb>
+    <gerund>tending</gerund>
     <requiredCapacities>
       <li>Manipulation</li>
     </requiredCapacities>

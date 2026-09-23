@@ -34,4 +34,18 @@
     </stages>
   </ThoughtDef>
 
+  <!-- Given to everyone who put a piece in, when the last one goes in. -->
+  <ThoughtDef>
+    <defName>EI_FinishedJigsaw</defName>
+    <durationDays>1.5</durationDays>
+    <stackLimit>1</stackLimit>
+    <stages>
+      <li>
+        <label>finished a jigsaw</label>
+        <description>Every one of those pieces is where it belongs now, and I know exactly which bits of sky were mine.</description>
+        <baseMoodEffect>5</baseMoodEffect>
+      </li>
+    </stages>
+  </ThoughtDef>
+
 </Defs>

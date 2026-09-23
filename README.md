@@ -23,6 +23,7 @@ for each — see [Versions](#versions).
 | Cornhole board | 1×2 | Dexterity | A sloped board with a hole, thrown at from a line a few tiles back. One colonist practises alone; two take turns with their own colour of sack. Wood and cloth, no power, no research. Trains shooting. |
 | Hammock | 1×2 | Solitary relaxation | Rest that is not a bed: no assignment, no sleeping the night, no medical care. Recovers rest at 45% of a plain bed while a colonist lounges. Woven from cloth or leather. |
 | Armillary sphere | 1×1 | Solitary relaxation | Brass rings on a tripod, turning under their own clockwork. Watched from 1–4 tiles. Beauty 16. |
+| Jigsaw table | 2×2 | Cerebral | A puzzle that stays where it was left. Anyone who pulls up a chair adds pieces — as many at once as there are chairs — and it fills in visibly over several sittings. Everyone who worked on it is pleased when the last piece goes in; the finished picture is framed, boxed, and hung on a wall like a lamp (Beauty 8), and the next puzzle comes out of the box. Four pictures. Wood, metal or stone. |
 
 ### Industrial — powered
 
@@ -41,6 +42,12 @@ for each — see [Versions](#versions).
 | Pool filtration unit | 1×2 | Social | 80W + 5W/tile | Electricity |
 | Tabletop orrery | 1×1 | Solitary relaxation | — | Complex furniture |
 | Grand orrery | 2×2 | Solitary relaxation | — | Complex furniture |
+
+Every electric game and screen — pinball, the arcade tables, the hologame pod,
+the holotheater, karaoke, gravball and the bowling lane — can break down the way
+a television does, sitting dark until a colonist repairs it with a component.
+Furniture and fittings (the massage chair, heated tub, aquarium, pool pump and
+vista panels) do not.
 
 All four pinball tables share one cabinet frame and one animation; they differ in
 cost, power, beauty and how much joy they give, and they sit behind a single

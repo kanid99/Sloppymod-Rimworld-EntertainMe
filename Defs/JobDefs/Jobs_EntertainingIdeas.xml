@@ -221,4 +221,24 @@
     <allowOpportunisticPrefix>true</allowOpportunisticPrefix>
   </JobDef>
 
+  <!-- A jigsaw is worked on across many sittings; this is one of them. The
+       puzzle's progress belongs to the table, not to the job. -->
+  <JobDef>
+    <defName>EI_DoJigsaw</defName>
+    <driverClass>EntertainingIdeas.JobDriver_DoJigsaw</driverClass>
+    <reportString>working on a jigsaw puzzle.</reportString>
+    <joyDuration>4000</joyDuration>
+    <joySkill>Intellectual</joySkill>
+    <joyXpPerTick>0.0015</joyXpPerTick>
+    <joyKind>Gaming_Cerebral</joyKind>
+    <taleOnCompletion>PlayedGame</taleOnCompletion>
+    <allowOpportunisticPrefix>true</allowOpportunisticPrefix>
+  </JobDef>
+
+  <JobDef>
+    <defName>EI_FrameJigsaw</defName>
+    <driverClass>EntertainingIdeas.JobDriver_ServiceBuilding</driverClass>
+    <reportString>framing the finished jigsaw at TargetA.</reportString>
+  </JobDef>
+
 </Defs>
