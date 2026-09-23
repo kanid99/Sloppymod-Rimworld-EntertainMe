@@ -430,15 +430,23 @@ namespace EntertainingIdeas
             Toil work = Toils_General.Wait(serviceable != null ? serviceable.ServiceWorkTicks : 240, TargetIndex.A);
             work.WithProgressBarToilDelay(TargetIndex.A);
             work.FailOnDespawnedOrNull(TargetIndex.A);
-            work.AddFinishAction(delegate
+            yield return work;
+
+            // Its own toil rather than a finish action on the wait. A finish
+            // action runs however the toil ends, so a colonist drafted two
+            // seconds into filling a tub used to leave it full anyway; this
+            // toil is only reached when the work was actually done.
+            Toil finish = ToilMaker.MakeToil("EI_FinishService");
+            finish.initAction = delegate
             {
                 IServiceable target = Target;
                 if (target != null)
                 {
                     target.Service();
                 }
-            });
-            yield return work;
+            };
+            finish.defaultCompleteMode = ToilCompleteMode.Instant;
+            yield return finish;
         }
     }
 }
