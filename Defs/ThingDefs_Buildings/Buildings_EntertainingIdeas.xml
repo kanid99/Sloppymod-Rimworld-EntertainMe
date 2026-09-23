@@ -339,7 +339,7 @@
   <ThingDef Name="EI_CocktailTableBase" ParentName="EI_JoyBuildingBase" Abstract="True">
     <designatorDropdown>EI_CocktailTables</designatorDropdown>
     <graphicData>
-      <graphicClass>Graphic_Single</graphicClass>
+      <graphicClass>Graphic_Multi</graphicClass>
       <drawSize>(1.15,1.15)</drawSize>
       <shadowData>
         <volume>(0.8,0.35,0.8)</volume>
@@ -348,7 +348,9 @@
         <rect>(0.08,0.08,0.84,0.84)</rect>
       </damageData>
     </graphicData>
-    <rotatable>false</rotatable>
+    <!-- Turns, so the two seats - joystick sides - can be lined up with
+         wherever the chairs are. The screen turns with it. -->
+    <rotatable>true</rotatable>
     <fillPercent>0.4</fillPercent>
     <pathCost>50</pathCost>
     <constructEffect>ConstructMetal</constructEffect>
@@ -404,6 +406,7 @@
         <frameCount>16</frameCount>
         <ticksPerFrame>8</ticksPerFrame>
         <drawSize>(1.15,1.15)</drawSize>
+        <rotateWithBuilding>true</rotateWithBuilding>
         <idleFramePath>EntertainingIdeas/Buildings/CocktailArcadeTitle</idleFramePath>
         <idleFrameCount>8</idleFrameCount>
         <idleTicksPerFrame>20</idleTicksPerFrame>
@@ -1893,6 +1896,7 @@
         <frameCount>16</frameCount>
         <ticksPerFrame>8</ticksPerFrame>
         <drawSize>(1.15,1.15)</drawSize>
+        <rotateWithBuilding>true</rotateWithBuilding>
         <idleFramePath>EntertainingIdeas/Buildings/CocktailClimbTitle</idleFramePath>
         <idleFrameCount>8</idleFrameCount>
         <idleTicksPerFrame>20</idleTicksPerFrame>

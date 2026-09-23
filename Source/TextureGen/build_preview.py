@@ -23,7 +23,7 @@ SOURCES = {
     "Aquarium": "Aquarium_south.png",
     "GravballCourt": "GravballCourt_south.png",
     "SkittlesLane": "SkittlesLane_south.png",
-    "CocktailArcade": "CocktailArcade.png",
+    "CocktailArcade": "CocktailArcade_south.png",
     "MassageChair": "MassageChair_south.png",
     "HologamePod": "HologamePod_south.png",
     "VistaDay": "VistaPanel3Day_2.png",

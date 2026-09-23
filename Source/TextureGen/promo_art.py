@@ -59,7 +59,7 @@ def lineup():
           ("SoakingTub.png", "SOAKING TUB"), ("SkittlesLane_south.png", "SKITTLES LANE")]),
         ("INDUSTRIAL",
          [("PinballClassic_south.png", "PINBALL"), ("PinballBoomalope_south.png", "BOOMALOPE BLITZ"),
-          ("PinballMechRampage_south.png", "MECH RAMPAGE"), ("CocktailArcade.png", "COCKTAIL ARCADE"),
+          ("PinballMechRampage_south.png", "MECH RAMPAGE"), ("CocktailArcade_south.png", "COCKTAIL ARCADE"),
           ("MassageChair_south.png", "MASSAGE CHAIR"), ("Aquarium_south.png", "AQUARIUM"),
           ("KaraokeMachine_south.png", "KARAOKE"), ("SoakingTubElectric.png", "HEATED TUB")]),
         ("SPACER AND ULTRA",
@@ -92,7 +92,7 @@ def animation():
         place(c, "PinballClassic_south.png", 20 + i*140, y, 124, 290, overlay="PinballPlay_%s.png" % f)
     preview.text(c, "ARCADE TABLE - THE MAZE GAME RUNS DURING PLAY", 610, y + 6, 1, DIM)
     for i, f in enumerate(("0", "5", "10", "15")):
-        place(c, "CocktailArcade.png", 610 + i*145, y + 26, 132, 132,
+        place(c, "CocktailArcade_south.png", 610 + i*145, y + 26, 132, 132,
               overlay="CocktailArcadeScreen_%s.png" % f)
     preview.text(c, "KARAOKE - LYRICS SCROLL, SPEAKERS PULSE", 610, y + 176, 1, DIM)
     for i, f in enumerate(("0", "2", "4")):

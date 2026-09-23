@@ -29,7 +29,7 @@ SECTIONS = [
      ["PinballClassic_south.png", "PinballBoomalope_south.png",
       "PinballMechRampage_south.png", "PinballArchotech_south.png",
       "PinballClassic_east.png"]),
-    ("COCKTAIL ARCADE TABLE  INDUSTRIAL  SEATS TWO", ["CocktailArcade.png"]),
+    ("COCKTAIL ARCADE TABLE  INDUSTRIAL  SEATS TWO", ["CocktailArcade_south.png"]),
     ("ARCADE SCREEN  RUNS WHILE PLAYED",
      ["CocktailArcadeScreen_0.png", "CocktailArcadeScreen_4.png",
       "CocktailArcadeScreen_8.png", "CocktailArcadeScreen_12.png"]),

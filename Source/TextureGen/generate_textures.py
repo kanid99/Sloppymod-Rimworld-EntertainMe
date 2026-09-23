@@ -844,7 +844,8 @@ def cocktail_cabinet(name, screen_drawer, trim):
         for i in range(2):
             c.circle(cx + 6 + i * 11, sy, 3.4, (236, 196, 76, 255))
     c.rect(cx + 44, cy - 10, cx + 52, cy + 10, (28, 26, 32, 255), 3)   # coin slot
-    save_single(c, name)
+    # Four ways round, so the two seats can be lined up with the chairs.
+    save_rotations(c, name)
     return c
 
 
