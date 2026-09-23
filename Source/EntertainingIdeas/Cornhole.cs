@@ -7,17 +7,6 @@ using Verse.AI;
 
 namespace EntertainingIdeas
 {
-    [DefOf]
-    public static class EI_CornholeDefOf
-    {
-        public static JobDef EI_Play_Cornhole;
-
-        static EI_CornholeDefOf()
-        {
-            DefOfHelper.EnsureInitializedInCtor(typeof(EI_CornholeDefOf));
-        }
-    }
-
     /// <summary>
     /// Who is currently pitching at a board, in a stable order.
     ///
@@ -37,7 +26,7 @@ namespace EntertainingIdeas
         /// one: the giver asks this of every board a colonist might walk to,
         /// and the animation asks it of every board on screen.
         /// </summary>
-        public static void At(Thing board, List<Pawn> players, Pawn ignore = null)
+        public static void At(Thing board, List<Pawn> players, Pawn ignore = null, JobDef jobDef = null)
         {
             players.Clear();
             Map map = board.Map;
@@ -61,9 +50,12 @@ namespace EntertainingIdeas
                     {
                         continue;
                     }
+                    // Any recreation job aimed at this board, unless the caller
+                    // names one. Cornhole, the lawn noughts and crosses and the
+                    // four-in-a-row frame all share this.
                     Job job = pawn.CurJob;
-                    if (job != null && job.def == EI_CornholeDefOf.EI_Play_Cornhole
-                        && job.targetA.Thing == board)
+                    if (job != null && job.targetA.Thing == board
+                        && (jobDef != null ? job.def == jobDef : job.def.joyKind != null))
                     {
                         players.Add(pawn);
                     }
@@ -73,9 +65,9 @@ namespace EntertainingIdeas
         }
 
         /// <summary>How many are pitching, when that is all the caller wants.</summary>
-        public static int CountAt(Thing board, Pawn ignore)
+        public static int CountAt(Thing board, Pawn ignore, JobDef jobDef = null)
         {
-            At(board, counting, ignore);
+            At(board, counting, ignore, jobDef);
             int count = counting.Count;
             counting.Clear();       // do not hold pawns alive between asks
             return count;
@@ -111,7 +103,7 @@ namespace EntertainingIdeas
             }
             // Everyone except this pawn: a colonist deciding to carry on playing
             // must not count as blocking their own place.
-            return CornholePlayers.CountAt(t, pawn) < MaxPlayers;
+            return CornholePlayers.CountAt(t, pawn, def.jobDef) < MaxPlayers;
         }
     }
 
@@ -164,7 +156,7 @@ namespace EntertainingIdeas
 
     public class CompCornholeGame : ThingComp
     {
-        private CompProperties_CornholeGame Props
+        protected CompProperties_CornholeGame Props
         {
             get { return (CompProperties_CornholeGame)props; }
         }
@@ -269,7 +261,7 @@ namespace EntertainingIdeas
         /// Where a sack comes to rest. Scattered deterministically around the
         /// board so they neither stack on one pixel nor reshuffle every frame.
         /// </summary>
-        private Vector3 LandingFor(int throwIndex)
+        protected virtual Vector3 LandingFor(int throwIndex)
         {
             Rand.PushState(parent.thingIDNumber + throwIndex * 31);
             Vector3 spot = parent.DrawPos;
@@ -279,7 +271,16 @@ namespace EntertainingIdeas
             return spot;
         }
 
-        private float SpinFor(int throwIndex)
+        /// <summary>
+        /// Whether an earlier throw is still lying on the board. Cornhole just
+        /// keeps the last few; a game with rounds clears between them.
+        /// </summary>
+        protected virtual bool StillLying(int index, int throwIndex)
+        {
+            return true;
+        }
+
+        protected virtual float SpinFor(int throwIndex)
         {
             Rand.PushState(parent.thingIDNumber + throwIndex * 977);
             float spin = Rand.Range(0f, 360f);
@@ -342,7 +343,7 @@ namespace EntertainingIdeas
             {
                 int index = throwIndex - back;
                 int slot = back - 1;
-                if (index < 0 || cachedPlayers == 0)
+                if (index < 0 || cachedPlayers == 0 || !StillLying(index, throwIndex))
                 {
                     landedOwner[slot] = -1;
                     continue;

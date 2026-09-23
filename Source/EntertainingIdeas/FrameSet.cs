@@ -14,13 +14,20 @@ namespace EntertainingIdeas
         private readonly string path;
         private readonly int count;
         private readonly Vector2 drawSize;
+        private readonly Shader shader;
         private Graphic[] graphics;
 
-        public FrameSet(string path, int count, Vector2 drawSize)
+        /// <param name="shader">
+        /// Defaults to lit-from-within, which suits screens and smoke. Pass
+        /// ShaderDatabase.Transparent for things that should darken with the
+        /// room - a board lying on a table.
+        /// </param>
+        public FrameSet(string path, int count, Vector2 drawSize, Shader shader = null)
         {
             this.path = path;
             this.count = count;
             this.drawSize = drawSize;
+            this.shader = shader;
         }
 
         public int IndexFor(int ticksPerFrame)
@@ -42,7 +49,7 @@ namespace EntertainingIdeas
             {
                 graphics[index] = GraphicDatabase.Get<Graphic_Single>(
                     path + "_" + index,
-                    ShaderDatabase.TransparentPostLight,
+                    shader ?? ShaderDatabase.TransparentPostLight,
                     drawSize,
                     Color.white);
             }

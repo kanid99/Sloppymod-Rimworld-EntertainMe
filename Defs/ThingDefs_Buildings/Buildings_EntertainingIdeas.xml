@@ -2251,4 +2251,398 @@
     </comps>
   </ThingDef>
 
+
+  <!-- ======================================================================
+       Board games. One table with a cupboard of games - whoever sits down
+       first picks one, the rest join in, and the board for it is drawn over
+       the table - and Seed Pits, the same idea carved for a tribe.
+       ====================================================================== -->
+  <DesignatorDropdownGroupDef>
+    <defName>EI_BoardGames</defName>
+  </DesignatorDropdownGroupDef>
+
+  <ThingDef ParentName="EI_JoyBuildingBase">
+    <defName>EI_BoardGameTable</defName>
+    <label>board game table</label>
+    <description>A broad table and a cupboard of boxed games under it. Whoever sits down first picks one - never whatever was played last - and everyone who pulls up a chair after that is in:\n\n- Colonists of the Rim: settle a ring of hexes, trade for what you are short of, argue about the robber.\n- Raid!: the planet, carved up between four factions, one of which is mechanoids.\n- Orbital Trader: buy up the trade routes round an orbit and charge everyone else for landing.\n- Caravan Routes: claim the roads between towns before anyone else gets a caravan down them.\n- Muffalo &amp; Thrumbo: draughts, brown against white, crowned with horns.\n\nUp to four players, one per chair pulled up to its sides. The board on the table shows which game is on.</description>
+    <designatorDropdown>EI_BoardGames</designatorDropdown>
+    <graphicData>
+      <!-- The jigsaw table's furniture: a plain top, tinted by its stuff. The
+           board is an overlay, so it keeps its own colours. -->
+      <texPath>EntertainingIdeas/Buildings/JigsawTable</texPath>
+      <graphicClass>Graphic_Single</graphicClass>
+      <drawSize>(2,2)</drawSize>
+      <damageData>
+        <rect>(0.05,0.05,1.9,1.9)</rect>
+      </damageData>
+    </graphicData>
+    <size>(2,2)</size>
+    <rotatable>false</rotatable>
+    <fillPercent>0.4</fillPercent>
+    <pathCost>42</pathCost>
+    <castEdgeShadows>true</castEdgeShadows>
+    <staticSunShadowHeight>0.2</staticSunShadowHeight>
+    <statBases>
+      <MaxHitPoints>100</MaxHitPoints>
+      <WorkToBuild>2600</WorkToBuild>
+      <Mass>22</Mass>
+      <Beauty>3</Beauty>
+      <JoyGainFactor>1.15</JoyGainFactor>
+    </statBases>
+    <stuffCategories>
+      <li>Woody</li>
+      <li>Metallic</li>
+      <li>Stony</li>
+    </stuffCategories>
+    <costStuffCount>70</costStuffCount>
+    <costList>
+      <Cloth>15</Cloth>
+    </costList>
+    <building>
+      <joyKind>Gaming_Cerebral</joyKind>
+    </building>
+    <comps>
+      <li Class="EntertainingIdeas.CompProperties_BoardGame">
+        <idleTexPath>EntertainingIdeas/Buildings/BoardGamesIdle</idleTexPath>
+        <maxPlayers>4</maxPlayers>
+        <ticksPerFrame>300</ticksPerFrame>
+        <drawSize>(2,2)</drawSize>
+        <games>
+          <li><label>Colonists of the Rim</label><framePath>EntertainingIdeas/Buildings/BoardColonists</framePath><frameCount>3</frameCount></li>
+          <li><label>Raid!</label><framePath>EntertainingIdeas/Buildings/BoardRaid</framePath><frameCount>3</frameCount></li>
+          <li><label>Orbital Trader</label><framePath>EntertainingIdeas/Buildings/BoardOrbital</framePath><frameCount>3</frameCount></li>
+          <li><label>Caravan Routes</label><framePath>EntertainingIdeas/Buildings/BoardCaravan</framePath><frameCount>3</frameCount></li>
+          <li><label>Muffalo &amp; Thrumbo</label><framePath>EntertainingIdeas/Buildings/BoardMuffalo</framePath><frameCount>3</frameCount></li>
+        </games>
+      </li>
+    </comps>
+  </ThingDef>
+
+  <ThingDef ParentName="EI_JoyBuildingBase">
+    <defName>EI_SeedPitBoard</defName>
+    <label>seed pit board</label>
+    <description>A board with two rows of pits carved into it and a store at each end, and a bag of dried seeds to sow round them. Seed Pits is older than anyone can say: take up a pit, sow it round one seed at a time, capture what you land on. Two players, sitting on the ground either side of it if there is nothing better to sit on.</description>
+    <designatorDropdown>EI_BoardGames</designatorDropdown>
+    <graphicData>
+      <texPath>EntertainingIdeas/Buildings/SeedPitBoard</texPath>
+      <graphicClass>Graphic_Single</graphicClass>
+      <drawSize>(1,1)</drawSize>
+      <damageData>
+        <rect>(0.05,0.25,0.9,0.5)</rect>
+      </damageData>
+    </graphicData>
+    <rotatable>false</rotatable>
+    <fillPercent>0.15</fillPercent>
+    <pathCost>14</pathCost>
+    <statBases>
+      <MaxHitPoints>60</MaxHitPoints>
+      <WorkToBuild>900</WorkToBuild>
+      <Mass>5</Mass>
+      <Beauty>2</Beauty>
+      <JoyGainFactor>0.9</JoyGainFactor>
+    </statBases>
+    <stuffCategories>
+      <li>Woody</li>
+      <li>Stony</li>
+    </stuffCategories>
+    <costStuffCount>25</costStuffCount>
+    <building>
+      <joyKind>Gaming_Cerebral</joyKind>
+    </building>
+    <comps>
+      <li Class="EntertainingIdeas.CompProperties_BoardGame">
+        <!-- Seeds laid out ready when nobody is playing. -->
+        <idleTexPath>EntertainingIdeas/Buildings/SeedPits_0</idleTexPath>
+        <maxPlayers>2</maxPlayers>
+        <requireChair>false</requireChair>
+        <ticksPerFrame>260</ticksPerFrame>
+        <drawSize>(1,1)</drawSize>
+        <games>
+          <li><label>Seed Pits</label><framePath>EntertainingIdeas/Buildings/SeedPits</framePath><frameCount>3</frameCount></li>
+        </games>
+      </li>
+    </comps>
+  </ThingDef>
+
+  <!-- ======================================================================
+       Table tennis and air hockey. A ball or puck goes back and forth between
+       whoever stands at the two ends; alone, a colonist practises against the
+       far end.
+       ====================================================================== -->
+  <ThingDef ParentName="EI_JoyBuildingBase">
+    <defName>EI_TableTennisTable</defName>
+    <label>table tennis table</label>
+    <description>A long green table with a net strung across the middle and a pair of bats. Two colonists stand one at each end and knock a light ball back and forth over the net until somebody misses, which is usually quickly and always disputed.\n\nOne colonist alone can practise against the far end. Needs a clear tile at each end to stand on.</description>
+    <graphicData>
+      <texPath>EntertainingIdeas/Buildings/TableTennisTable</texPath>
+      <graphicClass>Graphic_Multi</graphicClass>
+      <drawSize>(2,3)</drawSize>
+      <shadowData>
+        <volume>(1.8,0.3,2.8)</volume>
+      </shadowData>
+    </graphicData>
+    <size>(2,3)</size>
+    <rotatable>true</rotatable>
+    <fillPercent>0.4</fillPercent>
+    <pathCost>50</pathCost>
+    <statBases>
+      <MaxHitPoints>120</MaxHitPoints>
+      <WorkToBuild>3200</WorkToBuild>
+      <Mass>40</Mass>
+      <Beauty>2</Beauty>
+      <JoyGainFactor>1.1</JoyGainFactor>
+    </statBases>
+    <costList>
+      <WoodLog>50</WoodLog>
+      <Steel>20</Steel>
+      <Cloth>10</Cloth>
+    </costList>
+    <building>
+      <joyKind>Gaming_Dexterity</joyKind>
+    </building>
+    <comps>
+      <li Class="EntertainingIdeas.CompProperties_RallyGame">
+        <ballTexPath>EntertainingIdeas/Buildings/TableTennisBall</ballTexPath>
+        <ballSize>0.14</ballSize>
+        <secondsPerShot>0.9</secondsPerShot>
+        <arcs>true</arcs>
+        <endInset>0.3</endInset>
+        <sideInset>0.3</sideInset>
+      </li>
+    </comps>
+  </ThingDef>
+
+  <ThingDef ParentName="EI_JoyBuildingBase">
+    <defName>EI_AirHockeyTable</defName>
+    <label>air hockey table</label>
+    <description>A table with a hissing surface full of tiny holes, a fan underneath, and a flat puck that floats on the air and goes wherever it is hit, very fast. Two colonists at the ends try to get it past each other's mallet into the slot, and bank it off the rails when they cannot.\n\nOne colonist can practise against the far end. Needs power, and a clear tile at each end to stand on.</description>
+    <graphicData>
+      <texPath>EntertainingIdeas/Buildings/AirHockeyTable</texPath>
+      <graphicClass>Graphic_Multi</graphicClass>
+      <drawSize>(1,2)</drawSize>
+      <shadowData>
+        <volume>(0.9,0.35,1.9)</volume>
+      </shadowData>
+    </graphicData>
+    <size>(1,2)</size>
+    <rotatable>true</rotatable>
+    <fillPercent>0.45</fillPercent>
+    <pathCost>50</pathCost>
+    <constructEffect>ConstructMetal</constructEffect>
+    <statBases>
+      <MaxHitPoints>110</MaxHitPoints>
+      <WorkToBuild>5000</WorkToBuild>
+      <Mass>45</Mass>
+      <Beauty>3</Beauty>
+      <JoyGainFactor>1.2</JoyGainFactor>
+    </statBases>
+    <costList>
+      <Steel>60</Steel>
+      <ComponentIndustrial>2</ComponentIndustrial>
+    </costList>
+    <building>
+      <joyKind>Gaming_Dexterity</joyKind>
+      <paintable>true</paintable>
+    </building>
+    <comps>
+      <li Class="CompProperties_Power">
+        <compClass>CompPowerTrader</compClass>
+        <shortCircuitInRain>true</shortCircuitInRain>
+        <basePowerConsumption>120</basePowerConsumption>
+      </li>
+      <li Class="CompProperties_Flickable"/>
+      <li Class="CompProperties_Breakdownable"/>
+      <li Class="EntertainingIdeas.CompProperties_RallyGame">
+        <ballTexPath>EntertainingIdeas/Buildings/AirHockeyPuck</ballTexPath>
+        <ballSize>0.2</ballSize>
+        <secondsPerShot>0.7</secondsPerShot>
+        <arcs>false</arcs>
+        <banks>true</banks>
+        <malletTexPath>EntertainingIdeas/Buildings/AirHockeyMallet</malletTexPath>
+        <malletSize>0.24</malletSize>
+        <!-- End 0 is the blue goal at the back of the table, end 1 the red. -->
+        <malletColours>
+          <li>(70,118,196,255)</li>
+          <li>(206,70,62,255)</li>
+        </malletColours>
+        <endInset>0.28</endInset>
+        <sideInset>0.2</sideInset>
+        <requirePower>true</requirePower>
+      </li>
+    </comps>
+    <researchPrerequisites>
+      <li>Electricity</li>
+    </researchPrerequisites>
+  </ThingDef>
+
+  <!-- ======================================================================
+       Lawn noughts and crosses. Cornhole's throwing onto a pegged-out grid:
+       each bag lands in a square, two colours for noughts and crosses, and
+       the grid is cleared after nine throws.
+       ====================================================================== -->
+  <ThingDef ParentName="EI_JoyBuildingBase">
+    <defName>EI_LawnNoughtsCrosses</defName>
+    <label>lawn noughts and crosses</label>
+    <description>A three-by-three grid of rope pegged out on the ground, and a sack of bean bags in two colours. Noughts and crosses, except the marks have to be thrown into their squares from a line a few tiles back, which makes a simple game a great deal less simple.\n\nOne colonist can practise alone; two take turns. The rope lies flat, so it can be walked over.</description>
+    <graphicData>
+      <texPath>EntertainingIdeas/Buildings/LawnNoughtsGrid</texPath>
+      <graphicClass>Graphic_Single</graphicClass>
+      <drawSize>(3,3)</drawSize>
+    </graphicData>
+    <size>(3,3)</size>
+    <rotatable>true</rotatable>
+    <defaultPlacingRot>South</defaultPlacingRot>
+    <passability>Standable</passability>
+    <fillPercent>0</fillPercent>
+    <pathCost>2</pathCost>
+    <castEdgeShadows>false</castEdgeShadows>
+    <statBases>
+      <MaxHitPoints>40</MaxHitPoints>
+      <WorkToBuild>600</WorkToBuild>
+      <Mass>6</Mass>
+      <Beauty>1</Beauty>
+      <JoyGainFactor>1</JoyGainFactor>
+    </statBases>
+    <costList>
+      <WoodLog>15</WoodLog>
+      <Cloth>25</Cloth>
+    </costList>
+    <building>
+      <joyKind>Gaming_Dexterity</joyKind>
+      <watchBuildingStandDistanceRange>
+        <min>2</min>
+        <max>4</max>
+      </watchBuildingStandDistanceRange>
+      <watchBuildingStandRectWidth>2</watchBuildingStandRectWidth>
+    </building>
+    <placeWorkers>
+      <li>PlaceWorker_WatchArea</li>
+    </placeWorkers>
+    <comps>
+      <li Class="EntertainingIdeas.CompProperties_NoughtsCrosses">
+        <sackTexPath>EntertainingIdeas/Buildings/CornholeSack</sackTexPath>
+        <sackSize>0.34</sackSize>
+        <secondsPerThrow>2.4</secondsPerThrow>
+        <arcLift>0.45</arcLift>
+        <!-- Up to eight bags already down before the ninth throw. -->
+        <sacksOnBoard>8</sacksOnBoard>
+        <sackColours>
+          <li>(206,86,72,255)</li>
+          <li>(74,118,190,255)</li>
+        </sackColours>
+        <gridSize>3</gridSize>
+      </li>
+    </comps>
+  </ThingDef>
+
+  <!-- ======================================================================
+       Giant four-in-a-row. Drawn the way a television is: the face from the
+       south, the back from the north, a slim profile edge-on from the sides.
+       The discs are shown face-on only.
+       ====================================================================== -->
+  <ThingDef ParentName="EI_JoyBuildingBase">
+    <defName>EI_FourInARow</defName>
+    <label>giant four-in-a-row</label>
+    <description>An upright frame of seven columns taller than a child, and a crate of big coloured discs. Players take turns dropping a disc down a column; the first to line up four wins, and the loser pulls the release bar and lets the whole lot crash out onto the floor, which is the real reason anyone plays.\n\nTwo players stand in front of it. Face it the way the players should see it - from the sides it is only an edge.</description>
+    <graphicData>
+      <texPath>EntertainingIdeas/Buildings/FourInARow</texPath>
+      <graphicClass>Graphic_Multi</graphicClass>
+      <!-- Taller than its footprint, as a television is, and lifted so its
+           feet sit on it. -->
+      <drawSize>(2,1.5)</drawSize>
+      <drawOffsetSouth>(0,0,0.25)</drawOffsetSouth>
+      <drawOffsetNorth>(0,0,0.25)</drawOffsetNorth>
+    </graphicData>
+    <size>(2,1)</size>
+    <rotatable>true</rotatable>
+    <defaultPlacingRot>South</defaultPlacingRot>
+    <fillPercent>0.3</fillPercent>
+    <pathCost>40</pathCost>
+    <statBases>
+      <MaxHitPoints>90</MaxHitPoints>
+      <WorkToBuild>2000</WorkToBuild>
+      <Mass>25</Mass>
+      <Beauty>2</Beauty>
+      <JoyGainFactor>1</JoyGainFactor>
+    </statBases>
+    <costList>
+      <WoodLog>25</WoodLog>
+      <Steel>20</Steel>
+    </costList>
+    <building>
+      <joyKind>Gaming_Cerebral</joyKind>
+      <paintable>true</paintable>
+      <watchBuildingStandDistanceRange>
+        <min>1</min>
+        <max>2</max>
+      </watchBuildingStandDistanceRange>
+      <watchBuildingStandRectWidth>2</watchBuildingStandRectWidth>
+    </building>
+    <placeWorkers>
+      <li>PlaceWorker_WatchArea</li>
+    </placeWorkers>
+    <comps>
+      <li Class="EntertainingIdeas.CompProperties_AnimatedScreen">
+        <framePath>EntertainingIdeas/Buildings/FourInARowDiscs</framePath>
+        <frameCount>16</frameCount>
+        <ticksPerFrame>90</ticksPerFrame>
+        <drawSize>(2,1.5)</drawSize>
+        <scanRadius>3</scanRadius>
+        <playJobs>
+          <li>EI_Play_FourInARow</li>
+        </playJobs>
+        <!-- Face-on only. Edge-on from the sides there is nothing to see. -->
+        <drawRotations>
+          <li>South</li>
+          <li>North</li>
+        </drawRotations>
+      </li>
+    </comps>
+  </ThingDef>
+
+  <!-- ======================================================================
+       Tangle mat. Up to three colonists step from spot to spot as the spinner
+       calls them, and now and then one goes over.
+       ====================================================================== -->
+  <ThingDef ParentName="EI_JoyBuildingBase">
+    <defName>EI_TangleMat</defName>
+    <label>tangle mat</label>
+    <description>A big white mat printed with rows of coloured spots, and a spinner card. Somebody spins; everyone has to get a hand or a foot onto the colour it lands on, without letting go of the spots they are already on. Up to three can play at once, which is two more than the mat was designed for.\n\nPeople fall over. That is the game.</description>
+    <graphicData>
+      <texPath>EntertainingIdeas/Buildings/TangleMat</texPath>
+      <graphicClass>Graphic_Single</graphicClass>
+      <drawSize>(3,3)</drawSize>
+    </graphicData>
+    <size>(3,3)</size>
+    <rotatable>false</rotatable>
+    <passability>Standable</passability>
+    <fillPercent>0</fillPercent>
+    <pathCost>0</pathCost>
+    <castEdgeShadows>false</castEdgeShadows>
+    <statBases>
+      <MaxHitPoints>50</MaxHitPoints>
+      <WorkToBuild>800</WorkToBuild>
+      <Mass>4</Mass>
+      <Beauty>1</Beauty>
+      <JoyGainFactor>1.1</JoyGainFactor>
+    </statBases>
+    <costList>
+      <Cloth>40</Cloth>
+    </costList>
+    <building>
+      <joyKind>Social</joyKind>
+    </building>
+    <comps>
+      <li Class="EntertainingIdeas.CompProperties_AnimatedScreen">
+        <framePath>EntertainingIdeas/Buildings/TangleSpinner</framePath>
+        <frameCount>8</frameCount>
+        <ticksPerFrame>6</ticksPerFrame>
+        <drawSize>(3,3)</drawSize>
+        <playJobs>
+          <li>EI_PlayTangle</li>
+        </playJobs>
+      </li>
+    </comps>
+  </ThingDef>
+
 </Defs>

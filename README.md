@@ -25,6 +25,12 @@ for each — see [Versions](#versions).
 | Armillary sphere | 1×1 | Solitary relaxation | Brass rings on a tripod, turning under their own clockwork. Watched from 1–4 tiles. Beauty 16. |
 | Jigsaw table | 2×2 | Cerebral | A puzzle that stays where it was left. Anyone who pulls up a chair adds pieces — as many at once as there are chairs — and it fills in visibly over several sittings. Everyone who worked on it is pleased when the last piece goes in; the finished picture is framed, boxed, and hung on a wall like a lamp (Beauty 8), and the next puzzle comes out of the box. Four pictures. Wood, metal or stone. |
 | Storyteller's stump | 1×1 | Social | One colonist stands on it and tells stories beside a fire; the rest gather in front to listen, and the stories take shape in the fire's smoke — a thrumbo, a raider, a ship, a mechanoid. Everyone within earshot likes it or doesn't, by the teller's social skill and what they think of them. Needs a lit campfire (or any modded fire pit) within six tiles. Wood logs. |
+| Board game table | 2×2 | Cerebral | A cupboard of games; whoever sits first picks one and the rest join in, up to four, one per chair. Colonists of the Rim, Raid!, Orbital Trader, Caravan Routes, Muffalo & Thrumbo — the board on the table shows which is on, and moves on as the game does. Wood, metal or stone. |
+| Seed pit board | 1×1 | Cerebral | Seed Pits (mancala) carved for a tribe. Two players, who will sit on the ground beside it if there are no chairs. |
+| Table tennis table | 2×3 | Dexterity | One player at each end; the ball arcs over the net and bounces on the far half. Alone, a colonist practises against the far end. Trains melee. |
+| Lawn noughts and crosses | 3×3 | Dexterity | A rope grid pegged out on the grass. Cornhole's throwing: each bag lands in a square, two colours, cleared after nine throws. Walkable. |
+| Giant four-in-a-row | 2×1 | Cerebral | An upright frame two players drop discs into. Drawn like a TV: the face from the south, an edge from the sides — face it the way the players should see it. |
+| Tangle mat | 3×3 | Social | Up to three colonists step from spot to spot as the spinner calls them, and every so often one goes over. |
 
 ### Industrial — powered
 
@@ -40,12 +46,13 @@ for each — see [Versions](#versions).
 | Karaoke machine | 1×1 | Social | 120W | Microelectronics basics |
 | Bowling lane | 1×7 | Dexterity | 140W | Complex furniture + Electricity |
 | Heated soaking tub | 1×1 | Solitary relaxation | 200W | Complex furniture + Electricity |
+| Air hockey table | 1×2 | Dexterity | 120W | Electricity |
 | Pool filtration unit | 1×2 | Social | 80W + 5W/tile | Electricity |
 | Tabletop orrery | 1×1 | Solitary relaxation | — | Complex furniture |
 | Grand orrery | 2×2 | Solitary relaxation | — | Complex furniture |
 
-Every electric game and screen — pinball, the arcade tables, the hologame pod,
-the holotheater, karaoke, gravball and the bowling lane — can break down the way
+Every electric game and screen — pinball, the arcade tables, air hockey, the
+hologame pod, the holotheater, karaoke, gravball and the bowling lane — can break down the way
 a television does, sitting dark until a colonist repairs it with a component.
 Furniture and fittings (the massage chair, heated tub, aquarium, pool pump and
 vista panels) do not.

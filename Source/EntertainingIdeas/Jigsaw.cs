@@ -346,6 +346,17 @@ namespace EntertainingIdeas
         /// <summary>The nearest free chair pulled up to the table.</summary>
         public static bool TryFindSeat(Pawn pawn, Thing table, out IntVec3 seat)
         {
+            return TryFindSeat(pawn, table, true, out seat);
+        }
+
+        /// <summary>
+        /// The nearest free place to sit at the table. Without requireChair,
+        /// bare ground beside it will do - the way a tribe sits round a board
+        /// before anybody has built a stool - though a chair is still taken
+        /// over the floor when there is one.
+        /// </summary>
+        public static bool TryFindSeat(Pawn pawn, Thing table, bool requireChair, out IntVec3 seat)
+        {
             seat = IntVec3.Invalid;
             Map map = table.Map;
             float best = float.MaxValue;
@@ -355,8 +366,9 @@ namespace EntertainingIdeas
                 {
                     continue;
                 }
-                Building chair = cell.GetEdifice(map);
-                if (chair == null || chair.def.building == null || !chair.def.building.isSittable)
+                Building edifice = cell.GetEdifice(map);
+                bool chair = edifice != null && edifice.def.building != null && edifice.def.building.isSittable;
+                if (!chair && (requireChair || edifice != null || !cell.Standable(map)))
                 {
                     continue;
                 }
@@ -364,7 +376,8 @@ namespace EntertainingIdeas
                 {
                     continue;
                 }
-                float distance = cell.DistanceToSquared(pawn.Position);
+                // A chair always beats the floor next to it.
+                float distance = cell.DistanceToSquared(pawn.Position) + (chair ? 0f : 10000f);
                 if (distance < best)
                 {
                     best = distance;

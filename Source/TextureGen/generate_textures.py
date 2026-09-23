@@ -2808,5 +2808,540 @@ def _build_storyteller():
 
 _register("storyteller", _build_storyteller)
 
+
+# ---------------------------------------------------------------------------
+# Board games. The table under them is the jigsaw table's furniture; these are
+# the overlays drawn on top by CompBoardGame - one board per game, three
+# stages each as the game moves on, and the stacked boxes shown when nobody is
+# playing. Every board is a RimWorld-flavoured take on a real game.
+# ---------------------------------------------------------------------------
+
+PLAYER_COLS = ((206, 70, 62, 255), (70, 118, 196, 255), (236, 196, 70, 255), (96, 168, 90, 255))
+
+
+def die(c, x, y, value, size=13, body=(244, 240, 230, 255)):
+    silhouette(c, [("rect", x - size / 2.0, y - size / 2.0, x + size / 2.0, y + size / 2.0, 3, body)], 1.6)
+    pips = {1: [(0, 0)], 2: [(-1, -1), (1, 1)], 3: [(-1, -1), (0, 0), (1, 1)],
+            4: [(-1, -1), (1, -1), (-1, 1), (1, 1)], 5: [(-1, -1), (1, -1), (0, 0), (-1, 1), (1, 1)],
+            6: [(-1, -1), (1, -1), (-1, 0), (1, 0), (-1, 1), (1, 1)]}[value]
+    q = size * 0.27
+    for px, py in pips:
+        c.circle(x + px * q, y + py * q, size * 0.09, (40, 34, 30, 255))
+
+
+def cards(c, x, y, count, back, spread=7):
+    for k in range(count):
+        cx = x + k * spread
+        silhouette(c, [("rect", cx, y, cx + 14, y + 20, 2, back)], 1.4)
+        c.frame(cx + 2, y + 2, cx + 12, y + 18, darker(back, 0.75), 1.0, 1)
+
+
+def board_base(c, x0, y0, x1, y1, fill):
+    silhouette(c, [("rect", x0, y0, x1, y1, 5, fill)], 3.0)
+    c.frame(x0 + 4, y0 + 4, x1 - 4, y1 - 4, darker(fill, 0.8), 1.4, 3)
+
+
+def _hex(c, cx, cy, r, color):
+    import math
+    c.poly([(cx + r * math.cos(math.pi / 6 + k * math.pi / 3),
+             cy + r * math.sin(math.pi / 6 + k * math.pi / 3)) for k in range(6)], color)
+
+
+def board_colonists(c, stage, rng):
+    """Colonists of the Rim: hex tiles, settlements and roads."""
+    import math
+    board_base(c, 30, 28, 226, 206, (86, 132, 176, 255))           # the sea round it
+    terr = [(58, 112, 64), (222, 194, 92), (150, 150, 160), (142, 196, 104), (186, 108, 70)]
+    r = 17.5
+    rows = (3, 4, 5, 4, 3)
+    centres = []
+    for j, n in enumerate(rows):
+        for i in range(n):
+            cx = 128 + (i - (n - 1) / 2.0) * r * math.sqrt(3)
+            cy = 117 + (j - 2) * r * 1.5
+            centres.append((cx, cy))
+    base_rng = __import__("random").Random("colonists-tiles")
+    for k, (cx, cy) in enumerate(centres):
+        col = terr[base_rng.randrange(len(terr))] if k != 9 else (214, 196, 150)   # ruins in the middle
+        _hex(c, cx, cy, r + 0.8, darker(col + (255,), 0.7))
+        _hex(c, cx, cy, r - 0.6, col + (255,))
+        if k != 9:
+            c.circle(cx, cy, 5.2, (240, 230, 200, 255))
+            c.circle(cx, cy, 1.6, darker((240, 230, 200, 255), 0.5))
+    # Settlements and roads grow with the game.
+    verts = []
+    for cx, cy in centres:
+        for k in range(6):
+            a = math.pi / 6 + k * math.pi / 3
+            verts.append((round(cx + r * math.cos(a), 1), round(cy + r * math.sin(a), 1)))
+    verts = sorted(set(verts))
+    pick = __import__("random").Random("colonists-build")
+    order = pick.sample(verts, 14)
+    for k, (vx, vy) in enumerate(order[:4 + stage * 4]):
+        col = PLAYER_COLS[k % 4]
+        near = min((v for v in verts if v != (vx, vy)), key=lambda v: (v[0] - vx) ** 2 + (v[1] - vy) ** 2)
+        c.line(vx, vy, (vx + near[0]) / 2.0, (vy + near[1]) / 2.0, darker(col, 0.6), 4.2)
+        c.line(vx, vy, (vx + near[0]) / 2.0, (vy + near[1]) / 2.0, col, 2.6)
+        silhouette(c, [("rect", vx - 4, vy - 2, vx + 4, vy + 4, 1, col),
+                       ("poly", [(vx - 5, vy - 1.5), (vx, vy - 6.5), (vx + 5, vy - 1.5)], col)], 1.4)
+    die(c, 60, 226, rng.randint(1, 6))
+    die(c, 78, 228, rng.randint(1, 6))
+    cards(c, 150, 216, 3 + stage, (176, 140, 96, 255))
+
+
+def board_raid(c, stage, rng):
+    """Raid!: a world map and armies - including a grey mechanoid one."""
+    board_base(c, 26, 30, 230, 196, (74, 112, 150, 255))
+    lands = [[(44, 58), (96, 46), (112, 74), (90, 104), (52, 96)],
+             [(126, 44), (184, 50), (206, 86), (170, 104), (134, 84)],
+             [(58, 118), (104, 112), (118, 156), (84, 182), (50, 160)],
+             [(138, 118), (190, 114), (212, 150), (176, 184), (136, 166)],
+             [(112, 96), (134, 100), (128, 116), (110, 112)]]
+    greens = [(118, 150, 88), (160, 148, 96), (104, 136, 92), (140, 118, 84), (170, 160, 110)]
+    for pts, col in zip(lands, greens):
+        c.poly(_grow_poly(pts, 1.8), darker(col + (255,), 0.65))
+        c.poly(pts, col + (255,))
+    armies = PLAYER_COLS[:3] + ((132, 136, 146, 255),)       # the grey one is the mechanoids
+    spots = [(78, 72), (100, 86), (160, 70), (186, 90), (80, 142), (96, 166), (164, 140), (184, 164), (122, 106)]
+    for k, (sx, sy) in enumerate(spots):
+        owner = (k + stage) % 4
+        n = 1 + (k * 3 + stage * 2) % 4
+        for m in range(n):
+            x, y = sx + (m % 2) * 7, sy + (m // 2) * 7
+            silhouette(c, [("rect", x - 3, y - 3, x + 3, y + 3, 1, armies[owner])], 1.2)
+    for k in range(3):
+        die(c, 52 + k * 17, 220, rng.randint(1, 6), body=(214, 72, 62, 255))
+    cards(c, 160, 212, 2 + stage, (120, 82, 60, 255))
+
+
+def board_orbital(c, stage, rng):
+    """Orbital Trader: a track of properties round a planet, and silver."""
+    x0, y0, x1, y1 = 40, 24, 216, 200
+    board_base(c, x0, y0, x1, y1, (226, 230, 214, 255))
+    n = 9
+    step = (x1 - x0 - 8) / float(n)
+    strips = [(160, 96, 60), (120, 180, 220), (206, 90, 150), (230, 150, 60), (206, 64, 58),
+              (236, 214, 70), (80, 160, 90), (60, 80, 170)]
+    for side in range(4):
+        for k in range(n):
+            col = strips[(side * 2 + k // 5) % len(strips)] + (255,)
+            if side == 0:
+                cx0, cy0, cx1, cy1 = x0 + 4 + k * step, y1 - 22, x0 + 4 + (k + 1) * step, y1 - 4
+                band = (cx0, cy0, cx1, cy0 + 5)
+            elif side == 1:
+                cx0, cy0, cx1, cy1 = x0 + 4, y1 - 4 - (k + 1) * step, x0 + 22, y1 - 4 - k * step
+                band = (cx1 - 5, cy0, cx1, cy1)
+            elif side == 2:
+                cx0, cy0, cx1, cy1 = x1 - 4 - (k + 1) * step, y0 + 4, x1 - 4 - k * step, y0 + 22
+                band = (cx0, cy1 - 5, cx1, cy1)
+            else:
+                cx0, cy0, cx1, cy1 = x1 - 22, y0 + 4 + k * step, x1 - 4, y0 + 4 + (k + 1) * step
+                band = (cx0, cy0, cx0 + 5, cy1)
+            c.frame(cx0, cy0, cx1, cy1, (160, 164, 150, 200), 1.0, 0)
+            if 0 < k < n - 1:
+                c.rect(band[0], band[1], band[2], band[3], col, 0)
+    # The planet in the middle, a ring, and a trade ship on it.
+    c.circle(128, 112, 34, (70, 110, 170, 255))
+    c.circle(120, 104, 12, (100, 150, 110, 255))
+    c.circle(140, 124, 9, (100, 150, 110, 255))
+    c.ring(128, 112, 50, 48, (120, 124, 140, 200))
+    c.rect(170, 98, 180, 104, (200, 204, 214, 255), 2)
+    # Tokens moving round the track, and silver piles by the board.
+    for k in range(3):
+        pos = (k * 7 + stage * 5) % 32
+        side, idx = pos // 8, pos % 8
+        if side == 0:
+            tx, ty = x0 + 10 + idx * step, y1 - 12
+        elif side == 1:
+            tx, ty = x0 + 12, y1 - 10 - idx * step
+        elif side == 2:
+            tx, ty = x1 - 10 - idx * step, y0 + 12
+        else:
+            tx, ty = x1 - 12, y0 + 10 + idx * step
+        silhouette(c, [("circle", tx, ty, 4.2, PLAYER_COLS[k])], 1.4)
+    for k, (sx, sy) in enumerate(((52, 222), (150, 224), (200, 220))):
+        for m in range(3 + (k + stage) % 3):
+            c.circle(sx + m * 2, sy - m * 2.2, 5, darker((200, 204, 214, 255), 0.6))
+            c.circle(sx + m * 2, sy - m * 2.2, 4, (206, 210, 220, 255))
+    die(c, 104, 226, rng.randint(1, 6))
+
+
+def board_caravan(c, stage, rng):
+    """Caravan Routes: towns, the roads between them, and claimed routes."""
+    board_base(c, 26, 26, 230, 200, (214, 196, 150, 255))
+    towns = [(52, 52), (104, 44), (170, 56), (208, 90), (64, 108), (128, 96), (186, 136),
+             (52, 170), (112, 158), (160, 180), (210, 176)]
+    routes = [(0, 1), (1, 2), (2, 3), (0, 4), (1, 5), (4, 5), (5, 3), (5, 6), (3, 6), (4, 7),
+              (7, 8), (8, 5), (8, 9), (9, 6), (6, 10), (9, 10), (2, 5)]
+    claimed = __import__("random").Random("caravan").sample(range(len(routes)), 12)
+    import math
+    for k, (a, b) in enumerate(routes):
+        (ax, ay), (bx, by) = towns[a], towns[b]
+        owner = claimed.index(k) % 4 if k in claimed[:3 + stage * 3] else None
+        d = math.hypot(bx - ax, by - ay)
+        segs = max(2, int(d // 11))
+        for s in range(segs):
+            t0, t1 = (s + 0.12) / segs, (s + 0.88) / segs
+            x0, y0 = ax + (bx - ax) * t0, ay + (by - ay) * t0
+            x1, y1 = ax + (bx - ax) * t1, ay + (by - ay) * t1
+            if owner is None:
+                c.line(x0, y0, x1, y1, (160, 142, 104, 255), 3.4)
+            else:
+                c.line(x0, y0, x1, y1, darker(PLAYER_COLS[owner], 0.55), 5.6)
+                c.line(x0, y0, x1, y1, PLAYER_COLS[owner], 3.8)
+    for tx, ty in towns:
+        silhouette(c, [("circle", tx, ty, 5, (120, 84, 56, 255))], 1.6)
+        c.circle(tx, ty, 2.2, (236, 220, 180, 255))
+    cards(c, 40, 212, 4, (96, 130, 90, 255))
+    cards(c, 150, 212, 2 + stage, (150, 96, 70, 255))
+
+
+def board_muffalo(c, stage, rng):
+    """Muffalo & Thrumbo: draughts, brown pieces against white."""
+    x0, y0 = 56, 36
+    sq = 18
+    board_base(c, x0 - 8, y0 - 8, x0 + 8 * sq + 8, y0 + 8 * sq + 8, (110, 78, 50, 255))
+    for j in range(8):
+        for i in range(8):
+            col = (226, 204, 160, 255) if (i + j) % 2 == 0 else (120, 84, 56, 255)
+            c.rect(x0 + i * sq, y0 + j * sq, x0 + (i + 1) * sq, y0 + (j + 1) * sq, col, 0)
+    rnd = __import__("random").Random("draughts-%d" % stage)
+    dark = [(i, j) for j in range(8) for i in range(8) if (i + j) % 2 == 1]
+    muff = [cell for cell in dark if cell[1] < 3]
+    thr = [cell for cell in dark if cell[1] > 4]
+    # Pieces advance and fall as the game goes.
+    lost = stage * 2
+    muff = rnd.sample(muff, len(muff) - lost)
+    thr = rnd.sample(thr, len(thr) - lost)
+    if stage:
+        mids = [cell for cell in dark if 3 <= cell[1] <= 4]
+        muff += rnd.sample(mids, stage)
+        thr += rnd.sample([m for m in mids if m not in muff], stage)
+    for (i, j), body in [(m, (118, 80, 50, 255)) for m in muff] + [(t, (240, 240, 236, 255)) for t in thr]:
+        cx, cy = x0 + (i + 0.5) * sq, y0 + (j + 0.5) * sq
+        silhouette(c, [("circle", cx, cy, 6.8, body)], 1.6)
+        c.ring(cx, cy, 5.2, 4.2, darker(body, 0.78))
+    # Captured pieces at the side.
+    for k in range(lost):
+        c.circle(30, 60 + k * 12, 6, (118, 80, 50, 255))
+        c.circle(226, 180 - k * 12, 6, (240, 240, 236, 255))
+
+
+BOARD_GAMES = (("Colonists", board_colonists), ("Raid", board_raid), ("Orbital", board_orbital),
+               ("Caravan", board_caravan), ("Muffalo", board_muffalo))
+
+
+def board_game_frames(stages=3):
+    import random
+    for name, drawer in BOARD_GAMES:
+        for stage in range(stages):
+            c = Canvas(256, 256)
+            drawer(c, stage, random.Random("%s-%d" % (name, stage)))
+            c.save(os.path.join(OUT, "Board%s_%d.png" % (name, stage)))
+        print("  Board%s_{0..%d}.png  (256x256)" % (name, stages - 1))
+
+
+def board_games_idle():
+    """The boxes, stacked at one end while nobody is playing."""
+    c = Canvas(256, 256)
+    lids = ((70, 118, 196, 255), (206, 70, 62, 255), (86, 132, 90, 255))
+    for k, lid in enumerate(lids):
+        x, y = 150 - k * 6, 176 - k * 16
+        silhouette(c, [("rect", x, y, x + 70, y + 44, 3, lid)], 2.6)
+        c.rect(x + 8, y + 8, x + 40, y + 34, darker(lid, 0.75), 2)
+        c.rect(x + 46, y + 10, x + 62, y + 14, (240, 232, 214, 255), 1)
+        c.rect(x + 46, y + 20, x + 58, y + 24, (240, 232, 214, 255), 1)
+    # A folded board leaning against them.
+    silhouette(c, [("rect", 40, 150, 120, 210, 3, (86, 132, 176, 255))], 2.6)
+    c.line(80, 152, 80, 208, darker((86, 132, 176, 255), 0.7), 1.6)
+    save_single(c, "BoardGamesIdle")
+    return c
+
+
+# Seed Pits: mancala on a carved board, for a tribe's first evenings.
+
+def seed_pit_board():
+    c = Canvas(128, 128)
+    wood = (232, 224, 210, 255)                                   # pale: stuff tints it
+    silhouette(c, [("rect", 8, 36, 120, 92, 22, wood)], 4.0)
+    for i in range(6):
+        for j in range(2):
+            c.circle(28 + i * 14.4, 54 + j * 20, 6.4, darker(wood, 0.72))
+            c.circle(28 + i * 14.4, 55 + j * 20, 5.4, darker(wood, 0.8))
+    for x in (15, 113):
+        c.ellipse(x, 64, 6, 16, darker(wood, 0.72))
+    save_single(c, "SeedPitBoard")
+    return c
+
+
+def seed_pit_frames(stages=3):
+    import random
+    seeds = ((200, 64, 52, 255), (246, 232, 170, 255), (110, 170, 80, 255), (240, 150, 60, 255))
+    for stage in range(stages):
+        c = Canvas(128, 128)
+        rng = random.Random("seedpits-%d" % stage)
+        counts = [4] * 12 if stage == 0 else [rng.randint(0, 7) for _ in range(12)]
+        stores = (0, 0) if stage == 0 else (rng.randint(3, 8) + stage * 2, rng.randint(3, 8) + stage)
+        for k, n in enumerate(counts):
+            i, j = k % 6, k // 6
+            px, py = 28 + i * 14.4, 55 + j * 20
+            for m in range(n):
+                a = m * 2.4 + k
+                col = seeds[(m + k) % len(seeds)]
+                sx, sy = px + math.cos(a) * (1.2 + m * 0.45), py + math.sin(a) * (1.2 + m * 0.4)
+                c.ellipse(sx, sy, 2.9, 2.2, darker(col, 0.6))
+                c.ellipse(sx - 0.3, sy - 0.3, 2.3, 1.7, col)
+        for (x, n) in ((15, stores[0]), (113, stores[1])):
+            for m in range(n):
+                c.ellipse(x + (m % 2) * 3.4 - 1.7, 54 + m * 2.2, 2.9, 2.2, darker(seeds[m % len(seeds)], 0.6))
+                c.ellipse(x + (m % 2) * 3.4 - 2.0, 53.7 + m * 2.2, 2.3, 1.7, seeds[m % len(seeds)])
+        c.save(os.path.join(OUT, "SeedPits_%d.png" % stage))
+    print("  SeedPits_{0..%d}.png  (128x128)" % (stages - 1))
+
+
+def _build_boardgames():
+    made = {"BoardGamesIdle": board_games_idle(), "SeedPitBoard": seed_pit_board()}
+    board_game_frames()
+    seed_pit_frames()
+    return made
+
+
+_register("boardgames", _build_boardgames)
+
+
+# ---------------------------------------------------------------------------
+# Rally games: table tennis (2x3, unpowered) and air hockey (1x2, powered).
+# The ball, puck and mallets are separate sprites CompRallyGame moves about.
+# ---------------------------------------------------------------------------
+
+def table_tennis_table():
+    c = Canvas(256, 384)
+    top = (46, 104, 88, 255)
+    silhouette(c, [("rect", 18, 16, 238, 368, 6, top)], 5.0)
+    c.frame(26, 24, 230, 360, (240, 240, 236, 255), 3.0, 2)        # edge lines
+    c.line(128, 26, 128, 358, (240, 240, 236, 200), 1.6)           # centre line
+    # The net, across the middle, with its posts.
+    c.rect(12, 187, 244, 197, darker(top, 0.55), 2)
+    c.rect(14, 189, 242, 195, (232, 232, 226, 255), 1)
+    for x in (10, 246):
+        c.circle(x, 192, 6, DARK)
+        c.circle(x, 192, 4.2, (170, 170, 176, 255))
+    save_rotations(c, "TableTennisTable")
+    return c
+
+
+def air_hockey_table():
+    c = Canvas(128, 256)
+    rail, surface = (44, 60, 120, 255), (226, 236, 244, 255)
+    silhouette(c, [("rect", 8, 8, 120, 248, 12, rail)], 5.0)
+    c.rect(16, 16, 112, 240, surface, 8)
+    for y in range(24, 236, 8):                                     # air holes
+        for x in range(22, 110, 8):
+            c.circle(x, y, 0.9, darker(surface, 0.82))
+    c.line(18, 128, 110, 128, (206, 70, 62, 200), 2.0)
+    c.ring(64, 128, 20, 18.4, (206, 70, 62, 200))
+    for y, col in ((16, (60, 110, 190, 220)), (240, (206, 70, 62, 220))):
+        c.ring(64, y, 22, 20.4, col)
+        c.rect(44, y - 3 if y > 128 else y - 1, 84, y + 1 if y > 128 else y + 3, DARK, 1)   # goal slot
+    c.rect(52, 244, 76, 250, (236, 196, 70, 255), 2)                # scoreboard light
+    save_rotations(c, "AirHockeyTable")
+    return c
+
+
+def rally_sprites():
+    c = Canvas(32, 32)
+    c.circle(16, 16, 12, DARK)
+    c.circle(16, 16, 10, (250, 248, 240, 255))
+    c.circle(13, 13, 3.5, (255, 255, 255, 255))
+    save_single(c, "TableTennisBall")
+    c = Canvas(48, 48)
+    c.circle(24, 24, 20, DARK)
+    c.circle(24, 24, 18, (214, 60, 52, 255))
+    c.ring(24, 24, 13, 11, darker((214, 60, 52, 255), 0.7))
+    save_single(c, "AirHockeyPuck")
+    c = Canvas(48, 48)                                              # white: tinted per end
+    c.circle(24, 24, 20, (60, 60, 64, 255))
+    c.circle(24, 24, 18, (255, 255, 255, 255))
+    c.circle(24, 24, 9, (60, 60, 64, 255))
+    c.circle(24, 24, 7.5, (236, 236, 236, 255))
+    save_single(c, "AirHockeyMallet")
+
+
+def _build_rally():
+    made = {"TableTennisTable": table_tennis_table(), "AirHockeyTable": air_hockey_table()}
+    rally_sprites()
+    return made
+
+
+_register("rally", _build_rally)
+
+
+# ---------------------------------------------------------------------------
+# Lawn noughts and crosses: a rope grid pegged out on the grass. The ground
+# shows through - there is nothing here but rope and pegs.
+# ---------------------------------------------------------------------------
+
+def lawn_grid():
+    c = Canvas(384, 384)
+    rope, rope_dk = (238, 232, 214, 255), (150, 138, 110, 255)
+    peg, peg_dk = (150, 108, 66, 255), (96, 66, 40, 255)
+    for k in (1, 2):
+        v = k * 128
+        for (x0, y0, x1, y1) in ((v, 14, v, 370), (14, v, 370, v)):
+            c.line(x0, y0, x1, y1, rope_dk, 7)
+            c.line(x0, y0, x1, y1, rope, 4.2)
+    for k in (1, 2):
+        v = k * 128
+        for (x, y) in ((v, 10), (v, 374), (10, v), (374, v)):
+            silhouette(c, [("circle", x, y, 8, peg)], 3.0)
+            c.circle(x - 2, y - 2, 3, darker(peg, 1.2) if False else (178, 132, 86, 255))
+    save_single(c, "LawnNoughtsGrid")
+    return c
+
+
+_register("lawngrid", lambda: {"LawnNoughtsGrid": lawn_grid()})
+
+
+# ---------------------------------------------------------------------------
+# Giant four-in-a-row. Drawn the way a television is: the face when it faces
+# south, the back from the north, and a slim edge-on profile from the sides,
+# because from above an upright frame is only a strip. The discs are an
+# overlay, shown face-on only.
+# ---------------------------------------------------------------------------
+
+FOUR_COLS, FOUR_ROWS = 7, 6
+FOUR_X0, FOUR_Y0, FOUR_CELL = 37, 12, 26
+FOUR_H = 192     # 1.5 tiles tall: an upright face needs more than its footprint, as a TV does
+
+
+def _four_face(c, back=False):
+    frame = (48, 92, 176, 255) if not back else (38, 74, 146, 255)
+    pieces = [("rect", FOUR_X0 - 10, FOUR_Y0 - 6, FOUR_X0 + FOUR_COLS * FOUR_CELL + 10,
+               FOUR_Y0 + FOUR_ROWS * FOUR_CELL + 6, 6, frame),
+              ("rect", FOUR_X0 - 26, 176, FOUR_X0 + 12, 186, 3, (120, 88, 56, 255)),     # feet
+              ("rect", FOUR_X0 + FOUR_COLS * FOUR_CELL - 12, 176,
+               FOUR_X0 + FOUR_COLS * FOUR_CELL + 26, 186, 3, (120, 88, 56, 255))]
+    silhouette(c, pieces, 4.0)
+    for j in range(FOUR_ROWS):
+        for i in range(FOUR_COLS):
+            x = FOUR_X0 + (i + 0.5) * FOUR_CELL
+            y = FOUR_Y0 + (j + 0.5) * FOUR_CELL
+            c.circle(x, y, 11, darker(frame, 0.6))
+            c.circle(x, y, 9.5, (28, 30, 40, 255))
+    if back:
+        c.rect(FOUR_X0 - 6, FOUR_Y0 + 4, FOUR_X0 + FOUR_COLS * FOUR_CELL + 6, FOUR_Y0 + 10,
+               darker(frame, 0.8), 1)
+
+
+def four_in_a_row():
+    south = Canvas(256, FOUR_H)
+    _four_face(south)
+    south.save(os.path.join(OUT, "FourInARow_south.png"))
+    north = Canvas(256, FOUR_H)
+    _four_face(north, back=True)
+    north.save(os.path.join(OUT, "FourInARow_north.png"))
+    # Edge on: the frame is a strip across its two tiles, feet out either side.
+    # East and west get the draw size turned round (1.5 x 2), so the canvas is too.
+    for name in ("east", "west"):
+        c = Canvas(FOUR_H, 256)
+        m = FOUR_H // 2
+        silhouette(c, [("rect", m - 8, 20, m + 8, 236, 3, (48, 92, 176, 255)),
+                       ("rect", m - 28, 22, m + 28, 32, 3, (120, 88, 56, 255)),
+                       ("rect", m - 28, 224, m + 28, 234, 3, (120, 88, 56, 255))], 4.0)
+        c.line(m, 24, m, 232, darker((48, 92, 176, 255), 0.7), 1.6)
+        c.save(os.path.join(OUT, "FourInARow_%s.png" % name))
+    print("  FourInARow_{north,east,south,west}.png")
+    return south
+
+
+def four_in_a_row_frames(total=16):
+    """Discs dropping in turn, a line of four lit up, then the frame emptied."""
+    import random
+    rng = random.Random("four")
+    heights = [0] * FOUR_COLS
+    moves = []
+    for k in range(13):
+        col = rng.choice([i for i in range(FOUR_COLS) if heights[i] < FOUR_ROWS])
+        moves.append((col, heights[col], k % 2))
+        heights[col] += 1
+    colours = ((214, 64, 54, 255), (238, 200, 60, 255))
+    for f in range(total):
+        c = Canvas(256, FOUR_H)
+        shown = min(f + 1, len(moves))
+        for (i, h, who) in moves[:shown]:
+            x = FOUR_X0 + (i + 0.5) * FOUR_CELL
+            y = FOUR_Y0 + (FOUR_ROWS - 0.5 - h) * FOUR_CELL
+            c.circle(x, y, 9.5, darker(colours[who], 0.7))
+            c.circle(x - 1, y - 1, 8, colours[who])
+        if f >= len(moves):
+            # The winning line, glowing.
+            for (i, h, who) in moves[len(moves) - 7:len(moves):2]:
+                x = FOUR_X0 + (i + 0.5) * FOUR_CELL
+                y = FOUR_Y0 + (FOUR_ROWS - 0.5 - h) * FOUR_CELL
+                c.ring(x, y, 12.5, 10.5, (255, 250, 210, 200 if f % 2 == 0 else 90))
+        c.save(os.path.join(OUT, "FourInARowDiscs_%d.png" % f))
+    print("  FourInARowDiscs_{0..%d}.png  (256x%d)" % (total - 1, FOUR_H))
+
+
+def _build_four():
+    made = {"FourInARow": four_in_a_row()}
+    four_in_a_row_frames()
+    return made
+
+
+_register("fourinarow", _build_four)
+
+
+# ---------------------------------------------------------------------------
+# Tangle mat: four columns of coloured spots, and a spinner in the corner. The
+# arrow is an overlay that spins while anyone is playing.
+# ---------------------------------------------------------------------------
+
+TANGLE_SPOTS = ((214, 64, 54, 255), (60, 110, 200, 255), (238, 200, 60, 255), (80, 170, 84, 255))
+TANGLE_SPIN = (330, 326)
+
+
+def tangle_mat():
+    c = Canvas(384, 384)
+    mat = (246, 244, 238, 255)
+    silhouette(c, [("rect", 14, 14, 370, 290, 8, mat)], 4.0)
+    for i, col in enumerate(TANGLE_SPOTS):
+        for j in range(4):
+            x = 62 + i * 87
+            y = 50 + j * 66
+            c.circle(x, y, 25, darker(col, 0.72))
+            c.circle(x, y, 23, col)
+    # The spinner card, set down beside the mat.
+    silhouette(c, [("rect", TANGLE_SPIN[0] - 44, TANGLE_SPIN[1] - 40, TANGLE_SPIN[0] + 44,
+                    TANGLE_SPIN[1] + 40, 5, mat)], 3.0)
+    for k, col in enumerate(TANGLE_SPOTS):
+        c.wedge(TANGLE_SPIN[0], TANGLE_SPIN[1], 32, 0, k * 90, (k + 1) * 90, col)
+    c.circle(TANGLE_SPIN[0], TANGLE_SPIN[1], 3.5, DARK)
+    save_single(c, "TangleMat")
+    return c
+
+
+def tangle_spinner_frames(total=8):
+    for f in range(total):
+        c = Canvas(384, 384)
+        a = math.radians(f * 360.0 / total * 2.6 + 20)
+        x, y = TANGLE_SPIN
+        tip = (x + math.cos(a) * 30, y + math.sin(a) * 30)
+        tail = (x - math.cos(a) * 12, y - math.sin(a) * 12)
+        c.line(tail[0], tail[1], tip[0], tip[1], DARK, 6)
+        c.line(tail[0], tail[1], tip[0], tip[1], (250, 250, 250, 255), 3.4)
+        c.circle(x, y, 4.5, DARK)
+        c.save(os.path.join(OUT, "TangleSpinner_%d.png" % f))
+    print("  TangleSpinner_{0..%d}.png  (384x384)" % (total - 1))
+
+
+def _build_tangle():
+    made = {"TangleMat": tangle_mat()}
+    tangle_spinner_frames()
+    return made
+
+
+_register("tangle", _build_tangle)
+
 if __name__ == "__main__":
     main()

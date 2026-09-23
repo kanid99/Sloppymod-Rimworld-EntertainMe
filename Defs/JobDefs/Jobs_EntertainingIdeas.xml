@@ -261,4 +261,62 @@
     <allowOpportunisticPrefix>true</allowOpportunisticPrefix>
   </JobDef>
 
+
+  <JobDef>
+    <defName>EI_PlayBoardGame</defName>
+    <driverClass>EntertainingIdeas.JobDriver_PlayBoardGame</driverClass>
+    <reportString>playing a board game.</reportString>
+    <joyDuration>4000</joyDuration>
+    <joySkill>Intellectual</joySkill>
+    <joyXpPerTick>0.0015</joyXpPerTick>
+    <joyKind>Gaming_Cerebral</joyKind>
+    <taleOnCompletion>PlayedGame</taleOnCompletion>
+    <allowOpportunisticPrefix>true</allowOpportunisticPrefix>
+  </JobDef>
+
+  <JobDef>
+    <defName>EI_Rally</defName>
+    <driverClass>EntertainingIdeas.JobDriver_Rally</driverClass>
+    <reportString>playing at TargetA.</reportString>
+    <joyDuration>3000</joyDuration>
+    <joySkill>Melee</joySkill>
+    <joyXpPerTick>0.003</joyXpPerTick>
+    <joyKind>Gaming_Dexterity</joyKind>
+    <taleOnCompletion>PlayedGame</taleOnCompletion>
+    <allowOpportunisticPrefix>true</allowOpportunisticPrefix>
+  </JobDef>
+
+  <JobDef>
+    <defName>EI_Play_NoughtsCrosses</defName>
+    <driverClass>JobDriver_WatchBuilding</driverClass>
+    <reportString>playing lawn noughts and crosses.</reportString>
+    <joyDuration>3600</joyDuration>
+    <joySkill>Shooting</joySkill>
+    <joyXpPerTick>0.004</joyXpPerTick>
+    <joyKind>Gaming_Dexterity</joyKind>
+    <taleOnCompletion>PlayedGame</taleOnCompletion>
+    <allowOpportunisticPrefix>true</allowOpportunisticPrefix>
+  </JobDef>
+
+  <JobDef>
+    <defName>EI_Play_FourInARow</defName>
+    <driverClass>JobDriver_WatchBuilding</driverClass>
+    <reportString>playing four-in-a-row.</reportString>
+    <joyDuration>3000</joyDuration>
+    <joySkill>Intellectual</joySkill>
+    <joyXpPerTick>0.0015</joyXpPerTick>
+    <joyKind>Gaming_Cerebral</joyKind>
+    <taleOnCompletion>PlayedGame</taleOnCompletion>
+    <allowOpportunisticPrefix>true</allowOpportunisticPrefix>
+  </JobDef>
+
+  <JobDef>
+    <defName>EI_PlayTangle</defName>
+    <driverClass>EntertainingIdeas.JobDriver_PlayTangle</driverClass>
+    <reportString>playing tangle.</reportString>
+    <joyDuration>2500</joyDuration>
+    <joyKind>Social</joyKind>
+    <allowOpportunisticPrefix>true</allowOpportunisticPrefix>
+  </JobDef>
+
 </Defs>

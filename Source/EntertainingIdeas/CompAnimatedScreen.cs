@@ -28,6 +28,12 @@ namespace EntertainingIdeas
         public int recheckInterval = 20;
         /// <summary>Jobs that count as using this building.</summary>
         public List<JobDef> playJobs = new List<JobDef>();
+        /// <summary>
+        /// Only draw when the building faces one of these. For something with
+        /// a front face, like a TV: the face-on animation belongs to the view
+        /// that shows the face, not to the edge-on side views. Empty = always.
+        /// </summary>
+        public List<Rot4> drawRotations = new List<Rot4>();
         /// <summary>Turn the frames to match a rotatable building's facing.</summary>
         public bool rotateWithBuilding = false;
         /// <summary>
@@ -147,6 +153,11 @@ namespace EntertainingIdeas
                 return;
             }
             if (Props.requireFuel && fuel != null && !fuel.HasFuel)
+            {
+                return;
+            }
+            if (Props.drawRotations != null && Props.drawRotations.Count > 0
+                && !Props.drawRotations.Contains(parent.Rotation))
             {
                 return;
             }

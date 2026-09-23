@@ -306,4 +306,87 @@
     </requiredCapacities>
   </JoyGiverDef>
 
+
+  <JoyGiverDef>
+    <defName>EI_PlayBoardGame</defName>
+    <giverClass>EntertainingIdeas.JoyGiver_BoardGame</giverClass>
+    <baseChance>2.5</baseChance>
+    <thingDefs>
+      <li>EI_BoardGameTable</li>
+      <li>EI_SeedPitBoard</li>
+    </thingDefs>
+    <jobDef>EI_PlayBoardGame</jobDef>
+    <joyKind>Gaming_Cerebral</joyKind>
+    <requiredCapacities>
+      <li>Sight</li>
+      <li>Manipulation</li>
+    </requiredCapacities>
+  </JoyGiverDef>
+
+  <!-- One player to each end; a second finds the other end. -->
+  <JoyGiverDef>
+    <defName>EI_Rally</defName>
+    <giverClass>EntertainingIdeas.JoyGiver_Rally</giverClass>
+    <baseChance>3</baseChance>
+    <thingDefs>
+      <li>EI_TableTennisTable</li>
+      <li>EI_AirHockeyTable</li>
+    </thingDefs>
+    <jobDef>EI_Rally</jobDef>
+    <joyKind>Gaming_Dexterity</joyKind>
+    <requiredCapacities>
+      <li>Sight</li>
+      <li>Manipulation</li>
+      <li>Moving</li>
+    </requiredCapacities>
+  </JoyGiverDef>
+
+  <!-- Cornhole's giver: vanilla watch-building, capped at two throwers. -->
+  <JoyGiverDef>
+    <defName>EI_Play_NoughtsCrosses</defName>
+    <giverClass>EntertainingIdeas.JoyGiver_Cornhole</giverClass>
+    <baseChance>3</baseChance>
+    <desireSit>false</desireSit>
+    <thingDefs>
+      <li>EI_LawnNoughtsCrosses</li>
+    </thingDefs>
+    <jobDef>EI_Play_NoughtsCrosses</jobDef>
+    <joyKind>Gaming_Dexterity</joyKind>
+    <requiredCapacities>
+      <li>Sight</li>
+      <li>Manipulation</li>
+    </requiredCapacities>
+  </JoyGiverDef>
+
+  <JoyGiverDef>
+    <defName>EI_Play_FourInARow</defName>
+    <giverClass>EntertainingIdeas.JoyGiver_Cornhole</giverClass>
+    <baseChance>2.5</baseChance>
+    <desireSit>false</desireSit>
+    <thingDefs>
+      <li>EI_FourInARow</li>
+    </thingDefs>
+    <jobDef>EI_Play_FourInARow</jobDef>
+    <joyKind>Gaming_Cerebral</joyKind>
+    <requiredCapacities>
+      <li>Sight</li>
+      <li>Manipulation</li>
+    </requiredCapacities>
+  </JoyGiverDef>
+
+  <JoyGiverDef>
+    <defName>EI_PlayTangle</defName>
+    <giverClass>EntertainingIdeas.JoyGiver_Tangle</giverClass>
+    <baseChance>2.5</baseChance>
+    <thingDefs>
+      <li>EI_TangleMat</li>
+    </thingDefs>
+    <jobDef>EI_PlayTangle</jobDef>
+    <joyKind>Social</joyKind>
+    <requiredCapacities>
+      <li>Moving</li>
+      <li>Manipulation</li>
+    </requiredCapacities>
+  </JoyGiverDef>
+
 </Defs>
