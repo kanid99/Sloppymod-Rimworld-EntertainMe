@@ -187,6 +187,9 @@
           <li>EI_Play_Pinball</li>
         </playJobs>
       </li>
+      <!-- Electric games wear out like a television does: a breakdown cuts
+           the power until someone repairs it with a component. -->
+      <li Class="CompProperties_Breakdownable"/>
     </comps>
     <statBases>
       <Flammability>1.0</Flammability>
@@ -372,6 +375,9 @@
         <basePowerConsumption>100</basePowerConsumption>
       </li>
       <li Class="CompProperties_Flickable"/>
+      <!-- Electric games wear out like a television does: a breakdown cuts
+           the power until someone repairs it with a component. -->
+      <li Class="CompProperties_Breakdownable"/>
     </comps>
     <researchPrerequisites>
       <li>TubeTelevision</li>
@@ -547,6 +553,9 @@
         <glowRadius>5</glowRadius>
         <glowColor>(110,220,230,0)</glowColor>
       </li>
+      <!-- Electric games wear out like a television does: a breakdown cuts
+           the power until someone repairs it with a component. -->
+      <li Class="CompProperties_Breakdownable"/>
     </comps>
     <researchPrerequisites>
       <li>Fabrication</li>
@@ -950,6 +959,9 @@
         <drawSize>(3,1)</drawSize>
         <projectionRange>12</projectionRange>
       </li>
+      <!-- Electric games wear out like a television does: a breakdown cuts
+           the power until someone repairs it with a component. -->
+      <li Class="CompProperties_Breakdownable"/>
     </comps>
     <researchPrerequisites>
       <li>AdvancedFabrication</li>
@@ -1375,6 +1387,9 @@
           <li>EI_Play_Skittles</li>
         </playJobs>
       </li>
+      <!-- Electric games wear out like a television does: a breakdown cuts
+           the power until someone repairs it with a component. -->
+      <li Class="CompProperties_Breakdownable"/>
     </comps>
     <researchPrerequisites>
       <li>ComplexFurniture</li>
@@ -1476,6 +1491,9 @@
         <performerSkill>Artistic</performerSkill>
         <performerXpPerPulse>4</performerXpPerPulse>
       </li>
+      <!-- Electric games wear out like a television does: a breakdown cuts
+           the power until someone repairs it with a component. -->
+      <li Class="CompProperties_Breakdownable"/>
     </comps>
     <researchPrerequisites>
       <li>MicroelectronicsBasics</li>
@@ -1547,6 +1565,9 @@
           <li>EI_Play_Gravball</li>
         </playJobs>
       </li>
+      <!-- Electric games wear out like a television does: a breakdown cuts
+           the power until someone repairs it with a component. -->
+      <li Class="CompProperties_Breakdownable"/>
     </comps>
     <researchPrerequisites>
       <li>AdvancedFabrication</li>
