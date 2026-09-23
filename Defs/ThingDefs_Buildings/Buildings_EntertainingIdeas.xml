@@ -578,9 +578,15 @@
     <rotatable>true</rotatable>
     <defaultPlacingRot>South</defaultPlacingRot>
     <designatorDropdown>EI_VistaPanels</designatorDropdown>
-    <!-- A wall attachment, the same shape of thing as a wall lamp: it shares
-         the wall's own cell and takes no floor. That is the whole point -
-         anything standing in the room in front of it is left alone. -->
+    <!-- Lives in the wall's own cell and takes no floor, so anything standing
+         in the room in front of it is left alone.
+
+         canPlaceOverWall, the way a power conduit shares a wall's cell - NOT
+         isAttachment. Vanilla's attachments (wall lamps) sit on the floor with
+         the wall behind them, and vanilla turns anything flagged isAttachment
+         to put a wall at its back. For a panel inside a wall, the only sides
+         with wall "behind" are along the wall, so it was spun to face along
+         it, every frame, over the top of this mod's own facing. -->
     <size>(1,1)</size>
     <altitudeLayer>BuildingOnTop</altitudeLayer>
     <passability>Standable</passability>
@@ -593,7 +599,7 @@
     <canOverlapZones>true</canOverlapZones>
     <building>
       <isEdifice>false</isEdifice>
-      <isAttachment>true</isAttachment>
+      <canPlaceOverWall>true</canPlaceOverWall>
     </building>
     <placeWorkers>
       <li>EntertainingIdeas.PlaceWorker_WallMountedDisplay</li>
@@ -2047,7 +2053,8 @@
 
   <!-- What a finished puzzle becomes. Not buildable: the only way to get one
        is to finish the puzzle. Mounts in a wall exactly as the one-tile vista
-       panel does, with the same place worker and auto-facing. -->
+       panel does - same place worker, same auto-facing, and the same
+       canPlaceOverWall rather than isAttachment, for the same reason. -->
   <ThingDef Name="EI_FramedJigsawBase" ParentName="BuildingBase" Abstract="True">
     <thingClass>Building</thingClass>
     <rotatable>true</rotatable>
@@ -2068,7 +2075,7 @@
     </thingCategories>
     <building>
       <isEdifice>false</isEdifice>
-      <isAttachment>true</isAttachment>
+      <canPlaceOverWall>true</canPlaceOverWall>
     </building>
     <placeWorkers>
       <li>EntertainingIdeas.PlaceWorker_WallMountedDisplay</li>

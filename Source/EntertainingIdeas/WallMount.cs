@@ -163,11 +163,16 @@ namespace EntertainingIdeas
     /// standing there - a shelf, an armchair - was marked for removal to make
     /// space for a picture on the wall behind it. Wrong trade.
     ///
-    /// So the panel is one cell now, sitting in the wall cell the way a wall
-    /// lamp does, and the picture is simply drawn three tiles wide across the
-    /// neighbouring wall. Vanilla's wall-attachment support is single-cell -
-    /// GenConstruct.GetWallAttachedTo takes one position - and one cell is all
-    /// this needs. Nothing in the room is touched.
+    /// So the panel is one cell now, sitting in the wall cell itself the way a
+    /// power conduit does (canPlaceOverWall), and the picture is simply drawn
+    /// up to three tiles wide across the neighbouring wall. Nothing in the
+    /// room is touched.
+    ///
+    /// Deliberately not a vanilla wall attachment (isAttachment). Those sit on
+    /// the floor with the wall behind them - GenConstruct.GetWallAttachedTo
+    /// looks for the wall at the back of the thing - and vanilla turns them to
+    /// put one there. From inside a wall the only sides with wall behind are
+    /// along the wall, so the panel was forced to face sideways.
     ///
     /// What is checked: the cell is wall, the wall runs far enough either side
     /// to carry the width of the picture, and the side it faces is open.
@@ -319,6 +324,12 @@ namespace EntertainingIdeas
             return found;
         }
 
+        /// <summary>True when this rotation shows the picture to solid wall.</summary>
+        public static bool FacesIntoWall(Map map, IntVec3 cell, Rot4 rot)
+        {
+            return Score(map, cell, rot) == BlockedSide;
+        }
+
         private const int BlockedSide = 0;
         private const int OpenSide = 1;
         private const int RoomSide = 2;
@@ -372,6 +383,25 @@ namespace EntertainingIdeas
         {
             compClass = typeof(CompFaceOpenSide);
         }
+
+        public override IEnumerable<string> ConfigErrors(ThingDef parentDef)
+        {
+            foreach (string error in base.ConfigErrors(parentDef))
+            {
+                yield return error;
+            }
+            // This is how the vista panel came to face along its wall. Vanilla
+            // treats isAttachment things as sitting on the floor with a wall at
+            // their back and turns them to match; for a thing inside the wall
+            // that is always the wrong way, and vanilla re-applies it every
+            // frame, over the top of this comp and the place worker.
+            if (parentDef != null && parentDef.building != null && parentDef.building.isAttachment)
+            {
+                yield return "CompProperties_FaceOpenSide on " + parentDef.defName
+                             + ": use canPlaceOverWall, not isAttachment. Vanilla rotates attachments "
+                             + "to put a wall behind them, which turns an in-wall panel to face along the wall.";
+            }
+        }
     }
 
     public class CompFaceOpenSide : ThingComp
@@ -379,7 +409,17 @@ namespace EntertainingIdeas
         public override void PostSpawnSetup(bool respawningAfterLoad)
         {
             base.PostSpawnSetup(respawningAfterLoad);
-            if (respawningAfterLoad || parent.Map == null)
+            if (parent.Map == null)
+            {
+                return;
+            }
+            // On load, leave a panel alone unless it is showing its picture to
+            // solid wall. Panels built before 0.9.49 were turned to face along
+            // their wall by vanilla's attachment logic; this straightens those
+            // without ever overriding one a player deliberately aimed at a
+            // room or a doorway.
+            if (respawningAfterLoad
+                && !PlaceWorker_WallMountedDisplay.FacesIntoWall(parent.Map, parent.Position, parent.Rotation))
             {
                 return;
             }
