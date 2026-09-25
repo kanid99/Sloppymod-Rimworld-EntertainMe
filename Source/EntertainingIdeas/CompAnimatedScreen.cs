@@ -3,6 +3,7 @@ using RimWorld;
 using UnityEngine;
 using Verse;
 using Verse.AI;
+using Verse.Sound;
 
 namespace EntertainingIdeas
 {
@@ -14,6 +15,13 @@ namespace EntertainingIdeas
     /// "<framePath>_(frameCount-1)". They are drawn on top of the building at
     /// the same draw size, so a frame only needs to cover the part that moves.
     /// </summary>
+    /// <summary>A sound to play when the play loop reaches a particular frame.</summary>
+    public class FrameSound
+    {
+        public int frame;
+        public SoundDef sound;
+    }
+
     public class CompProperties_AnimatedScreen : CompProperties
     {
         /// <summary>Texture path without the frame index suffix.</summary>
@@ -28,6 +36,19 @@ namespace EntertainingIdeas
         public int recheckInterval = 20;
         /// <summary>Jobs that count as using this building.</summary>
         public List<JobDef> playJobs = new List<JobDef>();
+        /// <summary>
+        /// Sounds tied to the play loop: each plays once when the loop reaches
+        /// its frame, so a sound lands on the moment it belongs to - the ore
+        /// vanishing, the player leaving the girder. Frames come off the game
+        /// clock, so nothing plays while the game is paused.
+        /// </summary>
+        public List<FrameSound> frameSounds = new List<FrameSound>();
+        /// <summary>
+        /// Played now and then while the attract loop runs, so an idle cabinet
+        /// reads as switched on. Kept rare: every idleSoundIntervalTicks.
+        /// </summary>
+        public SoundDef idleSound;
+        public int idleSoundIntervalTicks = 3000;
         /// <summary>
         /// Only draw when the building faces one of these. For something with
         /// a front face, like a TV: the face-on animation belongs to the view
@@ -107,6 +128,25 @@ namespace EntertainingIdeas
             {
                 yield return "CompProperties_AnimatedScreen idle frames do nothing when requireUser is false: the play loop already runs constantly.";
             }
+            if (frameSounds != null)
+            {
+                for (int i = 0; i < frameSounds.Count; i++)
+                {
+                    if (frameSounds[i].sound == null)
+                    {
+                        yield return "CompProperties_AnimatedScreen frameSounds entry " + i + " has no sound.";
+                    }
+                    else if (frameSounds[i].frame < 0 || frameSounds[i].frame >= frameCount)
+                    {
+                        yield return "CompProperties_AnimatedScreen frameSounds entry " + i + " names frame "
+                                     + frameSounds[i].frame + ", outside 0.." + (frameCount - 1) + ".";
+                    }
+                }
+            }
+            if (idleSound != null && idleSoundIntervalTicks < 60)
+            {
+                yield return "CompProperties_AnimatedScreen idleSoundIntervalTicks under 60 would nag.";
+            }
             if (requireUser && (playJobs == null || playJobs.Count == 0))
             {
                 yield return "CompProperties_AnimatedScreen needs at least one entry in playJobs when requireUser is true.";
@@ -121,6 +161,8 @@ namespace EntertainingIdeas
         private CompPowerTrader power;
         private CompRefuelable fuel;
         private bool inUse;
+        private int lastSoundFrame = -1;
+        private int lastIdleBucket = -1;
         private int nextRecheckTick = -99999;
 
         private CompProperties_AnimatedScreen Props
@@ -177,7 +219,17 @@ namespace EntertainingIdeas
                     : Props.ticksPerFrame * 3;
             }
 
-            Graphic graphic = set.At(set.IndexFor(ticksPerFrame));
+            int index = set.IndexFor(ticksPerFrame);
+            if (set == frames)
+            {
+                PlayFrameSounds(index);
+            }
+            else
+            {
+                PlayIdleSound();
+            }
+
+            Graphic graphic = set.At(index);
             if (graphic == null)
             {
                 return;
@@ -193,6 +245,53 @@ namespace EntertainingIdeas
                 : drawPos.y + Props.altitudeOffset;
             float extraRotation = Props.rotateWithBuilding ? parent.Rotation.AsAngle - 180f : 0f;
             graphic.Draw(drawPos, Rot4.North, parent, extraRotation);
+        }
+
+        /// <summary>
+        /// Once per frame reached, not once per rendered frame: at a hundred
+        /// frames a second the same animation frame is drawn many times over.
+        /// Only runs while the building is drawn, which is fine - RimWorld's
+        /// map sounds come from where they happen, and one out of view would
+        /// not be heard anyway.
+        /// </summary>
+        private void PlayFrameSounds(int index)
+        {
+            lastIdleBucket = -1;            // after play, wait a full interval before the jingle
+            if (Props.frameSounds == null || Props.frameSounds.Count == 0 || index == lastSoundFrame)
+            {
+                return;
+            }
+            lastSoundFrame = index;
+            for (int i = 0; i < Props.frameSounds.Count; i++)
+            {
+                FrameSound entry = Props.frameSounds[i];
+                if (entry.frame == index && entry.sound != null)
+                {
+                    entry.sound.PlayOneShot(parent);
+                }
+            }
+        }
+
+        /// <summary>
+        /// The attract jingle, every idleSoundIntervalTicks of game time. Each
+        /// cabinet is offset by its id, so a row of them does not chime in
+        /// unison, and the first interval is waited out rather than played on
+        /// sight.
+        /// </summary>
+        private void PlayIdleSound()
+        {
+            lastSoundFrame = -1;
+            if (Props.idleSound == null)
+            {
+                return;
+            }
+            int interval = Mathf.Max(60, Props.idleSoundIntervalTicks);
+            int bucket = (Find.TickManager.TicksGame + parent.thingIDNumber * 131) / interval;
+            if (lastIdleBucket >= 0 && bucket != lastIdleBucket)
+            {
+                Props.idleSound.PlayOneShot(parent);
+            }
+            lastIdleBucket = bucket;
         }
 
         /// <summary>

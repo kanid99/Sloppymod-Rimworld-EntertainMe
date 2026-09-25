@@ -410,6 +410,17 @@
         <idleFramePath>EntertainingIdeas/Buildings/CocktailArcadeTitle</idleFramePath>
         <idleFrameCount>8</idleFrameCount>
         <idleTicksPerFrame>20</idleTicksPerFrame>
+        <!-- The loop is two seconds, repeated for a whole session, so only a
+             few of its moments make a sound: a round cleared as it starts
+             over, and the pick at each of the other three corners. -->
+        <frameSounds>
+          <li><frame>0</frame><sound>EI_OreRushSeam</sound></li>
+          <li><frame>4</frame><sound>EI_OreRushDig</sound></li>
+          <li><frame>8</frame><sound>EI_OreRushDig</sound></li>
+          <li><frame>12</frame><sound>EI_OreRushDig</sound></li>
+        </frameSounds>
+        <idleSound>EI_ArcadeAttract</idleSound>
+        <idleSoundIntervalTicks>7200</idleSoundIntervalTicks>
         <playJobs>
           <li>EI_Play_CocktailArcade</li>
         </playJobs>
@@ -1900,6 +1911,16 @@
         <idleFramePath>EntertainingIdeas/Buildings/CocktailClimbTitle</idleFramePath>
         <idleFrameCount>8</idleFrameCount>
         <idleTicksPerFrame>20</idleTicksPerFrame>
+        <!-- Every other hop, and the rock that sets off mid-loop. -->
+        <frameSounds>
+          <li><frame>0</frame><sound>EI_ThrumboJump</sound></li>
+          <li><frame>4</frame><sound>EI_ThrumboJump</sound></li>
+          <li><frame>6</frame><sound>EI_ThrumboRoll</sound></li>
+          <li><frame>8</frame><sound>EI_ThrumboJump</sound></li>
+          <li><frame>12</frame><sound>EI_ThrumboJump</sound></li>
+        </frameSounds>
+        <idleSound>EI_ArcadeAttract</idleSound>
+        <idleSoundIntervalTicks>7200</idleSoundIntervalTicks>
         <playJobs>
           <li>EI_Play_CocktailArcade</li>
         </playJobs>

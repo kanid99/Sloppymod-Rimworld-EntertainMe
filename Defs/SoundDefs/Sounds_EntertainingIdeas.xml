@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Defs>
+
+  <!-- The arcade tables' sounds. The clips are synthesised by
+       Source/SoundGen/generate_sounds.py - cabinets of this kind bleeped
+       because they were built from oscillators, so a generated sound is the
+       real article rather than a stand-in.
+
+       Everything here is meant to be tuned by ear: volumeRange is how loud
+       (vanilla's own one-shots mostly sit between 15 and 30), pitchRange is a
+       random spread so repeats do not sound mechanical, and distRange is how
+       far away a colonist - or the camera - can hear it. The clips differ in
+       how dense they are, so the volumes are set to even out how loud they
+       seem rather than how loud the files are. -->
+
+  <!-- Ore Rush: the miner's pick taking a piece of ore. -->
+  <SoundDef>
+    <defName>EI_OreRushDig</defName>
+    <context>MapOnly</context>
+    <maxSimultaneous>2</maxSimultaneous>
+    <subSounds>
+      <li>
+        <grains>
+          <li Class="AudioGrain_Clip">
+            <clipPath>EntertainingIdeas/Arcade/OreRushDig</clipPath>
+          </li>
+        </grains>
+        <volumeRange>15~15</volumeRange>
+        <pitchRange>0.92~1.08</pitchRange>
+        <distRange>0~30</distRange>
+      </li>
+    </subSounds>
+  </SoundDef>
+
+  <!-- Ore Rush: a round of the tunnel cleared. -->
+  <SoundDef>
+    <defName>EI_OreRushSeam</defName>
+    <context>MapOnly</context>
+    <maxSimultaneous>2</maxSimultaneous>
+    <subSounds>
+      <li>
+        <grains>
+          <li Class="AudioGrain_Clip">
+            <clipPath>EntertainingIdeas/Arcade/OreRushSeam</clipPath>
+          </li>
+        </grains>
+        <volumeRange>17~17</volumeRange>
+        <pitchRange>0.98~1.02</pitchRange>
+        <distRange>0~30</distRange>
+      </li>
+    </subSounds>
+  </SoundDef>
+
+  <!-- Thrumbo!: the player hopping along the girder. -->
+  <SoundDef>
+    <defName>EI_ThrumboJump</defName>
+    <context>MapOnly</context>
+    <maxSimultaneous>2</maxSimultaneous>
+    <subSounds>
+      <li>
+        <grains>
+          <li Class="AudioGrain_Clip">
+            <clipPath>EntertainingIdeas/Arcade/ThrumboJump</clipPath>
+          </li>
+        </grains>
+        <volumeRange>12~12</volumeRange>
+        <pitchRange>0.94~1.06</pitchRange>
+        <distRange>0~30</distRange>
+      </li>
+    </subSounds>
+  </SoundDef>
+
+  <!-- Thrumbo!: a rock set rolling down the girders. -->
+  <SoundDef>
+    <defName>EI_ThrumboRoll</defName>
+    <context>MapOnly</context>
+    <maxSimultaneous>2</maxSimultaneous>
+    <subSounds>
+      <li>
+        <grains>
+          <li Class="AudioGrain_Clip">
+            <clipPath>EntertainingIdeas/Arcade/ThrumboRoll</clipPath>
+          </li>
+        </grains>
+        <volumeRange>24~24</volumeRange>
+        <pitchRange>0.9~1.1</pitchRange>
+        <distRange>0~30</distRange>
+      </li>
+    </subSounds>
+  </SoundDef>
+
+  <!-- Either cabinet, idle: a soft jingle every couple of minutes. -->
+  <SoundDef>
+    <defName>EI_ArcadeAttract</defName>
+    <context>MapOnly</context>
+    <maxSimultaneous>1</maxSimultaneous>
+    <subSounds>
+      <li>
+        <grains>
+          <li Class="AudioGrain_Clip">
+            <clipPath>EntertainingIdeas/Arcade/ArcadeAttract</clipPath>
+          </li>
+        </grains>
+        <volumeRange>9~9</volumeRange>
+        <pitchRange>1~1</pitchRange>
+        <distRange>0~30</distRange>
+      </li>
+    </subSounds>
+  </SoundDef>
+
+</Defs>

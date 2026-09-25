@@ -51,6 +51,12 @@ for each — see [Versions](#versions).
 | Tabletop orrery | 1×1 | Solitary relaxation | — | Complex furniture |
 | Grand orrery | 2×2 | Solitary relaxation | — | Complex furniture |
 
+The two arcade tables have sound: synthesised chip blips tied to the frame of
+the screen animation they belong to - Ore Rush's pick and cleared rounds,
+Thrumbo!'s hops and rolling rocks - and a soft jingle every couple of minutes
+while idle. Everything else is silent for now. Volumes, pitch spread and range
+are in `Defs/SoundDefs`, meant to be tuned by ear.
+
 Every electric game and screen — pinball, the arcade tables, air hockey, the
 hologame pod, the holotheater, karaoke, gravball and the bowling lane — can break down the way
 a television does, sitting dark until a colonist repairs it with a component.
@@ -318,6 +324,7 @@ python3 Tools/validate.py                      # def sanity checks
 ./Tools/build.sh                               # rebuild both assemblies
 ./Tools/check_api.sh                           # XML classes, per game version
 python3 Source/TextureGen/generate_textures.py  # redraw everything (~5 min)
+python3 Source/SoundGen/generate_sounds.py     # re-synthesise the arcade sounds
 ```
 
 `build.sh` and `check_api.sh` need a C# compiler (`mono-devel` provides `mcs`)
