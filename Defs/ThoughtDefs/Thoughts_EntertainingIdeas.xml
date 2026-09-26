@@ -80,4 +80,33 @@
     </stages>
   </ThoughtDef>
 
+  <!-- The angler, each time something comes up through the ice. -->
+  <ThoughtDef>
+    <defName>EI_CaughtFish</defName>
+    <durationDays>0.5</durationDays>
+    <stackLimit>3</stackLimit>
+    <stackedEffectMultiplier>0.6</stackedEffectMultiplier>
+    <stages>
+      <li>
+        <label>caught a fish</label>
+        <description>The line went heavy and something came up through the ice, all silver and fury. I put it back. I will remember where it lives.</description>
+        <baseMoodEffect>3</baseMoodEffect>
+      </li>
+    </stages>
+  </ThoughtDef>
+
+  <!-- Bigger than anything the hole has given up before. -->
+  <ThoughtDef>
+    <defName>EI_LandedRecordFish</defName>
+    <durationDays>2</durationDays>
+    <stackLimit>1</stackLimit>
+    <stages>
+      <li>
+        <label>landed a record fish</label>
+        <description>Biggest one ever pulled out of that hole, and I have the numb fingers to prove it. Everyone is going to hear about this. Several times.</description>
+        <baseMoodEffect>7</baseMoodEffect>
+      </li>
+    </stages>
+  </ThoughtDef>
+
 </Defs>

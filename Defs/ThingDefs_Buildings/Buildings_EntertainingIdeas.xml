@@ -2666,4 +2666,87 @@
     </comps>
   </ThingDef>
 
+  <!-- ======================================================================
+       Ice fishing hole. Cut into water or ice, fished from a bucket beside
+       it. RimWorld's lakes never freeze, so the ice is the comp's own: it
+       thickens through cold days and thaws through warm ones, and nobody
+       goes out until it will hold them. Catch and release.
+       ====================================================================== -->
+  <ThingDef ParentName="EI_JoyBuildingBase">
+    <defName>EI_IceFishingHole</defName>
+    <label>ice fishing hole</label>
+    <description>A hole augered through the ice, a tip-up rigged over it with a flag on a spring, and an upturned bucket to sit on. Somebody wrapped up warm goes out, sits down, jigs a line, and waits. Now and then a perch, a char, a burbot or - once a winter, if they are lucky - a pike the length of an arm comes up flapping onto the ice. Then it goes back down the hole. The point was never the fish.
+
+Cut into water or ice, with somewhere to sit beside it: the shore, the shallows or more ice. Lakes do not freeze on their own here, so the hole keeps its own ice - it thickens through cold days, thaws through warm ones, and nobody goes out on less than 10 cm. On sea ice or an ice sheet it is always thick enough.
+
+Nobody goes fishing who would be cold outside in what they are wearing. Someone who knows animals catches more, and bigger. The hole remembers its biggest catch, and who landed it.</description>
+    <graphicData>
+      <texPath>EntertainingIdeas/Buildings/IceFishingHole</texPath>
+      <graphicClass>Graphic_Multi</graphicClass>
+      <drawSize>(1.4,1.4)</drawSize>
+      <damageData>
+        <rect>(0.1,0.1,0.8,0.8)</rect>
+      </damageData>
+    </graphicData>
+    <size>(1,1)</size>
+    <rotatable>true</rotatable>
+    <defaultPlacingRot>North</defaultPlacingRot>
+    <hasInteractionCell>true</hasInteractionCell>
+    <interactionCellOffset>(0,0,-1)</interactionCellOffset>
+    <!-- Water and ice carry none of the affordances a floor does; the place
+         worker decides where a hole can go instead. -->
+    <terrainAffordanceNeeded IsNull="True" />
+    <!-- A hole cannot be packed up and carried off. -->
+    <minifiedDef IsNull="True" />
+    <tickerType>Rare</tickerType>
+    <fillPercent>0.1</fillPercent>
+    <pathCost>30</pathCost>
+    <castEdgeShadows>false</castEdgeShadows>
+    <statBases>
+      <MaxHitPoints>60</MaxHitPoints>
+      <WorkToBuild>1200</WorkToBuild>
+      <Beauty>0</Beauty>
+      <Flammability>0</Flammability>
+      <JoyGainFactor>1.1</JoyGainFactor>
+    </statBases>
+    <!-- Not stuffable: a tip-up and a bucket are wood whatever else the
+         colony has. No research: a tribe fishes through ice as well as
+         anyone. -->
+    <costList>
+      <WoodLog>25</WoodLog>
+    </costList>
+    <building>
+      <joyKind>Meditative</joyKind>
+    </building>
+    <placeWorkers>
+      <li>EntertainingIdeas.PlaceWorker_IceFishingHole</li>
+    </placeWorkers>
+    <comps>
+      <li Class="EntertainingIdeas.CompProperties_IceFishing">
+        <safeThicknessCm>10</safeThicknessCm>
+        <maxThicknessCm>60</maxThicknessCm>
+        <freezeCmPerDegreeDay>0.5</freezeCmPerDegreeDay>
+        <meltCmPerDegreeDay>1</meltCmPerDegreeDay>
+        <startCmPerSeasonalDegree>3</startCmPerSeasonalDegree>
+        <biteIntervalTicks>600</biteIntervalTicks>
+        <catchChance>0.3</catchChance>
+        <catchChancePerSkill>0.015</catchChancePerSkill>
+        <framePath>EntertainingIdeas/Buildings/IceFishingJig</framePath>
+        <frameCount>8</frameCount>
+        <ticksPerFrame>12</ticksPerFrame>
+        <drawSize>(1,2)</drawSize>
+        <fishTexPath>EntertainingIdeas/Buildings/IceFish</fishTexPath>
+        <bucketTexPath>EntertainingIdeas/Buildings/IceFishingBucket</bucketTexPath>
+        <flopTicks>420</flopTicks>
+        <species>
+          <li><label>perch</label><minKg>0.1</minKg><maxKg>0.8</maxKg><commonality>40</commonality><colour>(196,190,110)</colour></li>
+          <li><label>arctic char</label><minKg>0.4</minKg><maxKg>4</maxKg><commonality>18</commonality><colour>(224,150,128)</colour></li>
+          <li><label>burbot</label><minKg>0.4</minKg><maxKg>3</maxKg><commonality>14</commonality><colour>(150,132,96)</colour></li>
+          <li><label>lake trout</label><minKg>0.8</minKg><maxKg>7</maxKg><commonality>14</commonality><colour>(160,172,170)</colour></li>
+          <li><label>pike</label><minKg>1</minKg><maxKg>12</maxKg><commonality>8</commonality><colour>(140,164,104)</colour></li>
+        </species>
+      </li>
+    </comps>
+  </ThingDef>
+
 </Defs>

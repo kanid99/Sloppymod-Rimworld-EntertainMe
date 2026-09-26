@@ -31,6 +31,7 @@ for each — see [Versions](#versions).
 | Lawn noughts and crosses | 3×3 | Dexterity | A rope grid pegged out on the grass. Cornhole's throwing: each bag lands in a square, two colours, cleared after nine throws. Walkable. |
 | Giant four-in-a-row | 2×1 | Cerebral | An upright frame two players drop discs into. Drawn like a TV: the face from the south, an edge from the sides — face it the way the players should see it. |
 | Tangle mat | 3×3 | Social | Up to three colonists step from spot to spot as the spinner calls them, and every so often one goes over. |
+| Ice fishing hole | 1×1 | Meditative | Cut into water or ice, fished from an upturned bucket beside it. Keeps its own ice — see [ice fishing](#ice-fishing). Catch and release; remembers the record. Wood logs. Trains animals. |
 
 ### Industrial — powered
 
@@ -213,6 +214,39 @@ A `JobDef` carries only one `joySkill`, so the comp also hands the performer
 experience in a second skill: the job trains social, the comp adds artistic, and
 a turn at the microphone builds both.
 
+## Ice fishing
+
+RimWorld's lakes never freeze, so the hole keeps track of its own ice. Every
+rare tick it reads the map's outdoor temperature and grows or loses thickness:
+
+| | |
+|---|---|
+| Freezing | 0.5 cm per day per degree below 0 °C |
+| Thawing | 1 cm per day per degree above 0 °C — ice goes faster than it comes |
+| Safe to go out | 10 cm |
+| Cap | 60 cm |
+| Built mid-winter | starts at 3 cm per degree the *season* sits below freezing |
+
+So a hole cut in a -5 °C season starts at 15 cm and is fishable at once, a
+week at -10 °C adds 35 cm, and a warm spell of +5 °C takes 5 cm a day off it.
+On terrain that is already ice — sea ice, an ice sheet — it is always thick
+enough. The inspect pane says where the ice stands.
+
+It has to be cut into water or ice with a walkable cell beside it to sit on —
+the shore, the shallows, or more ice. A colonist only goes fishing when
+vanilla's own test for a walk says it is pleasant outside for them, which
+means dressed for the cold; if that stops being true, or the ice thins under
+them, they pack up.
+
+Every ten seconds or so there is a chance of a bite — 30%, plus 1.5% per level
+of Animals, the skill 1.6 fishes with and the one this trains. A catch is one
+of five species with its own weight range, rolled towards the small end and
+less so for a skilled angler. It flaps on the ice beside the hole for a few
+seconds and goes back down; the angler gets a small mood boost, or a bigger one
+and a message if it beats the hole's record. Catch and release on purpose: this
+is recreation, not a free food source, and it would out-produce a real fishing
+setup for nothing.
+
 ## Water
 
 A tub holds **one soak**. When it runs dry a colonist carries more out to it —
@@ -264,6 +298,7 @@ and `validate.py` fails if one is not.
 | Stand at its interaction cell | `JoyGiver_InteractBuildingInteractionCell` | `JobDriver_WatchBuilding` | pinball tables, hologame pod, skittles lane |
 | Stand back in a watch area | `JoyGiver_WatchBuilding` | `JobDriver_WatchBuilding` / `JobDriver_WatchTelevision` | shadow theater, aquarium, karaoke, gravball, holotheater |
 | Sit in the building itself | `JoyGiver_SitInBuilding` \* | `JobDriver_SitInBuilding` \* | massage chair, both tubs |
+| Sit at its interaction cell and fish | `JoyGiver_IceFishing` \* | `JobDriver_IceFishing` \* | ice fishing hole |
 
 \* This mod's own; everything else is a vanilla class.
 

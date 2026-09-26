@@ -389,4 +389,19 @@
     </requiredCapacities>
   </JoyGiverDef>
 
+  <JoyGiverDef>
+    <defName>EI_IceFish</defName>
+    <giverClass>EntertainingIdeas.JoyGiver_IceFishing</giverClass>
+    <baseChance>2</baseChance>
+    <thingDefs>
+      <li>EI_IceFishingHole</li>
+    </thingDefs>
+    <jobDef>EI_IceFish</jobDef>
+    <joyKind>Meditative</joyKind>
+    <requiredCapacities>
+      <li>Moving</li>
+      <li>Manipulation</li>
+    </requiredCapacities>
+  </JoyGiverDef>
+
 </Defs>

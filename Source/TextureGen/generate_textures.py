@@ -3343,5 +3343,157 @@ def _build_tangle():
 
 _register("tangle", _build_tangle)
 
+
+# ---------------------------------------------------------------------------
+# Ice fishing hole. Drawn south-facing, which puts the angler's bucket - the
+# interaction cell - off the TOP edge: a building facing south has its seat to
+# the north of it. The jig overlay follows the same convention, and the comp
+# turns both with the building.
+# ---------------------------------------------------------------------------
+
+ICE_HOLE = (90, 94)                 # centre of the hole on the 180px sprite
+
+
+def ice_fishing_hole():
+    import random
+    rng = random.Random("icefishing")
+    c = Canvas(180, 180)
+    ice, ice_dk = (206, 226, 236, 255), (170, 198, 214, 255)
+    snow = (236, 244, 248, 255)
+
+    # A ragged sheet of cleared ice, lobes rather than a clean disc.
+    lobes = [("ellipse", 90, 92, 64, 58, ice)]
+    for k in range(7):
+        a = k / 7.0 * 2 * math.pi + 0.3
+        lobes.append(("ellipse", 90 + math.cos(a) * 44, 92 + math.sin(a) * 40,
+                      rng.uniform(20, 28), rng.uniform(17, 24), ice))
+    silhouette(c, lobes, 3.0)
+    # Snow swept to the edges, the way a shovel leaves it.
+    for k in range(11):
+        a = k / 11.0 * 2 * math.pi + rng.uniform(-0.2, 0.2)
+        c.ellipse(90 + math.cos(a) * 52, 92 + math.sin(a) * 47,
+                  rng.uniform(9, 13), rng.uniform(6, 9), snow)
+    c.ellipse(90, 92, 46, 42, (214, 232, 241, 255))
+    # Cracks and trapped bubbles.
+    for _ in range(5):
+        a = rng.uniform(0, 2 * math.pi)
+        r0, r1 = rng.uniform(24, 30), rng.uniform(40, 50)
+        x0, y0 = 90 + math.cos(a) * r0, 92 + math.sin(a) * r0
+        mx, my = 90 + math.cos(a + 0.12) * (r0 + r1) / 2, 92 + math.sin(a + 0.12) * (r0 + r1) / 2
+        x1, y1 = 90 + math.cos(a - 0.05) * r1, 92 + math.sin(a - 0.05) * r1
+        c.line(x0, y0, mx, my, darker(ice_dk, 0.85, 170), 1.3)
+        c.line(mx, my, x1, y1, darker(ice_dk, 0.85, 140), 1.1)
+    for _ in range(9):
+        c.circle(rng.uniform(56, 124), rng.uniform(60, 128), rng.uniform(1.2, 2.6),
+                 (255, 255, 255, 150))
+
+    hx, hy = ICE_HOLE
+    # Auger slush heaped round the hole, then the hole itself: dark water
+    # under a thin skin of ice already trying to close it.
+    for k in range(14):
+        a = k / 14.0 * 2 * math.pi
+        c.circle(hx + math.cos(a) * 21, hy + math.sin(a) * 19, rng.uniform(5, 8), (226, 236, 240, 255))
+    c.ellipse(hx, hy, 18, 16, DARK)
+    c.ellipse(hx, hy, 15.5, 13.5, (22, 44, 62, 255))
+    c.ellipse(hx - 3, hy - 3, 9, 7, (34, 66, 88, 255))
+    c.ellipse(hx - 6, hy - 5, 4, 2.5, (120, 170, 196, 120))
+
+    # The tip-up: two crossed sticks over the hole's near-right side and a
+    # sprung flag, folded down while nothing is biting.
+    wood, wood_dk = (170, 126, 78, 255), (120, 84, 50, 255)
+    tx, ty = hx + 30, hy + 30
+    c.line(tx - 16, ty - 12, tx + 16, ty + 12, DARK, 6.5)
+    c.line(tx - 16, ty + 12, tx + 16, ty - 12, DARK, 6.5)
+    c.line(tx - 16, ty - 12, tx + 16, ty + 12, wood, 4)
+    c.line(tx - 16, ty + 12, tx + 16, ty - 12, wood_dk, 4)
+    c.line(tx, ty, tx - 26, ty - 22, DARK, 4)                  # the flag staff
+    c.line(tx, ty, tx - 26, ty - 22, (80, 80, 84, 255), 2)
+    c.poly([(tx - 26, ty - 22), (tx - 16, ty - 26), (tx - 20, ty - 14)], DARK)
+    c.poly([(tx - 24, ty - 21), (tx - 17, ty - 24), (tx - 20, ty - 16)], (232, 96, 40, 255))
+    c.circle(tx, ty, 3, (60, 60, 64, 255))
+
+    # A hand auger laid down on the ice to the left: T-handle, shaft, flights.
+    ax, ay = 40, 104
+    c.line(ax, ay - 30, ax, ay + 30, DARK, 6)
+    c.line(ax, ay - 30, ax, ay + 30, (150, 156, 164, 255), 3.4)
+    c.line(ax - 12, ay - 32, ax + 12, ay - 32, DARK, 7)
+    c.line(ax - 12, ay - 32, ax + 12, ay - 32, wood, 4.4)
+    for k in range(6):
+        y = ay + 4 + k * 4.5
+        c.line(ax - 7, y, ax + 7, y + 3, DARK, 2.6)
+        c.line(ax - 6, y, ax + 6, y + 3, (190, 196, 204, 255), 1.4)
+    save_rotations(c, "IceFishingHole")
+    return c
+
+
+def ice_fishing_jig_frames(total=8):
+    """The rod and line, drawn over the hole: the rod comes from the angler on
+    the seat a tile above (the canvas is two tiles tall, centred on the hole)
+    and the line drops into the water, twitched up and let fall, with a ring
+    spreading on the water each time it goes back down."""
+    for f in range(total):
+        t = f / float(total)
+        c = Canvas(128, 256)
+        lift = max(0.0, math.sin(t * 2 * math.pi)) * 7       # the jig
+        sway = math.sin(t * 2 * math.pi + 1.0) * 1.5
+        hx, hy = 64, 130
+        tipx, tipy = 63 + sway, 92 - lift
+        c.line(70, 44, tipx, tipy, DARK, 4)                   # the short ice rod, from the hands
+        c.line(70, 44, tipx, tipy, (60, 52, 44, 255), 2.2)
+        c.circle(tipx, tipy, 1.8, (236, 236, 236, 255))
+        c.line(tipx, tipy, hx + sway * 0.4, hy - 2, (236, 240, 244, 210), 1.0)
+        # A ripple, born as the line drops and spreading out to the rim.
+        u = (t + 0.25) % 1.0
+        r = 3 + u * 10
+        a = int(170 * (1 - u))
+        if a > 8:
+            c.ring(hx, hy, r + 0.9, r, (170, 210, 228, a))
+        c.circle(hx + sway * 0.4, hy - 2, 1.6, (230, 60, 50, 230))   # the jig's bead
+        c.save(os.path.join(OUT, "IceFishingJig_%d.png" % f))
+    print("  IceFishingJig_{0..%d}.png  (128x256)" % (total - 1))
+
+
+def ice_fishing_bucket():
+    """The upturned bucket the angler sits on."""
+    c = Canvas(64, 64)
+    wood, wood_dk = (166, 124, 80, 255), (128, 92, 58, 255)
+    c.circle(32, 32, 27, DARK)
+    c.circle(32, 32, 24, wood)
+    for k in range(10):                                     # staves
+        a = k / 10.0 * 2 * math.pi
+        c.line(32 + math.cos(a) * 9, 32 + math.sin(a) * 9,
+               32 + math.cos(a) * 23, 32 + math.sin(a) * 23, darker(wood, 0.78, 190), 1.2)
+    c.ring(32, 32, 24, 21, (98, 100, 106, 255))             # iron hoop
+    c.circle(32, 32, 9, wood_dk)
+    c.circle(29, 28, 4, (255, 255, 255, 50))
+    save_single(c, "IceFishingBucket")
+    return c
+
+
+def ice_fish():
+    """A fish from above, nose-east, painted pale so the comp can tint it to
+    whichever kind came up."""
+    c = Canvas(64, 64)
+    draw_fish_from_above(c, 32, 32, 0.0, 54, (60, 60, 60, 255))
+    draw_fish_from_above(c, 32, 32, 0.0, 50, (246, 246, 246, 255))
+    c.ellipse(34, 32, 16, 2.6, (200, 200, 200, 255))        # the darker back
+    for k in range(4):                                      # bars, for a perch or a pike
+        c.line(24 + k * 7, 28, 25 + k * 7, 36, (214, 214, 214, 200), 1.6)
+    c.circle(50, 30, 1.6, (30, 30, 30, 255))                # eyes
+    c.circle(50, 34, 1.6, (30, 30, 30, 255))
+    save_single(c, "IceFish")
+    return c
+
+
+def _build_icefishing():
+    made = {"IceFishingHole": ice_fishing_hole()}
+    ice_fishing_jig_frames()
+    ice_fishing_bucket()
+    ice_fish()
+    return made
+
+
+_register("icefishing", _build_icefishing)
+
 if __name__ == "__main__":
     main()

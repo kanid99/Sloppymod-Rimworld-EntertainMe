@@ -319,4 +319,19 @@
     <allowOpportunisticPrefix>true</allowOpportunisticPrefix>
   </JobDef>
 
+  <!-- Custom driver: sit by the hole, jig, and now and then land something.
+       Defined in Source/EntertainingIdeas/IceFishing.cs. Trains Animals,
+       which is the skill 1.6 fishes with. -->
+  <JobDef>
+    <defName>EI_IceFish</defName>
+    <driverClass>EntertainingIdeas.JobDriver_IceFishing</driverClass>
+    <reportString>ice fishing.</reportString>
+    <joyDuration>4000</joyDuration>
+    <joyMaxParticipants>1</joyMaxParticipants>
+    <joySkill>Animals</joySkill>
+    <joyXpPerTick>0.002</joyXpPerTick>
+    <joyKind>Meditative</joyKind>
+    <allowOpportunisticPrefix>true</allowOpportunisticPrefix>
+  </JobDef>
+
 </Defs>
