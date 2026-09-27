@@ -54,11 +54,13 @@
       <Cleanliness>0.4</Cleanliness>
       <WorkToBuild>320</WorkToBuild>
     </statBases>
-    <waterBodyType>Freshwater</waterBodyType>
     <takeSplashes>true</takeSplashes>
+    <!-- Whether snow settles on it, and what kind of water it is, are set per
+         game version in 1.5/Patches and 1.6/Patches: 1.6 renamed holdSnow to
+         holdSnowOrSand and added waterBodyType, and a field the running
+         version does not have is an XML error on load. -->
     <takeFootprints>false</takeFootprints>
     <extinguishesFire>true</extinguishesFire>
-    <holdSnowOrSand>false</holdSnowOrSand>
     <layerable>true</layerable>
     <affordances>
       <li>Light</li>

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Patch>
+  <!-- 1.6 only: these two fields do not exist in 1.5's TerrainDef, so they
+       cannot sit in the shared def. Pool water is fresh water, and snow does
+       not settle on a heated, circulating pool. -->
+  <Operation Class="PatchOperationAdd">
+    <xpath>/Defs/TerrainDef[defName="EI_PoolWater"]</xpath>
+    <value>
+      <waterBodyType>Freshwater</waterBodyType>
+      <holdSnowOrSand>false</holdSnowOrSand>
+    </value>
+  </Operation>
+</Patch>
