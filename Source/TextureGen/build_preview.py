@@ -36,10 +36,29 @@ SOURCES = {
 }
 
 
+def trim_sides(px, w, h):
+    """Drop fully transparent columns either side. The pinball textures are
+    saved square so the side views can stand taller than their footprint, which
+    leaves the end views centred between empty margins."""
+    def empty(x):
+        return all(px[(y * w + x) * 4 + 3] == 0 for y in range(h))
+    x0, x1 = 0, w
+    while x0 < x1 - 1 and empty(x0):
+        x0 += 1
+    while x1 - 1 > x0 and empty(x1 - 1):
+        x1 -= 1
+    out = bytearray()
+    for y in range(h):
+        out += px[(y * w + x0) * 4:(y * w + x1) * 4]
+    return out, x1 - x0, h
+
+
 def main():
     sprites = {}
     for key, filename in SOURCES.items():
         px, w, h = read_png(os.path.join(TEX, filename))
+        if key.startswith("Pinball"):
+            px, w, h = trim_sides(px, w, h)
         sprites[key] = (px, w, h)
     preview.build(sprites, os.path.join(ROOT, "About", "Preview.png"))
 
