@@ -24,6 +24,13 @@ TERRAIN = os.path.join(ROOT, "Textures", "EntertainingIdeas", "Terrain")
 
 DARK = (26, 22, 20, 255)          # shared outline colour
 
+# How round a round top reads: the mod's tables and cabinets are seen from high
+# up (the cocktail tabletop keeps 0.76 of its depth), so anything round - the
+# tubs, the stump, the hologame plinth, the pool filter's tank - is squashed
+# to about this much and shows a short side, or it looks seen from lower down
+# than the room around it.
+ROUND_SLANT = 0.70
+
 
 
 # ---------------------------------------------------------------------------
@@ -906,43 +913,108 @@ def motif_archotech(c, L, R, TOP):
 # ---------------------------------------------------------------------------
 # 4. Hologame pod  (spacer, 1x1, rotatable)
 # ---------------------------------------------------------------------------
-def hologame_pod():
-    c = Canvas(256, 256)
-    cx, cy = 128, 128
+# Hologame pod: a round plinth at the room's slant, a platform about a tile
+# across (drawn at 1.4 tiles), its emitter lit. The game hovers over it as a
+# standing hologram facing the player - from behind facing north, nearly
+# edge-on from the sides - and the console is an upright kiosk on the side
+# the pod faces.
+HG_CX, HG_CY, HG_RX = 128, 150, 92
+HG_RY = HG_RX * ROUND_SLANT
+HG_BAND = 13
+HG_TEAL = (58, 168, 178, 255)
+HG_K = (58, 64, 78, 255)
 
-    c.circle(cx, cy, 104, DARK)
-    c.circle(cx, cy, 100, (62, 68, 82, 255))            # plinth
-    c.ring(cx, cy, 100, 86, (86, 94, 112, 255))
-    c.ring(cx, cy, 88, 84, (40, 44, 54, 255))
-    for i in range(12):                                  # vents
-        import math
-        a = math.radians(i * 30 + 15)
-        c.line(cx + math.cos(a) * 86, cy + math.sin(a) * 86,
-               cx + math.cos(a) * 98, cy + math.sin(a) * 98, (34, 38, 46, 255), 6)
 
-    c.circle(cx, cy, 82, (22, 26, 34, 255))              # emitter well
-    c.circle(cx, cy, 74, (30, 92, 104, 255))
-    c.circle(cx, cy, 62, (58, 168, 178, 235))
-    c.circle(cx, cy, 44, (126, 226, 230, 220))
-
-    # Projected game board hovering above the well.
-    c.poly([(cx, cy - 46), (cx + 46, cy), (cx, cy + 46), (cx - 46, cy)], (220, 252, 252, 120))
-    for i in (-1, 1):
-        c.poly([(cx + i * 16, cy - 20), (cx + i * 34, cy), (cx + i * 16, cy + 20), (cx - i * 2, cy)],
-               (236, 255, 255, 150))
-    c.circle(cx, cy, 9, (255, 255, 255, 230))
+def _hg_plinth(c):
+    c.ellipse(HG_CX, HG_CY + HG_BAND + 5, HG_RX + 6, HG_RY + 5, (0, 0, 0, 55))
+    outline = _arc(HG_CX, HG_CY, HG_RX, HG_RY, 180, 360) + _arc(HG_CX, HG_CY + HG_BAND, HG_RX, HG_RY, 0, 180)
+    c.poly(_grow_poly(outline, 4), DARK)
+    c.poly(_arc(HG_CX, HG_CY, HG_RX, HG_RY, 0, 180) + _arc(HG_CX, HG_CY + HG_BAND, HG_RX, HG_RY, 180, 0), (48, 54, 66, 255))
+    for k in range(1, 12):
+        a = math.radians(180 * k / 12.0)
+        x = HG_CX + HG_RX * math.cos(a) * 0.97; y = HG_CY + HG_RY * math.sin(a) + 5
+        c.rect(x - 3, y, x + 3, y + HG_BAND - 10, (30, 34, 42, 255), 1)
+        c.circle(x, y + HG_BAND - 7, 1.5, (128, 226, 228, 200))
+    c.ellipse(HG_CX, HG_CY, HG_RX, HG_RY, (62, 68, 82, 255))
+    c.ellipse(HG_CX, HG_CY, HG_RX - 11, HG_RY - 5, (86, 94, 112, 255))
+    c.ellipse(HG_CX, HG_CY, HG_RX - 18, HG_RY - 8, (22, 26, 34, 255))
+    c.ellipse(HG_CX, HG_CY, HG_RX - 27, HG_RY - 12, (30, 92, 104, 255))
+    c.ellipse(HG_CX, HG_CY, HG_RX - 40, HG_RY - 17, HG_TEAL[:3] + (235,))
+    c.ellipse(HG_CX, HG_CY, HG_RX - 56, HG_RY - 24, (126, 226, 230, 220))
     for i in range(8):
-        import math
         a = math.radians(i * 45)
-        c.circle(cx + math.cos(a) * 56, cy + math.sin(a) * 56, 4.5, (198, 248, 250, 200))
+        c.circle(HG_CX + math.cos(a) * (HG_RX - 46), HG_CY + math.sin(a) * (HG_RY - 20), 3, (198, 248, 250, 200))
 
-    # Control shelf on the south face, where the pawn stands.
-    c.rect(cx - 40, cy + 84, cx + 40, cy + 112, DARK, 8)
-    c.rect(cx - 36, cy + 88, cx + 36, cy + 108, (74, 82, 98, 255), 6)
-    for i in range(4):
-        c.circle(cx - 24 + i * 16, cy + 98, 4.6, (128, 226, 228, 245))
-    save_rotations(c, "HologamePod")
+
+def _hg_board(c, cx, cy, a):
+    c.poly([(cx, cy - 32), (cx + 42, cy), (cx, cy + 32), (cx - 42, cy)], (220, 252, 252, a))
+    for i in (-1, 1):
+        c.poly([(cx + i * 12, cy - 14), (cx + i * 28, cy), (cx + i * 12, cy + 14), (cx - i * 2, cy)], (236, 255, 255, a))
+    c.circle(cx, cy, 6, (255, 255, 255, min(255, a + 70)))
+
+
+def _hg_hologram(c, facing):
+    beam = (150, 240, 245, 40)
+    top, bot = 34, 128
+    if facing in ("south", "north"):
+        x0, x1 = 70, 186
+        c.poly([(HG_CX - 34, HG_CY), (HG_CX + 34, HG_CY), (x1, bot), (x0, bot)], beam)
+        a = 150 if facing == "south" else 85
+        c.rect(x0, top, x1, bot, (160, 246, 250, 70 if facing == "south" else 45), 4)
+        c.frame(x0, top, x1, bot, (210, 255, 255, 170), 1.6, 4)
+        for k in range(5):
+            c.line(x0 + 4, top + 9 + k * 18, x1 - 4, top + 9 + k * 18, (210, 255, 255, 26), 1)
+        _hg_board(c, (x0 + x1) / 2.0, (top + bot) / 2.0, a)
+    else:
+        m = MirrorCanvas(c) if facing == "west" else c
+        m.poly([(HG_CX - 24, HG_CY), (HG_CX + 24, HG_CY), (HG_CX + 30, bot), (HG_CX - 10, bot)], beam)
+        m.poly([(HG_CX - 10, bot), (HG_CX + 30, bot), (HG_CX + 30, top), (HG_CX - 10, top)], (160, 246, 250, 60))
+        pane = Canvas(116, 94); _hg_board(pane, 58, 47, 150)
+        x = (HG_CX - 10) if facing == "east" else (256 - HG_CX - 30)
+        blit_quad(c, pane.pixels(), 116, 94, (0, 0, 116, 94), (x, bot), (40, 0), (0, -(bot - top)))
+        m.line(HG_CX + 30, top, HG_CX + 30, bot, (210, 255, 255, 170), 1.6)
+        m.line(HG_CX - 10, top, HG_CX - 10, bot, (210, 255, 255, 120), 1.2)
+
+
+def _hg_kiosk(c, facing):
+    if facing == "south":
+        x, y = HG_CX, HG_CY + HG_RY + HG_BAND + 18
+        silhouette(c, [("rect", x - 22, y - 44, x + 22, y, 5, HG_K)], 3.5)
+        c.rect(x - 22, y - 44, x + 22, y - 38, lighter(HG_K, 0.3), 4)
+        c.rect(x - 14, y - 32, x + 14, y - 8, darker(HG_K, 0.8), 3)
+    elif facing == "north":
+        x, y = HG_CX, HG_CY - HG_RY + 6
+        silhouette(c, [("rect", x - 22, y - 44, x + 22, y, 5, HG_K)], 3.5)
+        c.rect(x - 22, y - 44, x + 22, y - 38, lighter(HG_K, 0.3), 4)
+        c.rect(x - 17, y - 35, x + 17, y - 12, (20, 40, 50, 255), 3)
+        c.rect(x - 14, y - 32, x + 14, y - 15, (90, 220, 230, 255), 2)
+        for i in range(4):
+            c.circle(x - 10 + i * 7, y - 5, 1.8, (160, 240, 250, 255))
+    else:
+        m = MirrorCanvas(c) if facing == "west" else c
+        x, y = HG_CX + HG_RX + 14, HG_CY + 22
+        silhouette(m, [("poly", [(x - 9, y), (x - 9, y - 48), (x + 4, y - 48), (x + 9, y - 24), (x + 9, y)], HG_K)], 3.5)
+        m.rect(x - 9, y - 48, x + 4, y - 43, lighter(HG_K, 0.3), 2)
+        m.line(x - 7, y - 44, x - 7, y - 24, (120, 240, 250, 255), 2.2)
+
+
+def _hg_view(facing):
+    c = Canvas(256, 256)
+    if facing == "north":
+        _hg_kiosk(c, facing)
+    _hg_plinth(c)
+    _hg_hologram(c, facing)
+    if facing != "north":
+        _hg_kiosk(c, facing)
     return c
+
+
+
+def hologame_pod():
+    for facing in ("north", "east", "south", "west"):
+        _hg_view(facing).save(os.path.join(OUT, "HologamePod_%s.png" % facing))
+    print("  HologamePod_{north,east,south,west}.png  (256x256)")
+    return _hg_view("south")
 
 
 # ---------------------------------------------------------------------------
@@ -1861,9 +1933,11 @@ def pinball_play_frames(total=8):
 # drawOverPawns) is everything nearer the camera than they are - the water in
 # front of them, the rim's near edge, the barrel's near wall, and a stove
 # facing south - so they sit down inside the tub rather than on top of it.
-TUB_CX, TUB_RIM_Y, TUB_RX, TUB_RY = 64, 48, 44, 19
-TUB_BOT_Y = 104                   # centre of the bottom ellipse
-TUB_WATER_RX, TUB_WATER_RY = 38, 15
+TUB_CX, TUB_RIM_Y, TUB_RX = 64, 54, 44
+TUB_RY = round(TUB_RX * ROUND_SLANT)
+TUB_BOT_Y = 92                    # centre of the bottom ellipse
+TUB_WATER_RX = 38
+TUB_WATER_RY = round(TUB_WATER_RX * ROUND_SLANT)
 TUB_WOOD = (112, 78, 48, 255)
 TUB_WATER = (46, 104, 112, 255)
 TUB_FACINGS = ("north", "east", "south", "west")
@@ -1974,7 +2048,7 @@ def soaking_tub_water_frames(name="SoakingTubWater", electric=False, total=6):
     for it - so the tub has to do the work on both 1.5 and 1.6.
     """
     band = (150, 162, 178, 255) if electric else (146, 150, 158, 255)
-    hole_rx, hole_ry = 17, 7          # where the bather comes up through the water
+    hole_rx, hole_ry = 18, 12         # where the bather comes up through the water
     cy = TUB_RIM_Y + 2
     for i in range(total):
         p = float(i) / total
@@ -1987,7 +2061,7 @@ def soaking_tub_water_frames(name="SoakingTubWater", electric=False, total=6):
             for k in range(3):
                 t = (p + k / 3.0) % 1.0
                 rx = hole_rx + 3 + t * (TUB_WATER_RX - hole_rx - 5)
-                ry = hole_ry + 1.5 + t * (TUB_WATER_RY - hole_ry - 2.5)
+                ry = hole_ry + 2 + t * (TUB_WATER_RY - hole_ry - 3)
                 pts = _arc(TUB_CX, cy, rx, ry, 10, 170, 24)
                 for (x0, y0), (x1, y1) in zip(pts, pts[1:]):
                     c.line(x0, y0, x1, y1, (168, 222, 228, int(150 * (1 - t))), 1.4)
@@ -2955,6 +3029,7 @@ def _pool_filter_view(facing):
     tank = (64, 110, 150, 255)
 
     def tank_at(cv, x0, x1, top, bottom, rim_rx, rim_ry):
+        rim_ry = rim_rx * ROUND_SLANT
         silhouette(cv, [("rect", x0, top, x1, bottom, 14, tank)], 4.0)
         cx = (x0 + x1) / 2.0
         cv.rect(x0, top + 4, x1, bottom, tank, 0)
@@ -3808,46 +3883,47 @@ STORY_FRAMES = 10
 
 
 def _stump_view(facing):
-    """Standing, like the tubs: the cut top with its rings, the bark side and
-    roots below, and the small step up on the side it faces."""
+    """Standing, like the tubs and at their slant: the cut top with its rings,
+    a short bark side with roots, and the small step up on the side it faces."""
     import math
     c = Canvas(128, 128)
     bark = (92, 64, 42, 255)
-    cx, top_y, rx, ry, bot_y = 64, 50, 38, 16, 96
+    cx, top_y, rx, bot_y = 64, 56, 38, 82
+    ry = rx * ROUND_SLANT
 
     def body():
-        c.ellipse(cx, bot_y + 8, rx + 10, 9, (0, 0, 0, 55))
-        pts = _arc(cx, top_y, rx, ry, 180, 360) + _arc(cx, bot_y, rx, ry * 0.8, 0, 180)
+        c.ellipse(cx, bot_y + 12, rx + 10, ry * 0.7, (0, 0, 0, 55))
+        pts = _arc(cx, top_y, rx, ry, 180, 360) + _arc(cx, bot_y, rx, ry, 0, 180)
         c.poly(_grow_poly(pts, 3.5), DARK)
         for dx in (-rx + 2, rx - 4):                                 # roots
-            c.ellipse(cx + dx, bot_y + 6, 12, 6, darker(bark, 0.9))
-        c.poly(_arc(cx, top_y, rx, ry, 0, 180) + _arc(cx, bot_y, rx, ry * 0.8, 180, 0), bark)
+            c.ellipse(cx + dx, bot_y + ry * 0.7, 12, 6, darker(bark, 0.9))
+        c.poly(_arc(cx, top_y, rx, ry, 0, 180) + _arc(cx, bot_y, rx, ry, 180, 0), bark)
         for k in range(1, 9):                                        # bark furrows
             a = math.radians(180 * k / 9.0)
             x = cx + rx * math.cos(a)
             c.line(x, top_y + ry * math.sin(a) + 2, x + math.sin(k) * 2,
-                   bot_y + ry * 0.8 * math.sin(a) - 1, darker(bark, 0.65), 1.6)
+                   bot_y + ry * math.sin(a) - 1, darker(bark, 0.65), 1.6)
         c.ellipse(cx, top_y, rx, ry, (206, 170, 120, 255))           # the cut top
         for r in range(6, rx, 6):
-            pts = _arc(cx, top_y, r, r * ry / float(rx), 0, 360, 48)
+            pts = _arc(cx, top_y, r, r * ROUND_SLANT, 0, 360, 48)
             for (x0, y0), (x1, y1) in zip(pts, pts[1:]):
                 c.line(x0, y0, x1, y1, (176, 138, 92, 200), 1)
-        c.line(cx, top_y, cx + 18, top_y - 5, (150, 110, 70, 200), 1.4)   # a crack
+        c.line(cx, top_y, cx + 18, top_y - 7, (150, 110, 70, 200), 1.4)   # a crack
 
     def step(cv, x, y):
-        cv.poly(_grow_poly([(x - 16, y - 6), (x + 16, y - 6), (x + 16, y + 8), (x - 16, y + 8)], 3), DARK)
-        cv.rect(x - 16, y - 6, x + 16, y + 8, darker(bark, 0.9), 2)
-        cv.ellipse(x, y - 6, 16, 5, (196, 160, 112, 255))
+        cv.poly(_grow_poly([(x - 16, y - 8), (x + 16, y - 8), (x + 16, y + 5), (x - 16, y + 5)], 3), DARK)
+        cv.rect(x - 16, y - 8, x + 16, y + 5, darker(bark, 0.9), 2)
+        cv.ellipse(x, y - 8, 16, 16 * ROUND_SLANT * 0.7, (196, 160, 112, 255))
 
     if facing == "north":
-        step(c, cx, top_y - 16)
+        step(c, cx, top_y - ry - 4)
         body()
     elif facing == "south":
         body()
-        step(c, cx, bot_y + 12)
+        step(c, cx, bot_y + ry + 6)
     else:
         body()
-        step(MirrorCanvas(c) if facing == "west" else c, cx + rx + 6, bot_y - 2)
+        step(MirrorCanvas(c) if facing == "west" else c, cx + rx + 6, bot_y + 6)
     return c
 
 
