@@ -139,12 +139,30 @@ def arcade_attract():
     return join(*parts, gap=0.012)
 
 
+def infest_shot():
+    """INFESTATION!: the mini-turret's shot - a quick falling zap."""
+    f0, f1, d = 1500.0, 420.0, 0.09
+    return envelope(tone(lambda t: f0 * (f1 / f0) ** (t / d), d, square, 0.3), release=0.03)
+
+
+def infest_splat():
+    """INFESTATION!: a bug popping - a wet burst over a low drop."""
+    d = 0.2
+    rng = random.Random(11)
+    body = tone(lambda t: 220.0 * (70.0 / 220.0) ** (t / d), d, triangle)
+    noise = lowpass([rng.uniform(-1, 1) for _ in range(int(d * RATE))], 1400.0)
+    squelch = [s * (1.0 - i / float(len(noise))) ** 2 for i, s in enumerate(noise)]
+    return envelope(mix(body, squelch, 1.3), attack=0.002, release=0.07)
+
+
 SOUNDS = {
     "OreRushDig": ore_rush_dig,
     "OreRushSeam": ore_rush_seam,
     "ThrumboJump": thrumbo_jump,
     "ThrumboRoll": thrumbo_roll,
     "ArcadeAttract": arcade_attract,
+    "InfestShot": infest_shot,
+    "InfestSplat": infest_splat,
 }
 
 

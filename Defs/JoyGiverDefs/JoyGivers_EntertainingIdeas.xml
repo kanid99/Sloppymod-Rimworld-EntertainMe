@@ -63,6 +63,7 @@
     <thingDefs>
       <li>EI_CocktailArcadeTable</li>
       <li>EI_CocktailClimbTable</li>
+      <li>EI_CocktailInfestTable</li>
     </thingDefs>
     <jobDef>EI_Play_CocktailArcade</jobDef>
     <joyKind>Gaming_Dexterity</joyKind>

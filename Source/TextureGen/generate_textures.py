@@ -1248,56 +1248,85 @@ def girder_y(index, x):
     return gy0 + (gy1 - gy0) * t
 
 
-def draw_thrumbo(c, x, y, step, shove=False, size=1.0):
-    """RimWorld's thrumbo, side-on and facing right: big and pale grey, smooth
-    rather than shaggy, on long thick legs, its head carried forward on a
-    strong neck and the single long horn running straight out of its brow,
-    angled up - the unicorn's horn, not a muffalo's pair. No hump, no fringe:
-    those are what make a muffalo. Shoving, it drops its head and levels the
-    horn, which is how the rocks get started. (x, y) is the middle of the
-    body; its hooves are about 13 * size px below."""
-    def at(dx, dy):
-        return x + dx * size, y + dy * size
+# RimWorld's thrumbo, traced from the game's own art (a 240 px drawing, facing
+# right): one flowing shape - the back of the neck running down into the
+# rump, the front bulging out into a big chest - under a white fur cape with a
+# jagged hem over the blue-grey of its lower body, a small pointed face, a
+# spiky crest, the great crescent horn sweeping from behind the crest to a
+# tip in front of the face, and a thin whip of a tail.
+THRUMBO_BODY = [(45, 200), (50, 182), (64, 170), (84, 162), (100, 152), (112, 138), (116, 112),
+                (118, 86), (120, 64), (132, 54), (148, 52), (162, 60), (178, 70), (198, 86),
+                (184, 94), (168, 98), (162, 110), (176, 126), (200, 146), (215, 172), (222, 200),
+                (215, 222), (195, 235), (150, 238), (100, 236), (60, 228), (42, 215)]
+# The white cape stops short of the chest: the chest's bulge stays in the
+# blue-grey, which is what leaves the neck reading as a slim white column.
+THRUMBO_CAPE = [(50, 182), (64, 170), (84, 162), (100, 152), (112, 138), (116, 112), (118, 86),
+                (120, 64), (132, 54), (148, 52), (162, 60), (178, 70), (198, 86), (184, 94),
+                (168, 98), (162, 110), (158, 130), (154, 152), (150, 176), (138, 162),
+                (126, 182), (114, 166), (102, 186), (90, 170), (78, 190), (66, 174), (56, 192)]
+THRUMBO_NECK_LINE = [(168, 98), (162, 110), (158, 130), (154, 152), (150, 176)]
+THRUMBO_CREST = [(117, 76), (112, 56), (120, 60), (120, 38), (130, 54), (136, 32), (142, 50),
+                 (150, 40), (150, 56), (130, 62)]
+THRUMBO_HORN = [(138, 44), (150, 30), (166, 26), (182, 34), (192, 50), (194, 70), (188, 88),
+                (178, 100), (182, 84), (182, 66), (176, 52), (164, 42), (150, 42)]
+THRUMBO_TAIL = [(46, 204), (34, 196), (26, 184), (22, 170)]
 
-    hide = (206, 212, 222, 255)
-    hide_lt = (228, 232, 240, 255)
-    hide_dk = (164, 172, 186, 255)
-    hoof = (66, 64, 70, 255)
-    horn = (240, 232, 214, 255)
-    s_ = size
-    for k, lx in enumerate((-12, -7, 8, 12)):                   # long legs, stepping in turn
-        lift = 1.5 if (step + k) % 4 < 2 and not shove else 0
-        col = hide_dk if k in (1, 3) else darker(hide, 0.92)
-        x0, y0 = at(lx - 2, 2)
-        x1, y1 = at(lx + 2, 12 - lift)
-        c.rect(x0, y0, x1, y1, col, 1.2)
-        x0, y0 = at(lx - 2.3, 11 - lift)
-        x1, y1 = at(lx + 2.3, 13 - lift)
-        c.rect(x0, y0, x1, y1, hoof, 1)
-    tx0, ty0 = at(-15, -3)                                      # a thin tail with a tuft
-    tx1, ty1 = at(-19, 3)
-    c.line(tx0, ty0, tx1, ty1, hide_dk, 1.4 * s_)
-    c.circle(tx1, ty1, 1.8 * s_, hide_dk)
-    bx, by = at(-1, -2)
-    c.ellipse(bx, by, 15 * s_, 7 * s_, hide)                    # body, long and level
-    bx, by = at(-1, -5)
-    c.ellipse(bx, by, 12 * s_, 3 * s_, hide_lt)                 # light along the back
-    dip = 4 if shove else 0
-    nx0, ny0 = at(10, -4)                                       # neck, forward and up
-    hx, hy = at(18, -9 + dip)
-    c.line(nx0, ny0, hx - 2 * s_, hy + 1 * s_, hide, 7 * s_)
-    c.ellipse(hx, hy, 6 * s_, 4 * s_, hide)                     # head, long-faced
-    c.ellipse(hx + 5 * s_, hy + 1.5 * s_, 3.5 * s_, 2.6 * s_, hide_lt)   # muzzle
-    c.ellipse(hx - 3 * s_, hy - 3.5 * s_, 1.6 * s_, 2.4 * s_, hide_dk)   # ear
-    c.circle(hx + 1 * s_, hy - 1 * s_, 1.1 * s_, (30, 30, 36, 255))      # eye
-    # the horn: straight, long, tapering, out of the brow
-    tip = (18, -8) if not shove else (20, -1)
-    base = (hx + 2 * s_, hy - 3 * s_)
-    end = (hx + tip[0] * s_, hy + tip[1] * s_)
-    c.line(base[0], base[1], end[0], end[1], darker(horn, 0.78), 3.4 * s_)
-    mid = ((base[0] + end[0]) / 2.0, (base[1] + end[1]) / 2.0)
-    c.line(base[0], base[1], mid[0], mid[1], horn, 2.6 * s_)
-    c.line(mid[0], mid[1], end[0], end[1], horn, 1.5 * s_)
+
+def draw_thrumbo(c, x, y, step, shove=False, size=1.0):
+    """The thrumbo at (x, y) = the middle of where it meets the ground, about
+    32 * size px tall. Shoving, its neck, head, crest and horn bow forward
+    over the chest - how the rocks get started."""
+    import math
+    k = 0.15 * size
+    tilt = math.radians(14 if shove else 0)
+    pivot = (120.0, 150.0)
+
+    def at(px, py, bow=False):
+        if bow and py < pivot[1]:
+            dx, dy = px - pivot[0], py - pivot[1]
+            px = pivot[0] + dx * math.cos(tilt) - dy * math.sin(tilt)
+            py = pivot[1] + dx * math.sin(tilt) + dy * math.cos(tilt)
+        return (x + (px - 125) * k, y + (py - 236) * k)
+
+    def shape(points, bow=True):
+        return [at(px, py, bow) for px, py in points]
+
+    white = (242, 244, 248, 255)
+    grey = (170, 184, 204, 255)
+    line = (64, 70, 86, 255)
+    tail = [at(px, py) for px, py in THRUMBO_TAIL]
+    for (x0, y0), (x1, y1) in zip(tail, tail[1:]):
+        c.line(x0, y0, x1, y1, line, max(1.4, 14 * k))
+    for (x0, y0), (x1, y1) in zip(tail, tail[1:]):
+        c.line(x0, y0, x1, y1, grey, max(0.7, 7 * k))
+    body = shape(THRUMBO_BODY)
+    horn = shape(THRUMBO_HORN)
+    crest = shape(THRUMBO_CREST)
+    ow = max(1.0, 9 * k)                                       # outline weight
+    # Stroked along the edges rather than grown from the middle: growing a
+    # shape outward fills in its hollows - the back of the neck, the throat,
+    # the inside of the crescent - and turns the thrumbo into a blob.
+    for piece in (body, crest, horn):
+        for (x0, y0), (x1, y1) in zip(piece, piece[1:] + piece[:1]):
+            c.line(x0, y0, x1, y1, line, ow * 2)
+            c.circle(x0, y0, ow, line)
+    c.poly(body, grey)
+    # the fur hem shifts a little as it walks
+    cape = shape(THRUMBO_CAPE)
+    if int(step) % 2:
+        cape = [(px, py + (0.8 if i > 17 and i % 2 else 0)) for i, (px, py) in enumerate(cape)]
+    c.poly(cape, white)
+    inner = max(0.8, 6 * k)                                    # the neck's front, and the fur hem
+    neckline = [at(px, py, True) for px, py in THRUMBO_NECK_LINE]
+    for (x0, y0), (x1, y1) in zip(neckline, neckline[1:]):
+        c.line(x0, y0, x1, y1, line, inner)
+    hem = cape[len(THRUMBO_NECK_LINE) + 13:]
+    for (x0, y0), (x1, y1) in zip(hem, hem[1:]):
+        c.line(x0, y0, x1, y1, (150, 162, 184, 255), inner)
+    c.poly(crest, white)
+    c.poly(horn, (236, 238, 244, 255))
+    ex, ey = at(160, 72, True)                                  # the eye, half shut
+    c.line(ex - 5 * k * 2, ey, ex + 5 * k * 2, ey + 1.5 * k * 2, line, max(1.0, 8 * k))
 
 
 def draw_climb_colonist(c, x, y, step, climbing=False):
@@ -1340,7 +1369,7 @@ def draw_climb_screen(c, frame=None, total=16):
     lane2_t = p % 1.0
     lane2_x = GIRDERS[2][0] + lane2_t * (GIRDERS[2][2] - GIRDERS[2][0])
     shove = frame is not None and ROCK_START_X <= lane2_x < ROCK_START_X + 10
-    draw_thrumbo(c, 52, girder_y(3, 52) - 11, step, shove, size=0.82)  # smaller, so its horn stays on the screen
+    draw_thrumbo(c, 50, girder_y(3, 50) - 1.5, step, shove, size=0.7)   # small enough that its horn stays on the screen
     draw_climb_colonist(c, 108, girder_y(3, 108) - 8, step) # the one to reach
     if frame is None or step % 4 < 2:                       # ...calling for help
         c.circle(112, girder_y(3, 108) - 18, 2.2, (255, 244, 188, 220))
@@ -1382,7 +1411,7 @@ def draw_climb_title(c, frame, total):
 
     p = float(frame) / total
     rx = 82 + 26 * p                                         # shoved off, rolling away
-    draw_thrumbo(c, 54, 78, frame, shove=p < 0.25)
+    draw_thrumbo(c, 56, 90, frame, shove=p < 0.25, size=0.95)
     px = 106 + 5 * math.sin(2 * math.pi * p)
     draw_climb_colonist(c, px, 84, frame)
     if on_screen(rx, 86, 5):
@@ -1396,7 +1425,211 @@ def draw_climb_title(c, frame, total):
 
 
 # ---------------------------------------------------------------------------
-# The cabinet both games live in.
+# INFESTATION!  (the third cocktail game: RimWorld's insectoids, marching)
+#
+# Three ranks of the insects an infestation brings - megaspiders at the back,
+# spelopedes, megascarabs in front - sweep side to side over a mini-turret
+# dug in behind sandbags. The turret fires twice a loop and each shot pops a
+# bug in a splat of insect jelly; a bug spits acid that bursts on the
+# sandbags; a hive creeps across the top. Frame None is attract mode: the
+# whole swarm, nothing moving.
+# ---------------------------------------------------------------------------
+INF_COLS, INF_ROWS = 5, 3
+INF_ROW_Y = (50, 62, 74)              # megaspiders, spelopedes, megascarabs
+INF_TURRET_Y = 118
+INF_SANDBAGS = (50, 80, 110)
+# (spawn frame, hit frame, row, column): each shot is aimed at the bug it hits
+INF_KILLS = ((2, 5, 2, 1), (10, 13, 2, 3))
+INF_GREEN = (126, 206, 96, 255)
+
+
+def _inf_offset(frame):
+    """The swarm's sweep: right for half the loop, back for the other half."""
+    f = frame % 16
+    return 1.5 * (8 - abs(f - 8))
+
+
+def _inf_x(col, frame):
+    return 41 + col * 16 + _inf_offset(frame)
+
+
+def draw_megascarab(c, x, y, step, s=1.0):
+    """A megascarab from above: a domed shell split down the back, a small
+    head with mandibles toward the player, six short legs."""
+    shell = (64, 146, 124, 255)
+    kick = 1 if step % 2 else -1
+    for k, dy in enumerate((-2, 0, 2)):
+        for side in (-1, 1):
+            c.line(x + side * 3 * s, y + dy * s, x + side * 6 * s, y + (dy + kick * side * 0.8 - 0.5) * s,
+                   (40, 90, 76, 255), 1.1 * s)
+    c.ellipse(x, y, 4.2 * s, 4.6 * s, shell)
+    c.line(x, y - 4 * s, x, y + 3 * s, darker(shell, 0.6), 0.8 * s)
+    c.circle(x - 1.6 * s, y - 2 * s, 1.0 * s, lighter(shell, 0.4))      # sheen
+    c.circle(x, y + 4.6 * s, 1.8 * s, (40, 90, 76, 255))                 # head
+    c.line(x - 1 * s, y + 5.5 * s, x - 2 * s, y + 7 * s, (220, 210, 170, 255), 0.8 * s)
+    c.line(x + 1 * s, y + 5.5 * s, x + 2 * s, y + 7 * s, (220, 210, 170, 255), 0.8 * s)
+
+
+def draw_spelopede(c, x, y, step, s=1.0):
+    """A spelopede from above: three plated segments nose to tail, a leg
+    pair on each, and feelers reaching toward the player."""
+    plate = (206, 146, 64, 255)
+    kick = 1.2 if step % 2 else -1.2
+    for k, dy in enumerate((-3.5, 0, 3.5)):
+        for side in (-1, 1):
+            c.line(x + side * 2 * s, y + dy * s, x + side * 6 * s, y + (dy + (kick if k % 2 else -kick) * side) * s,
+                   darker(plate, 0.55), 1.0 * s)
+    for dy in (-3.5, 0, 3.5):
+        c.ellipse(x, y + dy * s, 3.0 * s, 2.2 * s, plate)
+        c.line(x - 2.5 * s, y + (dy - 1.2) * s, x + 2.5 * s, y + (dy - 1.2) * s, lighter(plate, 0.3), 0.7 * s)
+    c.circle(x, y + 6 * s, 1.8 * s, darker(plate, 0.7))                  # head
+    c.line(x - 1 * s, y + 7 * s, x - 3 * s, y + 9.5 * s, darker(plate, 0.6), 0.7 * s)
+    c.line(x + 1 * s, y + 7 * s, x + 3 * s, y + 9.5 * s, darker(plate, 0.6), 0.7 * s)
+
+
+def draw_megaspider(c, x, y, step, s=1.0):
+    """A megaspider from above: a swollen abdomen behind, the head toward the
+    player with its red eyes, eight long jointed legs."""
+    body = (148, 92, 158, 255)
+    lift = 1 if step % 2 else 0
+    for k in range(4):
+        a = -0.9 + k * 0.6
+        for side in (-1, 1):
+            kx = x + side * 5.5 * s
+            ky = y + (a * 5 + (lift if (k + (side > 0)) % 2 else -lift)) * s
+            c.line(x + side * 1.5 * s, y + a * 2 * s, kx, ky - 2 * s, darker(body, 0.55), 1.0 * s)
+            c.line(kx, ky - 2 * s, x + side * 7 * s, ky + 1.5 * s, darker(body, 0.55), 0.9 * s)
+    c.ellipse(x, y - 2 * s, 3.8 * s, 3.6 * s, body)                     # abdomen
+    c.circle(x - 1.2 * s, y - 3.2 * s, 1.0 * s, lighter(body, 0.35))
+    c.circle(x, y + 2.5 * s, 2.2 * s, darker(body, 0.75))               # head
+    c.circle(x - 0.9 * s, y + 3.2 * s, 0.6 * s, (240, 60, 50, 255))
+    c.circle(x + 0.9 * s, y + 3.2 * s, 0.6 * s, (240, 60, 50, 255))
+
+
+INF_DRAWERS = (draw_megaspider, draw_spelopede, draw_megascarab)
+
+
+def draw_mini_turret(c, x, y):
+    """RimWorld's mini-turret: a squat grey base, a round head, the barrel up."""
+    c.rect(x - 7, y - 2, x + 7, y + 5, (96, 100, 108, 255), 2)
+    c.circle(x, y - 3, 4.5, (140, 146, 156, 255))
+    c.rect(x - 1.2, y - 12, x + 1.2, y - 4, (170, 176, 186, 255), 0.6)
+    c.circle(x - 1.4, y - 4.4, 1.2, (200, 206, 214, 255))
+
+
+def _inf_turret_x(frame):
+    """The turret slides to be under each shot's target when it fires."""
+    import math
+    keys = [(k[0], _inf_x(k[3], k[1])) for k in INF_KILLS]
+    f = frame % 16
+    for i in range(len(keys)):
+        f0, x0 = keys[i]
+        f1, x1 = keys[(i + 1) % len(keys)]
+        span = (f1 - f0) % 16
+        into = (f - f0) % 16
+        if into <= span:
+            t = into / float(span) if span else 0.0
+            return x0 + (x1 - x0) * (0.5 - 0.5 * math.cos(math.pi * t))
+    return keys[0][1]
+
+
+def draw_sandbags(c, x, y, dented=False):
+    bag = (190, 170, 120, 255)
+    for bx, by in ((-6, 2), (0, 2), (6, 2), (-3, -2), (3, -2)):
+        c.ellipse(x + bx, y + by, 3.4, 2.2, darker(bag, 0.7))
+        c.ellipse(x + bx, y + by - 0.4, 3.0, 1.8, bag)
+    if dented:
+        c.circle(x + 3, y - 3, 2.4, SCREEN_BG)
+
+
+def draw_infest_screen(c, frame=None, total=16):
+    import math
+    x0, y0, x1, y1 = SCREEN
+    c.rect(x0, y0, x1, y1, SCREEN_BG, 8)
+    step = frame if frame is not None else 0
+    f = step % 16
+
+    # a hive creeping across the top, like the saucer in the old game
+    if frame is not None and 4 <= f <= 11:
+        hx = 36 + (f - 4) * 12.5
+        c.ellipse(hx, 41, 6, 3.5, (120, 92, 64, 255))
+        c.ellipse(hx, 40, 4, 2.2, (150, 118, 84, 255))
+        c.circle(hx, 42, 1.2, (40, 30, 24, 255))
+
+    dead = set()
+    for spawn, hit, row, col in INF_KILLS:
+        if frame is not None and f >= hit:
+            dead.add((row, col))
+    for row in range(INF_ROWS):
+        for col in range(INF_COLS):
+            if (row, col) in dead:
+                continue
+            INF_DRAWERS[row](c, _inf_x(col, step), INF_ROW_Y[row], step + col)
+
+    for spawn, hit, row, col in INF_KILLS:                  # shots, and the splat
+        if frame is None:
+            break
+        bx, by = _inf_x(col, hit), INF_ROW_Y[row]
+        if spawn <= f < hit:
+            sy = INF_TURRET_Y - 12 - (f - spawn) * 13
+            c.rect(bx - 0.8, sy - 5, bx + 0.8, sy + 1, (255, 240, 150, 255), 0.5)
+        if hit <= f <= hit + 1:
+            r = 5 if f == hit else 7
+            for k in range(8):
+                a = k * math.pi / 4 + (0.4 if f != hit else 0)
+                c.circle(bx + math.cos(a) * r, by + math.sin(a) * r * 0.8, 1.6, (214, 226, 96, 230))
+            c.circle(bx, by, 3 if f == hit else 2, (238, 244, 150, 240))   # insect jelly
+
+    spit_hit = False                                       # acid, spat at the sandbags
+    if frame is not None and 6 <= f <= 11:
+        sx = _inf_x(2, 6)
+        sy = INF_ROW_Y[2] + 6 + (f - 6) * 6
+        if sy < 96:
+            c.circle(sx, sy, 1.6, INF_GREEN)
+            c.circle(sx, sy - 2.5, 1.0, (126, 206, 96, 150))
+        else:
+            spit_hit = True
+            for k in range(5):
+                a = math.pi + k * math.pi / 4
+                c.circle(sx + math.cos(a) * 4, 95 + math.sin(a) * 3, 1.2, INF_GREEN)
+    for i, bx in enumerate(INF_SANDBAGS):
+        draw_sandbags(c, bx, 98, dented=(spit_hit and i == 1))
+
+    draw_mini_turret(c, _inf_turret_x(step) if frame is not None else 80, INF_TURRET_Y)
+    c.line(x0 + 4, 123, x1 - 4, 123, INF_GREEN[:3] + (160,), 1.2)       # the ground line
+    c.frame(x0, y0, x1, y1, (86, 92, 118, 220), 2.5, 8)
+
+
+def draw_infest_title(c, frame, total):
+    import math
+    x0, y0, x1, y1 = SCREEN
+    c.rect(x0, y0, x1, y1, SCREEN_BG, 8)
+    c.rect(x0, 36, x1, 52, (24, 34, 24, 255))
+    screen_title(c, "INFESTATION!", 41, 1, lighter(INF_GREEN, 0.35))
+    p = float(frame) / total
+    sx = 80 + 14 * math.sin(2 * math.pi * p)                # a megaspider scuttling
+    draw_megaspider(c, sx, 78, frame, s=2.4)
+    for k, dx in enumerate((-30, 30)):
+        INF_DRAWERS[k + 1](c, 80 + dx, 96 + (2 if (frame + k) % 2 else 0), frame + k, 1.2)
+    if (frame // 2) % 2 == 0:
+        screen_title(c, "INSERT COIN", 110, 1, (226, 232, 248, 255))
+    c.frame(x0, y0, x1, y1, (86, 92, 118, 220), 2.5, 8)
+
+
+def cocktail_infest():
+    return cocktail_cabinet("CocktailInfest", draw_infest_screen, INF_GREEN)
+
+
+def cocktail_infest_frames(total=16):
+    _screen_strip("CocktailInfestScreen", draw_infest_screen, total)
+
+
+def cocktail_infest_title_frames(total=8):
+    _screen_strip("CocktailInfestTitle", draw_infest_title, total)
+
+
+# ---------------------------------------------------------------------------
+# The cabinet all three games live in.
 # ---------------------------------------------------------------------------
 
 # Seen the way vanilla draws a table: the top a little foreshortened, and the
@@ -3427,7 +3660,10 @@ def _build_cocktail():
     climb = cocktail_climb()
     cocktail_climb_frames()
     cocktail_climb_title_frames()
-    return {"CocktailArcade": drill, "CocktailClimb": climb}
+    infest = cocktail_infest()
+    cocktail_infest_frames()
+    cocktail_infest_title_frames()
+    return {"CocktailArcade": drill, "CocktailClimb": climb, "CocktailInfest": infest}
 
 
 def _build_hologamepod():

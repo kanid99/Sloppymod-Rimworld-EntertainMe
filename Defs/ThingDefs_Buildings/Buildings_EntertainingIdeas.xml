@@ -2041,6 +2041,44 @@
     </comps>
   </ThingDef>
 
+  <ThingDef ParentName="EI_CocktailTableBase">
+    <defName>EI_CocktailInfestTable</defName>
+    <label>Infestation! arcade table</label>
+    <description>The sit-down cabinet again, on its third board. INFESTATION!: rank on rank of insectoids - megaspiders at the back, spelopedes, megascarabs up front - sweep back and forth over a lone mini-turret dug in behind sandbags, spitting acid as they come. Pop one and it goes up in a splat of insect jelly. Something that looks a lot like a hive creeps across the top of the screen now and then.\n\nColonists who have lived through a real infestation play it with a particular grim focus. Everyone else just likes the noise it makes.\n\nLeft alone it runs its title screen, one enormous megaspider scuttling back and forth under the name.\n\nSeats two - set a chair on either side.</description>
+    <graphicData>
+      <texPath>EntertainingIdeas/Buildings/CocktailInfest</texPath>
+    </graphicData>
+    <comps>
+      <li Class="CompProperties_Glower">
+        <glowRadius>3</glowRadius>
+        <glowColor>(150,230,120,0)</glowColor>
+      </li>
+      <li Class="EntertainingIdeas.CompProperties_AnimatedScreen">
+        <framePath>EntertainingIdeas/Buildings/CocktailInfestScreen</framePath>
+        <frameCount>16</frameCount>
+        <ticksPerFrame>8</ticksPerFrame>
+        <drawSize>(1.15,1.15)</drawSize>
+        <!-- Drawn onto the cabinet top for each facing, squeezed the same way. -->
+        <perFacing>true</perFacing>
+        <idleFramePath>EntertainingIdeas/Buildings/CocktailInfestTitle</idleFramePath>
+        <idleFrameCount>8</idleFrameCount>
+        <idleTicksPerFrame>20</idleTicksPerFrame>
+        <!-- The turret fires twice a loop, each shot popping a bug three frames on. -->
+        <frameSounds>
+          <li><frame>2</frame><sound>EI_InfestShot</sound></li>
+          <li><frame>5</frame><sound>EI_InfestSplat</sound></li>
+          <li><frame>10</frame><sound>EI_InfestShot</sound></li>
+          <li><frame>13</frame><sound>EI_InfestSplat</sound></li>
+        </frameSounds>
+        <idleSound>EI_ArcadeAttract</idleSound>
+        <idleSoundIntervalTicks>7200</idleSoundIntervalTicks>
+        <playJobs>
+          <li>EI_Play_CocktailArcade</li>
+        </playJobs>
+      </li>
+    </comps>
+  </ThingDef>
+
 
 
   <!-- =================== 24. Cornhole board (any tech) =================== -->

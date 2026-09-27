@@ -41,6 +41,7 @@ for each — see [Versions](#versions).
 | Mech rampage pinball | 1×2 | Dexterity | 180W | Microelectronics basics |
 | Ore Rush arcade table | 1×1 | Dexterity | 100W | Tube television |
 | Thrumbo! arcade table | 1×1 | Dexterity | 100W | Tube television |
+| Infestation! arcade table | 1×1 | Dexterity | 100W | Tube television |
 | Massage chair | 1×1 | Solitary relaxation | 90W | Complex furniture + Electricity |
 | Aquarium | 2×1 | Solitary relaxation | 60W | Complex furniture + Electricity |
 | Karaoke machine | 1×1 | Social | 120W | Microelectronics basics |
@@ -51,7 +52,7 @@ for each — see [Versions](#versions).
 | Tabletop orrery | 1×1 | Solitary relaxation | — | Complex furniture |
 | Grand orrery | 2×2 | Solitary relaxation | — | Complex furniture |
 
-The two arcade tables have sound: synthesised chip blips tied to the frame of
+The three arcade tables have sound: synthesised chip blips tied to the frame of
 the screen animation they belong to - Ore Rush's pick and cleared rounds,
 Thrumbo!'s hops and rolling rocks - and a soft jingle every couple of minutes
 while idle. Everything else is silent for now. Volumes, pitch spread and range
@@ -65,11 +66,11 @@ vista panels) do not.
 
 All four pinball tables share one cabinet frame and one animation; they differ in
 cost, power, beauty and how much joy they give, and they sit behind a single
-architect entry with a dropdown to pick one — as do the two arcade tables and the
+architect entry with a dropdown to pick one — as do the three arcade tables and the
 three vista panel widths. Each has a proper backglass —
 painted art over two six-digit score reels that climb while somebody is playing.
 
-The two cocktail tables seat two apiece — put a chair on either side — and run
+The three cocktail tables seat two apiece — put a chair on either side — and run
 different games. **Ore Rush** is a maze: you work a mine shaft in a hard hat,
 clearing seams of ore, while the things that live down there come along the same
 corridor from the other direction. **Thrumbo!** is a climb: a colonist is

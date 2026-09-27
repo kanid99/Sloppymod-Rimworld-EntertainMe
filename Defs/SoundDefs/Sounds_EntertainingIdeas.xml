@@ -108,4 +108,42 @@
     </subSounds>
   </SoundDef>
 
+  <!-- Infestation!: the mini-turret firing. -->
+  <SoundDef>
+    <defName>EI_InfestShot</defName>
+    <context>MapOnly</context>
+    <maxSimultaneous>2</maxSimultaneous>
+    <subSounds>
+      <li>
+        <grains>
+          <li Class="AudioGrain_Clip">
+            <clipPath>EntertainingIdeas/Arcade/InfestShot</clipPath>
+          </li>
+        </grains>
+        <volumeRange>14~14</volumeRange>
+        <pitchRange>0.94~1.06</pitchRange>
+        <distRange>0~30</distRange>
+      </li>
+    </subSounds>
+  </SoundDef>
+
+  <!-- Infestation!: a bug popping in a splat of jelly. -->
+  <SoundDef>
+    <defName>EI_InfestSplat</defName>
+    <context>MapOnly</context>
+    <maxSimultaneous>2</maxSimultaneous>
+    <subSounds>
+      <li>
+        <grains>
+          <li Class="AudioGrain_Clip">
+            <clipPath>EntertainingIdeas/Arcade/InfestSplat</clipPath>
+          </li>
+        </grains>
+        <volumeRange>20~20</volumeRange>
+        <pitchRange>0.88~1.12</pitchRange>
+        <distRange>0~30</distRange>
+      </li>
+    </subSounds>
+  </SoundDef>
+
 </Defs>
