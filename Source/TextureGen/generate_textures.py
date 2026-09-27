@@ -1249,55 +1249,55 @@ def girder_y(index, x):
 
 
 def draw_thrumbo(c, x, y, step, shove=False, size=1.0):
-    """RimWorld's thrumbo, side-on and facing right: a huge, shaggy, humped
-    grey-white beast on thick legs, its heavy head carried low and the one
-    long ivory horn sweeping forward and up off its brow. Shoving, it drops
-    its head and drives the horn forward - that is how the rocks get started.
-    (x, y) is the middle of the body; it stands about 11 * size px below."""
+    """RimWorld's thrumbo, side-on and facing right: big and pale grey, smooth
+    rather than shaggy, on long thick legs, its head carried forward on a
+    strong neck and the single long horn running straight out of its brow,
+    angled up - the unicorn's horn, not a muffalo's pair. No hump, no fringe:
+    those are what make a muffalo. Shoving, it drops its head and levels the
+    horn, which is how the rocks get started. (x, y) is the middle of the
+    body; its hooves are about 13 * size px below."""
     def at(dx, dy):
         return x + dx * size, y + dy * size
 
-    fur = (214, 212, 206, 255)
-    fur_lt = (234, 232, 226, 255)
-    fur_dk = (170, 166, 158, 255)
-    hoof = (70, 64, 60, 255)
-    horn = (238, 224, 188, 255)
+    hide = (206, 212, 222, 255)
+    hide_lt = (228, 232, 240, 255)
+    hide_dk = (164, 172, 186, 255)
+    hoof = (66, 64, 70, 255)
+    horn = (240, 232, 214, 255)
     s_ = size
-    dip = 3 if shove else 0
-    for k, lx in enumerate((-11, -5, 7, 12)):                  # legs, stepping in turn
+    for k, lx in enumerate((-12, -7, 8, 12)):                   # long legs, stepping in turn
         lift = 1.5 if (step + k) % 4 < 2 and not shove else 0
-        col = fur_dk if k in (1, 3) else darker(fur, 0.9)
-        x0, y0 = at(lx - 2, 3)
-        x1, y1 = at(lx + 2, 10 - lift)
-        c.rect(x0, y0, x1, y1, col, 1)
-        x0, y0 = at(lx - 2.2, 9 - lift)
-        x1, y1 = at(lx + 2.2, 11 - lift)
+        col = hide_dk if k in (1, 3) else darker(hide, 0.92)
+        x0, y0 = at(lx - 2, 2)
+        x1, y1 = at(lx + 2, 12 - lift)
+        c.rect(x0, y0, x1, y1, col, 1.2)
+        x0, y0 = at(lx - 2.3, 11 - lift)
+        x1, y1 = at(lx + 2.3, 13 - lift)
         c.rect(x0, y0, x1, y1, hoof, 1)
-    bx_, by_ = at(-2, 0)
-    c.ellipse(bx_, by_, 15 * s_, 8 * s_, fur)                  # body, a long barrel
-    c.ellipse(at(5, -5)[0], at(5, -5)[1], 9 * s_, 7 * s_, fur_lt)          # the hump
-    for k in range(8):                                          # shaggy belly fringe
-        fx, fy = at(-14 + k * 3.8, 6)
-        c.circle(fx, fy, 2.2 * s_, darker(fur, 0.92))
-    tx, ty = at(-16, -2)
-    c.ellipse(tx, ty, 3 * s_, 3 * s_, fur_lt)                   # tail tuft
-    hx, hy = at(16, 1 + dip)                                    # head, low and forward
-    c.ellipse(hx, hy, 7 * s_, 5 * s_, fur)
-    c.ellipse(hx + 6 * s_, hy + 2 * s_, 4 * s_, 3 * s_, darker(fur, 0.92))   # muzzle
-    c.circle(hx + 9 * s_, hy + 2 * s_, 1.1 * s_, (80, 70, 66, 255))        # nostril
-    c.ellipse(hx - 3 * s_, hy - 4 * s_, 2.4 * s_, 1.8 * s_, fur_dk)        # ear
-    c.circle(hx + 1 * s_, hy - 1.5 * s_, 1.2 * s_, (34, 30, 30, 255))      # eye
-    # the horn: thick at the brow, curving forward and up to a point
-    if shove:
-        bend = [(1, -3), (8, -5), (14, -5), (18, -4)]
-    else:
-        bend = [(1, -3), (6, -8), (10, -13), (12, -18)]
-    pts = [(hx + bx * s_, hy + by * s_) for bx, by in bend]
-    widths = (3.4, 2.8, 2.0, 1.2)
-    for (x0, y0), (x1, y1), w in zip(pts, pts[1:], widths):
-        c.line(x0, y0, x1, y1, darker(horn, 0.8), (w + 1.0) * s_)
-    for (x0, y0), (x1, y1), w in zip(pts, pts[1:], widths):
-        c.line(x0, y0, x1, y1, horn, w * s_)
+    tx0, ty0 = at(-15, -3)                                      # a thin tail with a tuft
+    tx1, ty1 = at(-19, 3)
+    c.line(tx0, ty0, tx1, ty1, hide_dk, 1.4 * s_)
+    c.circle(tx1, ty1, 1.8 * s_, hide_dk)
+    bx, by = at(-1, -2)
+    c.ellipse(bx, by, 15 * s_, 7 * s_, hide)                    # body, long and level
+    bx, by = at(-1, -5)
+    c.ellipse(bx, by, 12 * s_, 3 * s_, hide_lt)                 # light along the back
+    dip = 4 if shove else 0
+    nx0, ny0 = at(10, -4)                                       # neck, forward and up
+    hx, hy = at(18, -9 + dip)
+    c.line(nx0, ny0, hx - 2 * s_, hy + 1 * s_, hide, 7 * s_)
+    c.ellipse(hx, hy, 6 * s_, 4 * s_, hide)                     # head, long-faced
+    c.ellipse(hx + 5 * s_, hy + 1.5 * s_, 3.5 * s_, 2.6 * s_, hide_lt)   # muzzle
+    c.ellipse(hx - 3 * s_, hy - 3.5 * s_, 1.6 * s_, 2.4 * s_, hide_dk)   # ear
+    c.circle(hx + 1 * s_, hy - 1 * s_, 1.1 * s_, (30, 30, 36, 255))      # eye
+    # the horn: straight, long, tapering, out of the brow
+    tip = (18, -8) if not shove else (20, -1)
+    base = (hx + 2 * s_, hy - 3 * s_)
+    end = (hx + tip[0] * s_, hy + tip[1] * s_)
+    c.line(base[0], base[1], end[0], end[1], darker(horn, 0.78), 3.4 * s_)
+    mid = ((base[0] + end[0]) / 2.0, (base[1] + end[1]) / 2.0)
+    c.line(base[0], base[1], mid[0], mid[1], horn, 2.6 * s_)
+    c.line(mid[0], mid[1], end[0], end[1], horn, 1.5 * s_)
 
 
 def draw_climb_colonist(c, x, y, step, climbing=False):
@@ -1340,7 +1340,7 @@ def draw_climb_screen(c, frame=None, total=16):
     lane2_t = p % 1.0
     lane2_x = GIRDERS[2][0] + lane2_t * (GIRDERS[2][2] - GIRDERS[2][0])
     shove = frame is not None and ROCK_START_X <= lane2_x < ROCK_START_X + 10
-    draw_thrumbo(c, 54, girder_y(3, 54) - 9, step, shove, size=0.82)   # smaller, so its horn stays on the screen
+    draw_thrumbo(c, 52, girder_y(3, 52) - 11, step, shove, size=0.82)  # smaller, so its horn stays on the screen
     draw_climb_colonist(c, 108, girder_y(3, 108) - 8, step) # the one to reach
     if frame is None or step % 4 < 2:                       # ...calling for help
         c.circle(112, girder_y(3, 108) - 18, 2.2, (255, 244, 188, 220))
@@ -1382,7 +1382,7 @@ def draw_climb_title(c, frame, total):
 
     p = float(frame) / total
     rx = 82 + 26 * p                                         # shoved off, rolling away
-    draw_thrumbo(c, 56, 79, frame, shove=p < 0.25)
+    draw_thrumbo(c, 54, 78, frame, shove=p < 0.25)
     px = 106 + 5 * math.sin(2 * math.pi * p)
     draw_climb_colonist(c, px, 84, frame)
     if on_screen(rx, 86, 5):
