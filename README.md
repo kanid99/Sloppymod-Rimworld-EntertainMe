@@ -387,3 +387,11 @@ version's references, and all 171 textures are checked for completeness — but
 **none of this has been run in RimWorld yet.** Balance figures in particular
 (joy factors, the karaoke curve, the outdoors ceiling) are reasoned guesses
 until a colony has been let loose on them.
+
+## Licence
+
+Public domain, under [CC0 1.0](LICENSE). That covers everything here - code,
+textures, sounds and text. Copy it, change it, make your own version, fold it
+into another mod or re-upload it: no permission or credit needed.
+
+RimWorld belongs to Ludeon Studios, and nothing of theirs is included here.
