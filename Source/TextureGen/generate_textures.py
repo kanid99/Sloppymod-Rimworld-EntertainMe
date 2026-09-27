@@ -1657,6 +1657,34 @@ def draw_vista_scene(c, name, frame, total):
 VISTA_WIDTHS = ((1, "VistaPanel1"), (2, "VistaPanel2"), (3, "VistaPanel3"))
 
 
+# Wall pieces - the vista panels and the framed jigsaws - drawn for the wall
+# face they hang on. South is the picture face-on. On a north face the wall
+# itself is between the picture and the camera, so only the top of it shows,
+# over the wall's top edge (drawOffsetNorth puts that edge WALL_PEEK px down
+# the canvas). On an east or west face it would be seen edge-on, so it is
+# tipped out a little at the bottom, the way a hung picture leans: its top
+# against the wall, its foot toward the room - a narrowed strip lying along
+# the wall tile's face, still showing the picture. West is east turned half
+# round rather than mirrored, so nothing on it reads backwards.
+WALL_PEEK = 34
+WALL_EDGE_EAST = 79               # the wall's east face, at drawOffsetEast 0.26
+
+
+def save_wall_piece(face, name, strip):
+    """Write the four facings of a wall piece from its face-on drawing."""
+    px, w, h = face.pixels(), face.w, face.h
+    face.save(os.path.join(OUT, "%s_south.png" % name))
+    north = Canvas(w, 96)
+    blit_rect(north, px, w, h, (0, 0, w, h * 0.55), (0, 0, w, WALL_PEEK))
+    north.save(os.path.join(OUT, "%s_north.png" % name))
+    east = Canvas(96, w)
+    blit_quad(east, px, w, h, (0, 0, w, h), (WALL_EDGE_EAST + 3, w), (0, -w), (-strip, 0))
+    east.save(os.path.join(OUT, "%s_east.png" % name))
+    wp, ww, wh = rotate(east.pixels(), 96, w, 2)
+    write_png(os.path.join(OUT, "%s_west.png" % name), ww, wh, wp)
+    print("  %s_{north,east,south,west}.png" % name)
+
+
 def vista_panel():
     """Each panel's own texture: a daylight view with the lights down.
 
@@ -1671,7 +1699,7 @@ def vista_panel():
         c.rect(12, 12, c.w - 12, 84, (10, 12, 22, 150), 4)  # lights down
         for i in range(min(3, tiles + 1)):
             c.circle(28 + i * 12, 89, 2.2, (54, 58, 70, 255))
-        save_rotations(c, name)
+        save_wall_piece(c, name, 56)
         made[name] = c
     return made
 
@@ -3232,7 +3260,7 @@ def framed_jigsaws():
             y = 15 + 66.0 * k / JIGSAW_ROWS
             c.line(13, y, 115, y, (0, 0, 0, 34), 0.8)
         c.rect(13, 15, 115, 21, (255, 255, 255, 22), 0)      # glass sheen
-        save_rotations(c, "FramedJigsaw%s" % name)
+        save_wall_piece(c, "FramedJigsaw%s" % name, 46)
         made["FramedJigsaw%s" % name] = c
     return made
 

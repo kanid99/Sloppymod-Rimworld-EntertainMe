@@ -51,6 +51,65 @@ namespace EntertainingIdeas
     }
 
     /// <summary>
+    /// Auto-aiming that gives way to the player.
+    ///
+    /// A place worker's ghost is redrawn every frame, so a worker that simply
+    /// turns the ghost to its preferred side turns it back every frame too -
+    /// press rotate and it snaps straight back, which is what made placing a
+    /// vista panel feel like a fight. This makes the auto-aim a first guess
+    /// only: it is offered when the cursor reaches a new cell, and as soon as
+    /// the rotation changes to anything it did not set, the player has turned
+    /// it themselves and it stops for the rest of that placement.
+    /// </summary>
+    internal static class AutoTurn
+    {
+        private static Designator session;
+        private static IntVec3 lastCell = IntVec3.Invalid;
+        private static Rot4 expected;
+        private static bool playerTurned;
+
+        /// <summary>
+        /// True when the auto-aim may suggest a facing for this cell: a new
+        /// cell, and the player has not turned the ghost by hand. Call
+        /// Suggested with whatever was chosen, or with the current rotation
+        /// when there was nothing better.
+        /// </summary>
+        public static bool MaySuggest(IntVec3 cell, Rot4 current)
+        {
+            Designator designator = Find.DesignatorManager == null ? null : Find.DesignatorManager.SelectedDesignator;
+            if (designator != session)
+            {
+                // A fresh placement: forget the last one's choices.
+                session = designator;
+                lastCell = IntVec3.Invalid;
+                playerTurned = false;
+            }
+            if (playerTurned)
+            {
+                return false;
+            }
+            if (lastCell.IsValid && current != expected)
+            {
+                playerTurned = true;
+                return false;
+            }
+            if (cell == lastCell)
+            {
+                return false;
+            }
+            lastCell = cell;
+            expected = current;
+            return true;
+        }
+
+        public static void Suggested(Rot4 wanted, Rot4 current)
+        {
+            PlacingRotation.SnapTo(wanted, current);
+            expected = wanted;
+        }
+    }
+
+    /// <summary>
     /// Draws, while placing, the wall the projector will actually hit - or the
     /// beam running off into nothing if there is no wall in range. Aiming a
     /// projector you cannot see the aim of is guesswork otherwise.
@@ -83,9 +142,9 @@ namespace EntertainingIdeas
                 // facing that is already useless: a valid aim is left alone,
                 // because which wall to use is the player's call.
                 Rot4 better;
-                if (TryFindAWall(map, center, range, rot, out better))
+                if (AutoTurn.MaySuggest(center, rot) && TryFindAWall(map, center, range, rot, out better))
                 {
-                    PlacingRotation.SnapTo(better, rot);
+                    AutoTurn.Suggested(better, rot);
                     return;
                 }
                 GenDraw.DrawFieldEdges(beamCells, new Color(1f, 0.4f, 0.4f, 0.35f));
@@ -254,6 +313,13 @@ namespace EntertainingIdeas
                         "Needs " + run.Count + " tiles of unbroken wall to span.");
                 }
             }
+
+            // Any facing the player picks is theirs - a room, a doorway, the
+            // yard - except one that shows the picture to solid wall.
+            if (FacesIntoWall(map, loc, rot))
+            {
+                return new AcceptanceReport("Would face into a wall. Rotate it to face the room.");
+            }
             return true;
         }
 
@@ -266,8 +332,8 @@ namespace EntertainingIdeas
             }
 
             // Auto-orient, the way a wall lamp does: face whichever side of the
-            // wall is actually a room. Done here rather than at spawn alone so
-            // the ghost shows the truth while it is being placed.
+            // wall is actually a room - but only as a first guess at each new
+            // cell, never over the top of the player turning it themselves.
             SnapPlacingRotation(map, center, rot);
 
             GenDraw.DrawFieldEdges(WallRun(def, center, rot), ghostCol);
@@ -278,10 +344,14 @@ namespace EntertainingIdeas
 
         private static void SnapPlacingRotation(Map map, IntVec3 center, Rot4 current)
         {
+            if (!AutoTurn.MaySuggest(center, current))
+            {
+                return;
+            }
             Rot4 wanted;
             if (TryFindOpenSide(map, center, current, out wanted))
             {
-                PlacingRotation.SnapTo(wanted, current);
+                AutoTurn.Suggested(wanted, current);
             }
         }
 
@@ -374,8 +444,10 @@ namespace EntertainingIdeas
     }
 
     /// <summary>
-    /// Turns a wall-mounted thing to face the room when it is built, so a
-    /// blueprint placed the wrong way round still ends up pointing inward.
+    /// Turns a wall-mounted thing away from solid wall when it is built or
+    /// loaded - a wall put up in front of it after it was placed, or a panel
+    /// from before 0.9.49 that vanilla had turned along its wall. Any other
+    /// facing is the player's choice and is left alone.
     /// </summary>
     public class CompProperties_FaceOpenSide : CompProperties
     {
@@ -413,13 +485,11 @@ namespace EntertainingIdeas
             {
                 return;
             }
-            // On load, leave a panel alone unless it is showing its picture to
-            // solid wall. Panels built before 0.9.49 were turned to face along
-            // their wall by vanilla's attachment logic; this straightens those
-            // without ever overriding one a player deliberately aimed at a
-            // room or a doorway.
-            if (respawningAfterLoad
-                && !PlaceWorker_WallMountedDisplay.FacesIntoWall(parent.Map, parent.Position, parent.Rotation))
+            // Built or loaded, leave a panel alone unless it is showing its
+            // picture to solid wall. It used to re-aim every new panel at the
+            // "best" side on completion, which overrode a blueprint the player
+            // had deliberately turned to face a doorway or the yard.
+            if (!PlaceWorker_WallMountedDisplay.FacesIntoWall(parent.Map, parent.Position, parent.Rotation))
             {
                 return;
             }
