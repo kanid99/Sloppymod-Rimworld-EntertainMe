@@ -1670,6 +1670,52 @@ WALL_PEEK = 34
 WALL_EDGE_EAST = 79               # the wall's east face, at drawOffsetEast 0.26
 
 
+
+# ---------------------------------------------------------------------------
+# Tables: the top as it has always been drawn, and under its south edge the
+# front of the table and its legs, the way vanilla draws a table. Everything
+# that animates on a table top - puzzle pieces, boards, a ball, a puck, orrery
+# gears - is drawn at the building's centre at its own size, so the canvas is
+# padded by the same amount above as the legs take below, keeping the top
+# exactly where it was.
+# ---------------------------------------------------------------------------
+def table_legs(c, x0, x1, y_edge, drop, apron, leg, legs, apron_h=16):
+    """The south edge and the legs under it. Drawn before the top is laid
+    over, so only what hangs below the top's edge shows."""
+    for lx in legs:
+        c.rect(lx - 6, y_edge, lx + 6, y_edge + drop, DARK, 3)
+        c.rect(lx - 4, y_edge, lx + 4, y_edge + drop - 2, leg, 2)
+    c.ellipse((x0 + x1) / 2.0, y_edge + drop - 2, (x1 - x0) / 2.0, 5, (0, 0, 0, 45))
+    c.rect(x0 - 3, y_edge - 12, x1 + 3, y_edge + apron_h + 3, DARK, 5)
+    c.rect(x0, y_edge - 10, x1, y_edge + apron_h, apron, 4)
+    c.line(x0 + 3, y_edge + apron_h - 3, x1 - 3, y_edge + apron_h - 3, darker(apron, 0.7), 1.4)
+
+
+def lay_over(c, px, w, h, x, y):
+    """Composite a finished drawing onto a canvas at 1:1."""
+    blit_rect(c, px, w, h, (0, 0, w, h), (x, y, x + w, y + h))
+
+
+def save_table_views(top, name, drop, apron, leg, legs_ns, legs_ew, extra=None):
+    """A rotatable table's four views from its top, drawn facing south.
+
+    Each canvas is the turned top padded by drop on every side: the legs take
+    the padding below, and the rest keeps the top centred. The def's drawSize
+    is the top's size plus 2 * drop, in tiles."""
+    px, w, h = top.pixels(), top.w, top.h
+    for facing, turns in (("south", 0), ("west", 1), ("north", 2), ("east", 3)):
+        rp, rw, rh = rotate(px, w, h, turns)
+        c = Canvas(rw + 2 * drop, rh + 2 * drop)
+        legs = legs_ns if facing in ("north", "south") else legs_ew
+        table_legs(c, drop + 6, drop + rw - 6, drop + rh - 8, drop + 6, apron, leg,
+                   [drop + rw * f for f in legs])
+        lay_over(c, rp, rw, rh, drop, drop)
+        if extra is not None:
+            extra(c, facing, drop, rw, rh)
+        c.save(os.path.join(OUT, "%s_%s.png" % (name, facing)))
+    print("  %s_{north,east,south,west}.png  (tables, padded %d)" % (name, drop))
+
+
 def save_wall_piece(face, name, strip):
     """Write the four facings of a wall piece from its face-on drawing."""
     px, w, h = face.pixels(), face.w, face.h
@@ -2221,62 +2267,189 @@ def bowling_frames(total=6):
 # 12. Karaoke machine  (industrial, 1x1, a crowd gathers)
 # ---------------------------------------------------------------------------
 
-def karaoke_machine():
-    c = Canvas(128, 128)
-    c.rect(14, 14, 114, 116, DARK, 12)
-    c.rect(17, 17, 111, 113, (48, 44, 62, 255), 10)
-    c.rect(26, 24, 102, 66, (14, 16, 26, 255), 6)               # screen
-    c.frame(26, 24, 102, 66, (120, 130, 170, 140), 2, 6)
-    for k in range(5):                                           # idle lyric bars
-        c.rect(32, 32 + k * 7, 32 + (18 + (k * 13) % 44), 36 + k * 7,
-               (86, 132, 196, 200), 2)
-    case = (48, 44, 62, 255)
-    for sx in (24, 88):                                          # speakers
-        c.circle(sx + 8, 90, 15, darker(case, 0.5))
-        c.circle(sx + 8, 90, 12.5, (34, 32, 44, 255))
-        c.ring(sx + 8, 90, 9, 7.5, (78, 74, 96, 255))
-        c.circle(sx + 8, 90, 4, (96, 92, 116, 255))
-    c.rect(54, 78, 74, 104, darker(case, 0.5), 5)               # mic cradle
-    c.rect(57, 81, 71, 101, (62, 58, 76, 255), 4)
-    c.circle(64, 86, 6, (196, 198, 210, 255))
-    c.circle(64, 86, 4, (120, 124, 140, 255))
-    c.rect(58, 92, 70, 100, (40, 38, 50, 255), 3)
+# Karaoke, drawn the way an arcade cabinet is: side-on it is the machine's
+# profile - the lit marquee, the screen leaning back toward the singer, the
+# deck jutting out with the mic lying on it, the speaker cabinet below - and
+# the front and back share its heights exactly, so all four views are one
+# standing machine.
+KA_CASE = (56, 48, 74, 255)
+KA_TRIM = (206, 92, 178, 255)          # side art and marquee colour
+KA_GLASS = (14, 16, 26, 255)
+# Shared heights (canvas y), top to bottom.
+KA_TOP = 14            # marquee top
+KA_MARQ = 28           # marquee bottom / screen top
+KA_SCR_BOT = 60        # screen bottom / deck top
+KA_DECK = 72           # deck front edge bottom
+KA_BASE = 112          # cabinet bottom / plinth top
+KA_FLOOR = 120
+# Side profile (east view, front to the right), x positions.
+KA_BACK = 26           # back of the cabinet
+KA_TOP_FRONT = 76      # front of the marquee
+KA_SCR_FOOT = 84       # screen's bottom edge, leaning out toward the singer
+KA_DECK_FRONT = 106    # the deck juts out
+KA_BODY_FRONT = 94     # speaker cabinet front
+# Front view: x span.
+KA_FX0, KA_FX1 = 22, 106
+
+
+def _karaoke_side(c):
+    """East view: the cabinet's profile - marquee, the screen leaning back,
+    the deck jutting out with the mic on it, the speaker cabinet below."""
+    c.ellipse((KA_BACK + KA_DECK_FRONT) / 2.0, KA_FLOOR - 1, (KA_DECK_FRONT - KA_BACK) / 2.0 + 2, 4, (0, 0, 0, 60))
+    profile = [(KA_BACK, KA_TOP), (KA_TOP_FRONT, KA_TOP), (KA_TOP_FRONT, KA_MARQ), (KA_SCR_FOOT, KA_SCR_BOT),
+               (KA_DECK_FRONT, KA_SCR_BOT), (KA_DECK_FRONT, KA_DECK), (KA_BODY_FRONT, KA_DECK + 4),
+               (KA_BODY_FRONT, KA_BASE), (KA_BACK, KA_BASE)]
+    silhouette(c, [("poly", profile, KA_CASE),
+                   ("rect", KA_BACK + 2, KA_BASE - 2, KA_BODY_FRONT - 2, KA_FLOOR, 2, darker(KA_CASE, 0.6))], 4.0)
+    c.poly([(KA_BACK + 4, KA_BASE - 1), (KA_BODY_FRONT - 4, KA_BASE - 1), (KA_BODY_FRONT - 4, KA_FLOOR - 2), (KA_BACK + 4, KA_FLOOR - 2)], darker(KA_CASE, 0.55))
+    # the marquee's side, and the screen's edge catching its own light
+    c.rect(KA_BACK, KA_TOP, KA_TOP_FRONT, KA_MARQ, lighter(KA_CASE, 0.12), 3)
+    c.line(KA_TOP_FRONT - 1, KA_TOP + 2, KA_TOP_FRONT - 1, KA_MARQ - 1, lighter(KA_TRIM, 0.3), 2)
+    c.line(KA_TOP_FRONT, KA_MARQ, KA_SCR_FOOT, KA_SCR_BOT, (120, 150, 210, 230), 2)
+    # the deck's top, seen from above as it juts out, and the mic lying on it
+    c.poly([(KA_SCR_FOOT - 2, KA_SCR_BOT), (KA_DECK_FRONT, KA_SCR_BOT), (KA_DECK_FRONT - 2, KA_SCR_BOT + 4), (KA_SCR_FOOT - 2, KA_SCR_BOT + 4)], lighter(KA_CASE, 0.25))
+    c.rect(KA_DECK_FRONT - 6, KA_SCR_BOT, KA_DECK_FRONT, KA_DECK, darker(KA_CASE, 0.7), 1)
+    c.line(KA_SCR_FOOT + 2, KA_SCR_BOT - 3, KA_DECK_FRONT - 8, KA_SCR_BOT - 3, (170, 172, 184, 255), 4)
+    c.circle(KA_DECK_FRONT - 7, KA_SCR_BOT - 3, 3.6, (206, 208, 218, 255))
+    # speaker cones on the front, edge-on
+    c.rect(KA_BODY_FRONT - 3, KA_DECK + 10, KA_BODY_FRONT + 2, KA_BASE - 6, darker(KA_CASE, 0.5), 2)
+    c.rect(KA_BODY_FRONT - 1, KA_DECK + 14, KA_BODY_FRONT + 2, KA_DECK + 24, (96, 92, 116, 255), 1)
+    c.rect(KA_BODY_FRONT - 1, KA_BASE - 24, KA_BODY_FRONT + 2, KA_BASE - 12, (96, 92, 116, 255), 1)
+    # side art: a stripe following the profile and a big note
+    c.poly([(KA_BACK + 4, KA_BASE - 8), (KA_BACK + 4, KA_BASE - 16), (KA_BODY_FRONT - 4, KA_DECK + 6), (KA_BODY_FRONT - 4, KA_DECK + 14)], KA_TRIM)
+    nx, ny = KA_BACK + 26, KA_MARQ + 44
+    c.ellipse(nx, ny, 7, 5.5, lighter(KA_TRIM, 0.35))
+    c.rect(nx + 5, ny - 26, nx + 8, ny, lighter(KA_TRIM, 0.35), 1)
+    c.poly([(nx + 8, ny - 26), (nx + 18, ny - 20), (nx + 18, ny - 15), (nx + 8, ny - 20)], lighter(KA_TRIM, 0.35))
+    c.line(KA_BACK + 2, KA_TOP + 3, KA_BACK + 2, KA_BASE - 3, (255, 255, 255, 30), 2)
+
+
+def _karaoke_front(c, lit=True):
+    """South: the marquee, the screen, the deck with the mic, two speakers."""
+    c.ellipse((KA_FX0 + KA_FX1) / 2.0, KA_FLOOR - 1, (KA_FX1 - KA_FX0) / 2.0 + 2, 4, (0, 0, 0, 60))
+    silhouette(c, [("rect", KA_FX0, KA_TOP, KA_FX1, KA_BASE, 5, KA_CASE),
+                   ("rect", KA_FX0 - 3, KA_SCR_BOT, KA_FX1 + 3, KA_DECK, 3, lighter(KA_CASE, 0.2)),
+                   ("rect", KA_FX0 + 2, KA_BASE - 2, KA_FX1 - 2, KA_FLOOR, 2, darker(KA_CASE, 0.6))], 4.0)
+    c.rect(KA_FX0 + 4, KA_BASE - 1, KA_FX1 - 4, KA_FLOOR - 2, darker(KA_CASE, 0.55), 1)
+    # marquee
+    c.rect(KA_FX0, KA_TOP, KA_FX1, KA_MARQ, darker(KA_CASE, 0.7), 5)
+    c.rect(KA_FX0 + 5, KA_TOP + 3, KA_FX1 - 5, KA_MARQ - 3, lighter(KA_TRIM, 0.1) if lit else darker(KA_TRIM, 0.6), 3)
+    for k in range(7):
+        c.circle(KA_FX0 + 12 + k * 10, (KA_TOP + KA_MARQ) / 2.0, 2.2, (255, 240, 220, 200))
+    # screen, leaning back
+    c.rect(KA_FX0 + 5, KA_MARQ + 1, KA_FX1 - 5, KA_SCR_BOT - 1, darker(KA_CASE, 0.5), 4)
+    c.rect(KA_FX0 + 8, KA_MARQ + 4, KA_FX1 - 8, KA_SCR_BOT - 4, KA_GLASS, 3)
+    for k in range(4):
+        c.rect(KA_FX0 + 14, KA_MARQ + 9 + k * 5.5, KA_FX0 + 14 + (16 + (k * 13) % 40), KA_MARQ + 12 + k * 5.5, (86, 132, 196, 200), 1.5)
+    # the deck: its top catching the light, the mic lying on it, two buttons
+    c.rect(KA_FX0 - 3, KA_SCR_BOT, KA_FX1 + 3, KA_SCR_BOT + 5, lighter(KA_CASE, 0.32), 2)
+    c.line(52, KA_SCR_BOT + 2.5, 80, KA_SCR_BOT + 2.5, (170, 172, 184, 255), 4)
+    c.circle(82, KA_SCR_BOT + 2.5, 3.8, (206, 208, 218, 255))
+    for bx, col in ((34, (226, 182, 78, 255)), (94, (110, 196, 150, 255))):
+        c.circle(bx, KA_SCR_BOT + 7.5, 2.8, col)
+    # speakers
+    for sx in (KA_FX0 + 20, KA_FX1 - 20):
+        c.circle(sx, 92, 15, darker(KA_CASE, 0.5))
+        c.circle(sx, 92, 13, (34, 32, 44, 255))
+        c.ring(sx, 92, 9, 7.5, (78, 74, 96, 255))
+        c.circle(sx, 92, 4, (96, 92, 116, 255))
+    c.line(KA_FX0 + 1.5, KA_MARQ, KA_FX0 + 1.5, KA_BASE - 4, (255, 255, 255, 36), 2)
+
+
+def _karaoke_back(c):
+    c.ellipse((KA_FX0 + KA_FX1) / 2.0, KA_FLOOR - 1, (KA_FX1 - KA_FX0) / 2.0 + 2, 4, (0, 0, 0, 60))
+    silhouette(c, [("rect", KA_FX0, KA_TOP, KA_FX1, KA_BASE, 5, KA_CASE),
+                   ("rect", KA_FX0 + 2, KA_BASE - 2, KA_FX1 - 2, KA_FLOOR, 2, darker(KA_CASE, 0.6))], 4.0)
+    c.rect(KA_FX0 + 4, KA_BASE - 1, KA_FX1 - 4, KA_FLOOR - 2, darker(KA_CASE, 0.55), 1)
+    panel = darker(KA_CASE, 0.82)
+    c.rect(KA_FX0, KA_TOP, KA_FX1, KA_MARQ, darker(KA_CASE, 0.7), 5)                   # back of the marquee
+    c.rect(KA_FX0 + 4, KA_MARQ + 3, KA_FX1 - 4, KA_BASE - 4, panel, 3)
+    for k in range(5):                                                   # vents behind the screen
+        c.rect(34, KA_MARQ + 8 + k * 5, 94, KA_MARQ + 10.5 + k * 5, darker(panel, 0.5), 1)
+    for sx in (KA_FX0 + 20, KA_FX1 - 20):                                     # speaker magnets
+        c.circle(sx, 92, 9, darker(panel, 0.7))
+        c.circle(sx, 92, 5, darker(panel, 0.5))
+    c.rect(54, 78, 74, 88, (150, 146, 128, 255), 1.5)                   # maker's plate
+    c.rect(59, 98, 69, 105, darker(panel, 0.4), 2)                      # cable
+    c.line(64, 104, 64, 118, (22, 22, 26, 255), 3)
+    c.line(64, 118, 86, 121, (22, 22, 26, 255), 3)
+
+
+def _karaoke_notes(c, i, total, x, spread=22):
+    p = float(i) / total
     for k in range(3):
-        c.circle(61 + k * 3, 108, 2, (226, 182, 78, 255))
-    save_rotations(c, "KaraokeMachine")
+        t = (p + k / 3.0) % 1.0
+        nx = x + (k - 1) * spread + 6 * math.sin(2 * math.pi * t)
+        ny = KA_TOP + 8 - t * 22
+        a = int(210 * (1 - t))
+        c.circle(nx, ny + 6, 3.0, (250, 232, 150, a))
+        c.rect(nx + 1.8, ny - 4, nx + 3.4, ny + 6, (250, 232, 150, a), 1)
+
+
+def _karaoke_frame_south(i, total=6):
+    c = Canvas(128, 128); p = float(i) / total
+    c.rect(KA_FX0 + 8, KA_MARQ + 4, KA_FX1 - 8, KA_SCR_BOT - 4, KA_GLASS, 3)
+    for k in range(4):
+        lit = (i + k) % 4
+        width = 14 + ((k * 13 + i * 7) % 40)
+        col = (250, 226, 120, 235) if lit < 2 else (86, 132, 196, 210)
+        c.rect(KA_FX0 + 14, KA_MARQ + 9 + k * 5.5, KA_FX0 + 14 + width, KA_MARQ + 12 + k * 5.5, col, 1.5)
+    for k in range(7):                                                   # marquee chase
+        if (k + i) % 3 == 0:
+            c.circle(KA_FX0 + 12 + k * 10, (KA_TOP + KA_MARQ) / 2.0, 3.2, (255, 250, 230, 240))
+    for j, sx in enumerate((KA_FX0 + 20, KA_FX1 - 20)):
+        pulse = 1.0 + 0.22 * math.sin(2 * math.pi * (p * 2 + j * 0.5))
+        c.ring(sx, 92, 10 * pulse, 7.5 * pulse, (152, 146, 190, 180))
+        c.circle(sx, 92, 4 * pulse, (206, 198, 246, 200))
+    _karaoke_notes(c, i, total, 64)
     return c
 
 
-def karaoke_frames(total=6):
-    import math
-    for i in range(total):
+def _karaoke_frame_north(i, total=6):
+    c = Canvas(128, 128)
+    _karaoke_notes(c, i, total, 64)
+    return c
+
+
+def _karaoke_frame_side(c, i, total=6):
+    p = float(i) / total
+    c.line(KA_TOP_FRONT - 1, KA_TOP + 2, KA_TOP_FRONT - 1, KA_MARQ - 1, (255, 240, 220, 150 + 90 * (i % 2)), 2.4)
+    c.line(KA_TOP_FRONT, KA_MARQ, KA_SCR_FOOT, KA_SCR_BOT, (250, 226, 120, 170 + int(60 * math.sin(2 * math.pi * p * 2))), 2.4)
+    for j, (y0, y1) in enumerate(((KA_DECK + 14, KA_DECK + 24), (KA_BASE - 24, KA_BASE - 12))):
+        pulse = 0.5 + 0.5 * math.sin(2 * math.pi * (p * 2 + j * 0.5))
+        c.rect(KA_BODY_FRONT + 1, y0 - 2 * pulse, KA_BODY_FRONT + 3 + 3 * pulse, y1 + 2 * pulse, (152, 146, 190, int(90 + 120 * pulse)), 1)
+    _karaoke_notes(c, i, total, 84, 14)
+
+
+
+def karaoke_machine():
+    views = {}
+    for facing in ("north", "east", "south", "west"):
         c = Canvas(128, 128)
-        p = float(i) / total
+        if facing == "south":
+            _karaoke_front(c)
+        elif facing == "north":
+            _karaoke_back(c)
+        else:
+            _karaoke_side(MirrorCanvas(c) if facing == "west" else c)
+        c.save(os.path.join(OUT, "KaraokeMachine_%s.png" % facing))
+        views[facing] = c
+    print("  KaraokeMachine_{north,east,south,west}.png  (128x128)")
+    return views["south"]
 
-        c.rect(26, 24, 102, 66, (14, 16, 26, 255), 6)           # screen redraw
-        for k in range(5):                                       # bouncing lyrics
-            lit = (i + k) % 5
-            width = 16 + ((k * 13 + i * 7) % 46)
-            col = (250, 226, 120, 235) if lit < 2 else (86, 132, 196, 210)
-            c.rect(32, 32 + k * 7, 32 + width, 36 + k * 7, col, 2)
-        bounce = 30 + 44 * ((p * 2) % 1.0)                        # bouncing ball
-        c.circle(bounce, 28, 3.2, (255, 244, 200, 240))
 
-        for sx in (24, 88):                                      # speaker pulse
-            pulse = 1.0 + 0.25 * math.sin(2 * math.pi * (p * 2 + (0 if sx < 50 else 0.5)))
-            c.ring(sx + 8, 90, 11 * pulse, 8.5 * pulse, (152, 146, 190, 180))
-            c.circle(sx + 8, 90, 4 * pulse, (206, 198, 246, 200))
-
-        for k in range(3):                                       # notes drifting off
-            t = (p + k / 3.0) % 1.0
-            nx = 64 + (k - 1) * 22 + 6 * math.sin(2 * math.pi * t)
-            ny = 80 - t * 58
-            a = int(210 * (1 - t))
-            c.circle(nx, ny, 3.4, (250, 232, 150, a))
-            c.rect(nx + 2, ny - 12, nx + 4, ny, (250, 232, 150, a), 1)
-        c.circle(64, 86, 3, (250, 120, 110, 180 + int(60 * math.sin(2 * math.pi * p))))
-        c.save(os.path.join(OUT, "KaraokeMachineSing_%d.png" % i))
-    print("  KaraokeMachineSing_0..%d.png  (128x128)" % (total - 1))
+def karaoke_frames(total=6):
+    """One strip per facing (perFacing): lyrics, the marquee chase and the
+    speakers from the front; notes rising from every side; the screen's edge
+    and the speakers' rims side-on."""
+    for i in range(total):
+        _karaoke_frame_south(i, total).save(os.path.join(OUT, "KaraokeMachineSingSouth_%d.png" % i))
+        _karaoke_frame_north(i, total).save(os.path.join(OUT, "KaraokeMachineSingNorth_%d.png" % i))
+        for facing in ("east", "west"):
+            c = Canvas(128, 128)
+            _karaoke_frame_side(MirrorCanvas(c) if facing == "west" else c, i, total)
+            c.save(os.path.join(OUT, "KaraokeMachineSing%s_%d.png" % (facing.capitalize(), i)))
+    print("  KaraokeMachineSing{North,East,South,West}_0..%d.png  (128x128)" % (total - 1))
 
 
 # ---------------------------------------------------------------------------
@@ -2418,7 +2591,30 @@ def tabletop_orrery():
     c = Canvas(160, 160)
     tabletop_orrery_body(c, None)
     tabletop_orrery_body(c, 0.0)      # a still frame for the build menu
-    save_single(c, "TabletopOrrery")
+    save_single(orrery_case(c), "TabletopOrrery")
+    return c
+
+
+ORRERY_DROP = 44
+
+
+def orrery_case(top):
+    """The tabletop orrery's wooden case under its top: the front with a
+    drawer, and brass feet. Padded ORRERY_DROP above as well, so the top and
+    its turning gears stay centred (drawSize 1.2 x 1.86)."""
+    d = ORRERY_DROP
+    c = Canvas(160, 160 + 2 * d)
+    wood = (104, 70, 44, 255)
+    c.ellipse(80, 160 + 2 * d - 4, 66, 5, (0, 0, 0, 50))
+    for fx in (26, 134):                                        # brass feet
+        c.rect(fx - 7, d + 180, fx + 7, 160 + 2 * d - 2, DARK, 3)
+        c.rect(fx - 5, d + 181, fx + 5, 160 + 2 * d - 4, (190, 150, 70, 255), 2)
+    c.rect(16, d + 130, 144, d + 186, DARK, 6)
+    c.rect(19, d + 133, 141, d + 183, darker(wood, 0.8), 5)     # the case's front
+    c.rect(52, d + 156, 108, d + 176, darker(wood, 0.55), 3)    # drawer
+    c.circle(80, d + 166, 3, (214, 176, 92, 255))
+    c.line(20, d + 180, 140, d + 180, darker(wood, 0.6), 1.4)
+    lay_over(c, top.pixels(), 160, 160, 0, d)
     return c
 
 
@@ -2592,48 +2788,83 @@ def pool_water_terrain():
     return c
 
 
-def pool_filter():
-    """1x2 plant room: pump, sand filter, and a gauge you can read."""
-    c = Canvas(160, 320)
-    L, R, TOP, BOT = 12, 148, 8, 312
-    mid = (L + R) / 2
+def _pool_filter_view(facing):
+    """A filter tank and a pump on a skid. The pump, its fan cover and the
+    control box face the way the unit does; the tank stands taller than the
+    footprint, so the canvas is 2x2 tiles (160 px each) around it."""
+    import math
+    c = Canvas(320, 320)
+    steel = (150, 156, 164, 255)
+    tank = (64, 110, 150, 255)
 
-    c.rect(L - 4, TOP - 4, R + 4, BOT + 4, DARK, 10)
-    c.rect(L, TOP, R, BOT, (96, 104, 112, 255), 8)         # housing
-    c.rect(L + 6, TOP + 6, R - 6, BOT - 6, (74, 82, 92, 255), 6)
+    def tank_at(cv, x0, x1, top, bottom, rim_rx, rim_ry):
+        silhouette(cv, [("rect", x0, top, x1, bottom, 14, tank)], 4.0)
+        cx = (x0 + x1) / 2.0
+        cv.rect(x0, top + 4, x1, bottom, tank, 0)
+        cv.ellipse(cx, top + 4, rim_rx, rim_ry, lighter(tank, 0.3))
+        cv.ellipse(cx, top + 4, rim_rx - 10, rim_ry - 5, lighter(tank, 0.15))
+        cv.circle(cx, top, 9, steel)
+        cv.circle(cx, top, 5, (90, 96, 104, 255))
+        cv.line(x0 + 14, top + 20, x0 + 14, bottom - 6, lighter(tank, 0.25), 3)
+        for y in (top + (bottom - top) * 0.36, top + (bottom - top) * 0.72):
+            cv.line(x0, y, x1, y, darker(tank, 0.7), 2)
 
-    inner = darker((96, 104, 112, 255), 0.48)                # interior lines: a tint of the
-                                                           # housing, not the
-                                                           # line around it
-    c.circle(mid, TOP + 78, 50, inner)                     # sand filter tank
-    c.circle(mid, TOP + 78, 46, (128, 136, 146, 255))
-    c.ring(mid, TOP + 78, 46, 38, (152, 160, 170, 255))
-    c.ring(mid, TOP + 78, 30, 26, (60, 66, 76, 255))
-    c.circle(mid, TOP + 78, 24, (46, 52, 62, 255))
-    c.circle(mid - 12, TOP + 62, 9, (255, 255, 255, 40))
+    def controls(cv, x, y):
+        cv.rect(x - 22, y - 12, x + 22, y + 12, DARK, 3)
+        cv.rect(x - 19, y - 9, x + 19, y + 9, (40, 44, 50, 255), 2)
+        for k in range(3):
+            cv.rect(x - 15 + k * 11, y - 4, x - 8 + k * 11, y + 4, (120, 226, 140, 255), 1)
 
-    c.circle(mid, BOT - 96, 34, inner)                     # pump volute
-    c.circle(mid, BOT - 96, 30, (108, 116, 126, 255))
-    c.ring(mid, BOT - 96, 30, 22, (140, 148, 158, 255))
-    for i in range(6):
-        a = math.radians(i * 60 + 12)
-        c.line(mid, BOT - 96, mid + math.cos(a) * 20, BOT - 96 + math.sin(a) * 20,
-               (58, 64, 74, 255), 4)
-    c.circle(mid, BOT - 96, 7, (44, 50, 60, 255))
-
-    for px in (L + 18, R - 18):                            # inlet and outlet
-        c.rect(px - 9, TOP + 128, px + 9, BOT - 120, inner, 5)
-        c.rect(px - 6, TOP + 131, px + 6, BOT - 123, (86, 132, 156, 255), 4)
-    c.rect(L + 8, BOT - 52, R - 8, BOT - 16, inner, 5)     # gauge plate
-    c.rect(L + 12, BOT - 48, R - 12, BOT - 20, (40, 46, 56, 255), 4)
-    c.circle(L + 34, BOT - 34, 11, (26, 30, 38, 255))
-    c.circle(L + 34, BOT - 34, 9, (210, 222, 232, 255))
-    c.line(L + 34, BOT - 34, L + 40, BOT - 41, (190, 60, 52, 255), 2.4)
-    for i in range(4):
-        c.rect(mid + 2 + i * 16, BOT - 42, mid + 12 + i * 16, BOT - 26,
-               (96, 214, 160, 255) if i < 3 else (58, 66, 78, 255), 2)
-    save_rotations(c, "PoolFilter")
+    if facing == "south":                                   # footprint x 80..240, y 0..320
+        c.ellipse(160, 314, 82, 6, (0, 0, 0, 55))
+        c.rect(84, 236, 236, 312, DARK, 4)
+        c.rect(87, 239, 233, 309, (92, 96, 104, 255), 3)             # skid
+        tank_at(c, 100, 220, 40, 232, 60, 16)
+        c.rect(110, 232, 210, 300, DARK, 10)
+        c.rect(113, 235, 207, 297, steel, 9)                         # pump, fan cover toward us
+        c.circle(160, 266, 26, DARK)
+        c.circle(160, 266, 23, (110, 116, 124, 255))
+        for k in range(8):
+            a = k * math.pi / 4
+            c.line(160, 266, 160 + 20 * math.cos(a), 266 + 20 * math.sin(a), (70, 74, 80, 255), 2)
+        controls(c, 208, 250)
+        for px in (118, 202):                                        # pipes
+            c.rect(px - 5, 226, px + 5, 312, DARK, 2)
+            c.rect(px - 3, 228, px + 3, 310, (200, 204, 210, 255), 1)
+    elif facing == "north":                                 # the pump at the far end, the tank nearest
+        c.ellipse(160, 314, 82, 6, (0, 0, 0, 55))
+        c.rect(84, 60, 236, 312, DARK, 4)
+        c.rect(87, 63, 233, 309, (92, 96, 104, 255), 3)
+        c.rect(104, 40, 216, 110, DARK, 10)
+        c.rect(107, 43, 213, 107, darker(steel, 0.85), 9)
+        for x in range(114, 206, 8):
+            c.line(x, 48, x, 102, darker(steel, 0.7), 1.5)           # cooling fins
+        c.rect(196, 30, 232, 56, DARK, 3)
+        c.rect(199, 33, 229, 53, (40, 44, 50, 255), 2)
+        tank_at(c, 100, 220, 110, 300, 60, 16)
+    else:                                                   # side-on; footprint y 80..240
+        m = MirrorCanvas(c) if facing == "west" else c
+        c.ellipse(160, 236, 150, 6, (0, 0, 0, 55))
+        m.rect(8, 200, 312, 238, DARK, 4)
+        m.rect(11, 203, 309, 235, (92, 96, 104, 255), 3)             # skid
+        tank_at(m, 24, 144, 30, 200, 60, 14)
+        silhouette(m, [("rect", 168, 140, 290, 200, 12, steel)], 3.5)   # pump, lying along
+        for x in range(176, 250, 8):
+            m.line(x, 146, x, 194, darker(steel, 0.8), 1.5)
+        m.rect(270, 144, 296, 196, (110, 116, 124, 255), 8)          # fan cover, toward the front
+        m.line(144, 170, 168, 170, (200, 204, 210, 255), 6)          # pipe, tank to pump
+        m.rect(290, 150, 314, 190, DARK, 3)
+        m.rect(293, 153, 311, 187, (40, 44, 50, 255), 2)             # control box, on the front
+        for k in range(3):
+            m.rect(299, 158 + k * 9, 305, 164 + k * 9, (120, 226, 140, 255), 1)
     return c
+
+
+def pool_filter():
+    for facing in ("north", "east", "south", "west"):
+        _pool_filter_view(facing).save(os.path.join(OUT, "PoolFilter_%s.png" % facing))
+    print("  PoolFilter_{north,east,south,west}.png  (320x320)")
+    return _pool_filter_view("south")
 
 
 # ---------------------------------------------------------------------------
@@ -3272,16 +3503,26 @@ def _over(dst, src):
         dst[i + 3] = int(oa * 255)
 
 
+GAME_TABLE_DROP = 50
+
+
 def jigsaw_table():
-    """The table alone, pale so stuff colour tints it like vanilla furniture."""
-    c = Canvas(256, 256)
-    top, edge = (236, 230, 220, 255), (206, 198, 186, 255)
-    silhouette(c, [("rect", 12, 14, 244, 242, 14, edge)], 5.0)
-    c.rect(20, 22, 236, 234, top, 10)
-    for k in range(7):                                    # boards, as tints
-        y = 22 + (k + 1) * 30
-        c.line(22, y, 234, y, darker(top, 0.9, 150), 1.4)
-    c.frame(20, 22, 236, 234, darker(edge, 0.85, 200), 2.0, 10)
+    """The jigsaw table, which the board game table shares: a wooden table with
+    a pale play surface set into its top, and its front edge and two legs
+    under the south edge. Padded GAME_TABLE_DROP above as well, so the top -
+    where the puzzle and the boards are drawn - stays on the footprint
+    (drawSize 2 x 2.78)."""
+    d = GAME_TABLE_DROP
+    c = Canvas(256, 256 + 2 * d)
+    wood = (150, 104, 62, 255)
+    table_legs(c, 12, 244, d + 246, d + 6, darker(wood, 0.85), darker(wood, 0.7), (26, 230))
+    silhouette(c, [("rect", 8, d + 8, 248, d + 248, 10, wood)], 4.0)
+    c.rect(12, d + 12, 244, d + 22, lighter(wood, 0.15), 8)          # far edge catching the light
+    for k in range(1, 6):
+        c.line(10, d + 8 + k * 40, 246, d + 8 + k * 40, darker(wood, 0.85), 1.2)
+    c.rect(22, d + 22, 234, d + 234, darker(wood, 0.6), 6)
+    c.rect(26, d + 26, 230, d + 230, (236, 228, 206, 255), 5)         # the play surface
+    c.frame(26, d + 26, 230, d + 230, (210, 198, 170, 255), 2, 5)
     save_single(c, "JigsawTable")
     return c
 
@@ -3408,26 +3649,55 @@ STORY_MOTIFS = ("Thrumbo", "Raider", "Ship", "Mech")
 STORY_FRAMES = 10
 
 
-def storyteller_stump():
+def _stump_view(facing):
+    """Standing, like the tubs: the cut top with its rings, the bark side and
+    roots below, and the small step up on the side it faces."""
+    import math
     c = Canvas(128, 128)
-    bark, bark_dk = (104, 74, 50, 255), (76, 52, 34, 255)
-    wood, wood_dk = (206, 172, 124, 255), (170, 136, 92, 255)
-    # A wide stump with a root flare at the back and a step cut into the
-    # front, which is the side the teller faces and the audience sits.
-    pieces = [("ellipse", 64, 60, 40, 38, bark),
-              ("ellipse", 36, 34, 14, 10, bark), ("ellipse", 94, 36, 13, 10, bark),
-              ("rect", 44, 88, 84, 110, 6, bark)]
-    silhouette(c, pieces, 4.0)
-    c.ellipse(36, 34, 11, 7, bark_dk)
-    c.ellipse(94, 36, 10, 7, bark_dk)
-    c.ellipse(64, 60, 33, 31, wood)
-    for r in (26, 19, 12, 6):                                  # growth rings
-        c.ring(64, 60, r + 0.9, r, darker(wood, 0.82, 200))
-    c.line(64, 60, 88, 44, darker(wood, 0.7, 160), 1.6)        # a dry crack
-    c.rect(47, 92, 81, 107, wood_dk, 4)                        # the carved step
-    c.line(49, 99, 79, 99, darker(wood_dk, 0.8, 200), 1.4)
-    save_rotations(c, "StorytellerStump")
+    bark = (92, 64, 42, 255)
+    cx, top_y, rx, ry, bot_y = 64, 50, 38, 16, 96
+
+    def body():
+        c.ellipse(cx, bot_y + 8, rx + 10, 9, (0, 0, 0, 55))
+        pts = _arc(cx, top_y, rx, ry, 180, 360) + _arc(cx, bot_y, rx, ry * 0.8, 0, 180)
+        c.poly(_grow_poly(pts, 3.5), DARK)
+        for dx in (-rx + 2, rx - 4):                                 # roots
+            c.ellipse(cx + dx, bot_y + 6, 12, 6, darker(bark, 0.9))
+        c.poly(_arc(cx, top_y, rx, ry, 0, 180) + _arc(cx, bot_y, rx, ry * 0.8, 180, 0), bark)
+        for k in range(1, 9):                                        # bark furrows
+            a = math.radians(180 * k / 9.0)
+            x = cx + rx * math.cos(a)
+            c.line(x, top_y + ry * math.sin(a) + 2, x + math.sin(k) * 2,
+                   bot_y + ry * 0.8 * math.sin(a) - 1, darker(bark, 0.65), 1.6)
+        c.ellipse(cx, top_y, rx, ry, (206, 170, 120, 255))           # the cut top
+        for r in range(6, rx, 6):
+            pts = _arc(cx, top_y, r, r * ry / float(rx), 0, 360, 48)
+            for (x0, y0), (x1, y1) in zip(pts, pts[1:]):
+                c.line(x0, y0, x1, y1, (176, 138, 92, 200), 1)
+        c.line(cx, top_y, cx + 18, top_y - 5, (150, 110, 70, 200), 1.4)   # a crack
+
+    def step(cv, x, y):
+        cv.poly(_grow_poly([(x - 16, y - 6), (x + 16, y - 6), (x + 16, y + 8), (x - 16, y + 8)], 3), DARK)
+        cv.rect(x - 16, y - 6, x + 16, y + 8, darker(bark, 0.9), 2)
+        cv.ellipse(x, y - 6, 16, 5, (196, 160, 112, 255))
+
+    if facing == "north":
+        step(c, cx, top_y - 16)
+        body()
+    elif facing == "south":
+        body()
+        step(c, cx, bot_y + 12)
+    else:
+        body()
+        step(MirrorCanvas(c) if facing == "west" else c, cx + rx + 6, bot_y - 2)
     return c
+
+
+def storyteller_stump():
+    for facing in ("north", "east", "south", "west"):
+        _stump_view(facing).save(os.path.join(OUT, "StorytellerStump_%s.png" % facing))
+    print("  StorytellerStump_{north,east,south,west}.png  (128x128)")
+    return _stump_view("south")
 
 
 def _story_shape(c, motif, x, y, sc, col):
@@ -3815,8 +4085,33 @@ def table_tennis_table():
     for x in (10, 246):
         c.circle(x, 192, 6, DARK)
         c.circle(x, 192, 4.2, (170, 170, 176, 255))
-    save_rotations(c, "TableTennisTable")
+    save_table_views(c, "TableTennisTable", 46, (48, 58, 56, 255), (150, 156, 164, 255),
+                     (0.16, 0.84), (0.12, 0.39, 0.61, 0.88), _tt_net)
     return c
+
+
+def _tt_net(c, facing, drop, rw, rh):
+    """The net stands up: facing north or south its face shows as a band
+    rising from its line; side-on only its posts stand proud."""
+    if facing in ("north", "south"):
+        y = drop + rh / 2.0
+        c.rect(drop + 8, y - 14, drop + rw - 8, y, (236, 236, 240, 150), 1)
+        for x in range(int(drop + 12), int(drop + rw - 10), 5):
+            c.line(x, y - 14, x, y, (200, 200, 210, 160), 0.8)
+        c.rect(drop + 8, y - 15, drop + rw - 8, y - 12, (250, 250, 252, 255), 1)
+        for x in (drop + 6, drop + rw - 6):
+            c.rect(x - 3, y - 16, x + 3, y + 2, (60, 60, 66, 255), 1)
+    else:
+        x = drop + rw / 2.0
+        c.rect(x - 3, drop + 4, x + 3, drop + 30, (60, 60, 66, 255), 1)
+        c.rect(x - 3, drop + rh - 20, x + 3, drop + rh + 2, (60, 60, 66, 255), 1)
+
+
+def _ah_lights(c, facing, drop, rw, rh):
+    if facing in ("east", "west"):
+        for k in range(6):
+            c.circle(drop + rw / 2.0 - 32 + k * 13, drop + rh + 8, 3,
+                     (240, 90, 80, 255) if k < 3 else (90, 160, 240, 255))
 
 
 def air_hockey_table():
@@ -3833,7 +4128,8 @@ def air_hockey_table():
         c.ring(64, y, 22, 20.4, col)
         c.rect(44, y - 3 if y > 128 else y - 1, 84, y + 1 if y > 128 else y + 3, DARK, 1)   # goal slot
     c.rect(52, 244, 76, 250, (236, 196, 70, 255), 2)                # scoreboard light
-    save_rotations(c, "AirHockeyTable")
+    save_table_views(c, "AirHockeyTable", 46, (40, 52, 110, 255), (120, 126, 140, 255),
+                     (0.16, 0.84), (0.08, 0.5, 0.92), _ah_lights)
     return c
 
 

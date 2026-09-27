@@ -97,7 +97,7 @@ def animation():
     preview.text(c, "KARAOKE - LYRICS SCROLL, SPEAKERS PULSE", 610, y + 176, 1, DIM)
     for i, f in enumerate(("0", "2", "4")):
         place(c, "KaraokeMachine_south.png", 610 + i*130, y + 196, 118, 118,
-              overlay="KaraokeMachineSing_%s.png" % f)
+              overlay="KaraokeMachineSingSouth_%s.png" % f)
     preview.text(c, "GRAVBALL - THE BALL ORBITS", 1000, y + 176, 1, DIM)
     for i, f in enumerate(("0", "3")):
         place(c, "GravballCourt_south.png", 1000 + i*100, y + 196, 95, 118,

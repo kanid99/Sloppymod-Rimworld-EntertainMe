@@ -1560,10 +1560,10 @@
       <!-- Singers stand back from it, so look further than the doorstep. -->
       <li Class="EntertainingIdeas.CompProperties_AnimatedScreen">
         <framePath>EntertainingIdeas/Buildings/KaraokeMachineSing</framePath>
+        <perFacing>true</perFacing>
         <frameCount>6</frameCount>
         <ticksPerFrame>9</ticksPerFrame>
         <drawSize>(1.2,1.2)</drawSize>
-        <rotateWithBuilding>true</rotateWithBuilding>
         <scanRadius>4</scanRadius>
         <playJobs>
           <li>EI_Sing_Karaoke</li>
@@ -1754,12 +1754,13 @@
     <graphicData>
       <texPath>EntertainingIdeas/Buildings/TabletopOrrery</texPath>
       <graphicClass>Graphic_Single</graphicClass>
-      <drawSize>(1.2,1.2)</drawSize>
+      <!-- The case's front and feet below the top, padded as much above. -->
+      <drawSize>(1.2,1.86)</drawSize>
       <shadowData>
         <volume>(0.8,0.35,0.8)</volume>
       </shadowData>
       <damageData>
-        <rect>(0.08,0.08,0.84,0.84)</rect>
+        <rect>(0.08,0.41,0.84,0.84)</rect>
       </damageData>
     </graphicData>
     <fillPercent>0.4</fillPercent>
@@ -1860,15 +1861,17 @@
     <graphicData>
       <texPath>EntertainingIdeas/Buildings/PoolFilter</texPath>
       <graphicClass>Graphic_Multi</graphicClass>
-      <drawSize>(1,2)</drawSize>
+      <!-- Two tiles square around the footprint: the filter tank stands
+           taller than the unit is deep. -->
+      <drawSize>(2,2)</drawSize>
       <shadowData>
         <volume>(0.8,0.9,1.7)</volume>
       </shadowData>
       <damageData>
-        <rectN>(0.1,0.05,0.8,0.9)</rectN>
-        <rectS>(0.1,0.05,0.8,0.9)</rectS>
-        <rectE>(0.05,0.1,0.9,0.8)</rectE>
-        <rectW>(0.05,0.1,0.9,0.8)</rectW>
+        <rectN>(0.55,0.05,0.9,1.9)</rectN>
+        <rectS>(0.55,0.05,0.9,1.9)</rectS>
+        <rectE>(0.05,0.5,1.9,1.3)</rectE>
+        <rectW>(0.05,0.5,1.9,1.3)</rectW>
       </damageData>
     </graphicData>
     <size>(1,2)</size>
@@ -2101,9 +2104,11 @@
     <graphicData>
       <texPath>EntertainingIdeas/Buildings/JigsawTable</texPath>
       <graphicClass>Graphic_Single</graphicClass>
-      <drawSize>(2,2)</drawSize>
+      <!-- The top on the footprint, the front edge and legs hanging below
+           it, padded as much above so the top stays centred. -->
+      <drawSize>(2,2.78)</drawSize>
       <damageData>
-        <rect>(0.05,0.05,1.9,1.9)</rect>
+        <rect>(0.05,0.44,1.9,1.9)</rect>
       </damageData>
     </graphicData>
     <size>(2,2)</size>
@@ -2382,9 +2387,11 @@
            board is an overlay, so it keeps its own colours. -->
       <texPath>EntertainingIdeas/Buildings/JigsawTable</texPath>
       <graphicClass>Graphic_Single</graphicClass>
-      <drawSize>(2,2)</drawSize>
+      <!-- The top on the footprint, the front edge and legs hanging below
+           it, padded as much above so the top stays centred. -->
+      <drawSize>(2,2.78)</drawSize>
       <damageData>
-        <rect>(0.05,0.05,1.9,1.9)</rect>
+        <rect>(0.05,0.44,1.9,1.9)</rect>
       </damageData>
     </graphicData>
     <size>(2,2)</size>
@@ -2487,7 +2494,9 @@
     <graphicData>
       <texPath>EntertainingIdeas/Buildings/TableTennisTable</texPath>
       <graphicClass>Graphic_Multi</graphicClass>
-      <drawSize>(2,3)</drawSize>
+      <!-- The top plus 0.36 of a tile all round: the legs below, and as much
+           above so the top - and the ball over it - stays centred. -->
+      <drawSize>(2.72,3.72)</drawSize>
       <shadowData>
         <volume>(1.8,0.3,2.8)</volume>
       </shadowData>
@@ -2530,7 +2539,8 @@
     <graphicData>
       <texPath>EntertainingIdeas/Buildings/AirHockeyTable</texPath>
       <graphicClass>Graphic_Multi</graphicClass>
-      <drawSize>(1,2)</drawSize>
+      <!-- The top plus 0.36 of a tile all round, for the legs below. -->
+      <drawSize>(1.72,2.72)</drawSize>
       <shadowData>
         <volume>(0.9,0.35,1.9)</volume>
       </shadowData>

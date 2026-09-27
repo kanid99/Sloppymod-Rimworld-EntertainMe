@@ -49,7 +49,7 @@ SECTIONS = [
     ("SKITTLES LANE  MEDIEVAL  1X5",
      ["SkittlesLane_south.png", "SkittlesLaneRoll_2.png", "SkittlesLaneRoll_5.png"]),
     ("KARAOKE MACHINE  INDUSTRIAL  A CROWD GATHERS",
-     ["KaraokeMachine_south.png", "KaraokeMachineSing_1.png", "KaraokeMachineSing_4.png"]),
+     ["KaraokeMachine_south.png", "KaraokeMachineSingSouth_1.png", "KaraokeMachineSingSouth_4.png"]),
     ("GRAVBALL COURT  ULTRA  3X3",
      ["GravballCourt_south.png", "GravballPlay_0.png", "GravballPlay_3.png"]),
     ("PINBALL IN PLAY  BALL AND LAMPS  SHARED BY ALL FOUR TABLES",
