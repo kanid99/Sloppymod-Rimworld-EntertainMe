@@ -1071,7 +1071,7 @@
     <description>A deep banded barrel with a small firebox slung underneath it. Fill it, light the box, and in half an hour there is enough hot water to put a person back together after a week of hauling rock.\n\nColonists get in rather than sit beside it, and it warms the room while it burns. Runs on wood.</description>
     <graphicData>
       <texPath>EntertainingIdeas/Buildings/SoakingTub</texPath>
-      <graphicClass>Graphic_Single</graphicClass>
+      <graphicClass>Graphic_Multi</graphicClass>
       <drawSize>(1.15,1.15)</drawSize>
       <shadowData>
         <volume>(0.8,0.4,0.8)</volume>
@@ -1080,7 +1080,10 @@
         <rect>(0.1,0.1,0.8,0.8)</rect>
       </damageData>
     </graphicData>
-    <rotatable>false</rotatable>
+    <!-- Drawn standing, so it turns: the stove (or control box) stands on the
+         side it faces, and a bather sits facing that way. -->
+    <rotatable>true</rotatable>
+    <defaultPlacingRot>South</defaultPlacingRot>
     <tickerType>Normal</tickerType>
     <fillPercent>0.45</fillPercent>
     <pathCost>60</pathCost>
@@ -1136,6 +1139,7 @@
       </li>
       <li Class="EntertainingIdeas.CompProperties_AnimatedScreen">
         <framePath>EntertainingIdeas/Buildings/SoakingTubWater</framePath>
+        <perFacing>true</perFacing>
         <frameCount>6</frameCount>
         <ticksPerFrame>16</ticksPerFrame>
         <drawSize>(1.15,1.15)</drawSize>
@@ -1156,6 +1160,9 @@
         <puffInterval>22</puffInterval>
         <rippleInterval>40</rippleInterval>
         <radius>0.32</radius>
+        <!-- The water sits up at the rim, seen as an ellipse. -->
+        <surfaceOffset>(0,0,0.13)</surfaceOffset>
+        <surfaceSquash>0.4</surfaceSquash>
         <requireFuel>true</requireFuel>
       </li>
       <li Class="EntertainingIdeas.CompProperties_Bathing"/>
@@ -1170,7 +1177,7 @@
     <description>The same barrel with the firebox taken off and an element dropped in, so it holds temperature instead of drifting cold the moment somebody forgets to feed it. No logs, no ash, no smoke - just a standing draw on the grid whether anyone is in it or not.\n\nColonists get in rather than sit beside it, and it warms the room while it runs. It still holds only one soak, so the water is carried out by hand between uses unless it has been plumbed in.</description>
     <graphicData>
       <texPath>EntertainingIdeas/Buildings/SoakingTubElectric</texPath>
-      <graphicClass>Graphic_Single</graphicClass>
+      <graphicClass>Graphic_Multi</graphicClass>
       <drawSize>(1.15,1.15)</drawSize>
       <shadowData>
         <volume>(0.8,0.4,0.8)</volume>
@@ -1179,7 +1186,10 @@
         <rect>(0.1,0.1,0.8,0.8)</rect>
       </damageData>
     </graphicData>
-    <rotatable>false</rotatable>
+    <!-- Drawn standing, so it turns: the stove (or control box) stands on the
+         side it faces, and a bather sits facing that way. -->
+    <rotatable>true</rotatable>
+    <defaultPlacingRot>South</defaultPlacingRot>
     <tickerType>Normal</tickerType>
     <fillPercent>0.45</fillPercent>
     <pathCost>60</pathCost>
@@ -1227,7 +1237,8 @@
         <fillWorkTicks>240</fillWorkTicks>
       </li>
       <li Class="EntertainingIdeas.CompProperties_AnimatedScreen">
-        <framePath>EntertainingIdeas/Buildings/SoakingTubWater</framePath>
+        <framePath>EntertainingIdeas/Buildings/SoakingTubElectricWater</framePath>
+        <perFacing>true</perFacing>
         <frameCount>6</frameCount>
         <ticksPerFrame>16</ticksPerFrame>
         <drawSize>(1.15,1.15)</drawSize>
@@ -1246,6 +1257,9 @@
         <puffInterval>20</puffInterval>
         <rippleInterval>40</rippleInterval>
         <radius>0.32</radius>
+        <!-- The water sits up at the rim, seen as an ellipse. -->
+        <surfaceOffset>(0,0,0.13)</surfaceOffset>
+        <surfaceSquash>0.4</surfaceSquash>
         <requirePower>true</requirePower>
       </li>
       <li Class="EntertainingIdeas.CompProperties_Bathing"/>

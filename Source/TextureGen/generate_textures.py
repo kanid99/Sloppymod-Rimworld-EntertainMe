@@ -1804,98 +1804,151 @@ def pinball_play_frames(total=8):
 # 9. Soaking tub  (medieval, 1x1, wood-fired, pawns get in)
 # ---------------------------------------------------------------------------
 
-def draw_tub_water(c, frame=None, total=6):
-    """Still water for the cabinet texture itself."""
+# Drawn standing, the way RimWorld shows anything with height: the rim seen at
+# the camera's slant as an ellipse with the water inside it, the staves and
+# hoops of the barrel's near side below, feet on the floor. The wood-fired
+# tub's stove and chimney stand on the side it faces; from the north only the
+# chimney shows, over the rim. The electric tub has its control box there.
+#
+# A bather is drawn by the game at the tile's centre, which puts their head
+# and shoulders above the rim. The overlay drawn over them (SoakingTubWater,
+# drawOverPawns) is everything nearer the camera than they are - the water in
+# front of them, the rim's near edge, the barrel's near wall, and a stove
+# facing south - so they sit down inside the tub rather than on top of it.
+TUB_CX, TUB_RIM_Y, TUB_RX, TUB_RY = 64, 48, 44, 19
+TUB_BOT_Y = 104                   # centre of the bottom ellipse
+TUB_WATER_RX, TUB_WATER_RY = 38, 15
+TUB_WOOD = (112, 78, 48, 255)
+TUB_WATER = (46, 104, 112, 255)
+TUB_FACINGS = ("north", "east", "south", "west")
+
+
+def _arc(cx, cy, rx, ry, a0, a1, n=40):
+    """Points along an ellipse from angle a0 to a1, in degrees."""
     import math
-    p = 0.0 if frame is None else float(frame) / total
-    c.circle(64, 62, 38, (46, 104, 112, 255))
-    c.circle(64, 62, 38, (60, 130, 138, 120))
-    for k in range(3):
-        r = 8 + ((p + k / 3.0) % 1.0) * 28
-        alpha = int(130 * (1.0 - (r - 8) / 28.0))
-        if alpha > 8:
-            c.ring(64, 62, r, r - 2, (186, 232, 236, alpha))
+    return [(cx + rx * math.cos(math.radians(a0 + (a1 - a0) * k / float(n))),
+             cy + ry * math.sin(math.radians(a0 + (a1 - a0) * k / float(n)))) for k in range(n + 1)]
 
 
-def soaking_tub(name="SoakingTub", electric=False):
-    c = Canvas(128, 128)
-    c.circle(64, 62, 49, DARK)
-    c.circle(64, 62, 45, (112, 78, 48, 255))                    # staves
-    for k in range(14):
-        import math
-        a = k / 14.0 * 2 * math.pi
-        c.line(64 + math.cos(a) * 37, 62 + math.sin(a) * 37,
-               64 + math.cos(a) * 46, 62 + math.sin(a) * 46, (74, 48, 28, 255), 5)
-    band = (150, 162, 178, 255) if electric else (146, 150, 158, 255)
-    c.ring(64, 62, 45, 41, band)                                # hoop
-    c.ring(64, 62, 40, 38, darker((112, 78, 48, 255), 0.5))     # inner hoop: a tint
-    draw_tub_water(c, None)
+def _tub_near_wall(c, band):
+    """The barrel's near side: from the rim's front edge down to the floor."""
+    import math
+    c.poly(_arc(TUB_CX, TUB_RIM_Y, TUB_RX, TUB_RY, 0, 180)
+           + _arc(TUB_CX, TUB_BOT_Y, TUB_RX, TUB_RY * 0.8, 180, 0), TUB_WOOD)
+    for k in range(1, 8):                                       # staves
+        a = math.radians(180 * k / 8.0)
+        x = TUB_CX + TUB_RX * math.cos(a)
+        c.line(x, TUB_RIM_Y + TUB_RY * math.sin(a) + 1,
+               x, TUB_BOT_Y + TUB_RY * 0.8 * math.sin(a) - 1, darker(TUB_WOOD, 0.7), 1.4)
+    for hy in (TUB_RIM_Y + 18, TUB_BOT_Y - 6):                  # hoops
+        pts = _arc(TUB_CX, hy, TUB_RX, TUB_RY * 0.9, 0, 180)
+        for (x0, y0), (x1, y1) in zip(pts, pts[1:]):
+            c.line(x0, y0, x1, y1, band, 3.4)
+    c.poly(_arc(TUB_CX, TUB_RIM_Y, TUB_RX, TUB_RY, 0, 180)       # the rim's near lip
+           + _arc(TUB_CX, TUB_RIM_Y + 3, TUB_RX - 1, TUB_RY - 1, 180, 0), lighter(TUB_WOOD, 0.22))
 
+
+def _tub_far_side(c):
+    """Shadow, outline, the rim all the way round and the inside of the staves."""
+    c.ellipse(TUB_CX, TUB_BOT_Y + 6, TUB_RX + 6, TUB_RY * 0.8 + 3, (0, 0, 0, 60))
+    outline = (_arc(TUB_CX, TUB_RIM_Y, TUB_RX, TUB_RY, 180, 360)
+               + _arc(TUB_CX, TUB_BOT_Y, TUB_RX, TUB_RY * 0.8, 0, 180))
+    c.poly(_grow_poly(outline, 3.5), DARK)
+    c.ellipse(TUB_CX, TUB_RIM_Y, TUB_RX, TUB_RY, lighter(TUB_WOOD, 0.22))
+    c.ellipse(TUB_CX, TUB_RIM_Y + 1, TUB_RX - 5, TUB_RY - 4, darker(TUB_WOOD, 0.7))
+
+
+def _tub_stove(c, x, y):
+    c.rect(x - 16, y - 12, x + 16, y + 14, DARK, 5)
+    c.rect(x - 13, y - 9, x + 13, y + 11, (58, 50, 46, 255), 4)
+    c.rect(x - 8, y - 3, x + 8, y + 7, (30, 24, 22, 255), 2)
+    c.circle(x, y + 3, 5, (226, 120, 52, 235))
+    c.circle(x, y + 3, 2.6, (255, 196, 110, 255))
+
+
+def _tub_chimney(c, x, y_top, y_bot):
+    c.rect(x - 5, y_top, x + 5, y_bot, DARK, 2)
+    c.rect(x - 3, y_top + 2, x + 3, y_bot, (70, 66, 64, 255), 1.5)
+    c.rect(x - 7, y_top - 4, x + 7, y_top + 3, DARK, 2)          # cap
+    c.rect(x - 5, y_top - 2, x + 5, y_top + 1, (92, 88, 86, 255), 1)
+
+
+def _tub_controls(c, x, y):
+    c.rect(x - 18, y - 10, x + 18, y + 10, DARK, 5)
+    c.rect(x - 15, y - 7, x + 15, y + 7, (62, 66, 78, 255), 4)
+    for k, col in enumerate(((120, 226, 140, 255), (236, 196, 78, 255), (130, 190, 240, 255))):
+        c.circle(x - 9 + k * 9, y, 2.8, col)
+
+
+def _tub_front_fittings(c, facing, electric):
+    """Whatever stands in front of the barrel facing south - over the bather too."""
+    if facing != "south":
+        return
     if electric:
-        import math
-        for k in range(10):                                     # heating element
-            a = k / 10.0 * 2 * math.pi
-            c.line(64 + math.cos(a) * 26, 62 + math.sin(a) * 26,
-                   64 + math.cos(a) * 33, 62 + math.sin(a) * 33, (206, 132, 96, 150), 3)
-        c.rect(40, 104, 88, 124, DARK, 6)                       # control box
-        c.rect(43, 107, 85, 121, (62, 66, 78, 255), 5)
-        for k, col in enumerate(((120, 226, 140, 255), (236, 196, 78, 255), (130, 190, 240, 255))):
-            c.circle(53 + k * 11, 114, 3.2, col)
+        _tub_controls(c, TUB_CX, TUB_BOT_Y + 2)
     else:
-        c.rect(44, 104, 84, 124, DARK, 6)                       # firebox
-        c.rect(47, 107, 81, 121, (52, 44, 40, 255), 5)
-        c.circle(64, 114, 6, (226, 120, 52, 235))
-        c.circle(64, 114, 3, (255, 196, 110, 255))
-    save_single(c, name)
+        _tub_stove(c, TUB_CX, TUB_BOT_Y + 4)
+        _tub_chimney(c, TUB_CX + TUB_RX + 2, 10, TUB_BOT_Y)
+
+
+def soaking_tub_view(facing, electric=False):
+    c = Canvas(128, 128)
+    band = (150, 162, 178, 255) if electric else (146, 150, 158, 255)
+    m = MirrorCanvas(c) if facing == "west" else c
+    if facing in ("east", "west"):                               # on the side it faces
+        if electric:
+            _tub_controls(m, TUB_CX + TUB_RX + 2, TUB_BOT_Y - 4)
+        else:
+            _tub_chimney(m, TUB_CX + TUB_RX + 8, 10, TUB_BOT_Y + 2)
+            _tub_stove(m, TUB_CX + TUB_RX + 4, TUB_BOT_Y + 2)
+    elif facing == "north" and not electric:
+        _tub_chimney(c, TUB_CX + 10, 4, TUB_RIM_Y - 4)           # behind, over the rim
+    _tub_far_side(c)
+    c.ellipse(TUB_CX, TUB_RIM_Y + 2, TUB_WATER_RX, TUB_WATER_RY, TUB_WATER)
+    c.ellipse(TUB_CX, TUB_RIM_Y + 2, TUB_WATER_RX, TUB_WATER_RY, (60, 130, 138, 115))
+    _tub_near_wall(c, band)
+    _tub_front_fittings(c, facing, electric)
     return c
 
 
-def soaking_tub_water_frames(total=6):
-    """The water surface, drawn OVER the occupant so they sit down in it.
+def soaking_tub(name="SoakingTub", electric=False):
+    for facing in TUB_FACINGS:
+        soaking_tub_view(facing, electric).save(os.path.join(OUT, "%s_%s.png" % (name, facing)))
+    print("  %s_{north,east,south,west}.png  (128x128)" % name)
+    return soaking_tub_view("south", electric)
 
-    Not a waterline. A waterline - a flat horizontal edge with water below it
-    and air above - is what you see standing beside a tub, and this game's
-    camera is directly overhead. From up there the surface is the whole circle
-    and a bather is surrounded by it, head and shoulders proud of the water and
-    everything else under it. So the overlay is a ring: water right around the
-    outside, a hole in the middle the size of a pawn's head and shoulders.
+
+def soaking_tub_water_frames(name="SoakingTubWater", electric=False, total=6):
+    """Drawn over the bather: the water in front of them, with ripples running
+    out from where they sit, then the rim's near edge and the barrel's near
+    wall - everything the camera sees in front of someone sitting in a tub.
 
     1.6 does have a real swimming pose, but it is keyed to Pawn.Swimming, which
     is read-only and comes from the terrain underfoot - a building cannot ask
-    for it - so the surface has to do the work on both 1.5 and 1.6.
+    for it - so the tub has to do the work on both 1.5 and 1.6.
     """
-    import math
-    water = (46, 104, 112, 255)
-    surface = 38.0          # the tub's water reaches this far
-    bather = 20.0           # head and shoulders stay clear of the water
-
+    band = (150, 162, 178, 255) if electric else (146, 150, 158, 255)
+    hole_rx, hole_ry = 17, 7          # where the bather comes up through the water
+    cy = TUB_RIM_Y + 2
     for i in range(total):
-        c = Canvas(128, 128)
         p = float(i) / total
-
-        c.ring(64, 62, surface, bather, water)
-        # A meniscus where the water meets them, and a soft edge inside it, so
-        # the hole does not read as a cut-out.
-        c.ring(64, 62, bather + 1.6, bather - 0.4, (96, 176, 184, 170))
-        c.ring(64, 62, bather + 0.4, bather - 2.0, (46, 104, 112, 120))
-
-        # Ripples pushing out from the bather and dying against the staves.
-        for k in range(3):
-            t = (p + k / 3.0) % 1.0
-            r = bather + 2 + t * (surface - bather - 3)
-            alpha = int(150 * (1.0 - t))
-            if alpha > 8:
-                c.ring(64, 62, r, r - 1.8, (168, 222, 228, alpha))
-
-        # A couple of glints on the moving surface.
-        for k in range(4):
-            a = 2 * math.pi * ((p * 0.6 + k / 4.0) % 1.0)
-            gr = bather + 5 + 9 * math.sin(2 * math.pi * (p + k * 0.2))
-            c.circle(64 + math.cos(a) * gr, 62 + math.sin(a) * gr, 2.4,
-                     (210, 244, 248, 90))
-
-        c.save(os.path.join(OUT, "SoakingTubWater_%d.png" % i))
-    print("  SoakingTubWater_0..%d.png  (128x128)" % (total - 1))
+        for facing in TUB_FACINGS:
+            c = Canvas(128, 128)
+            c.poly(_arc(TUB_CX, cy, TUB_WATER_RX, TUB_WATER_RY, 0, 180)
+                   + _arc(TUB_CX, cy, hole_rx, hole_ry, 180, 0), TUB_WATER)
+            c.poly(_arc(TUB_CX, cy, hole_rx + 2, hole_ry + 1.2, 0, 180)       # meniscus
+                   + _arc(TUB_CX, cy, hole_rx, hole_ry, 180, 0), (110, 186, 192, 200))
+            for k in range(3):
+                t = (p + k / 3.0) % 1.0
+                rx = hole_rx + 3 + t * (TUB_WATER_RX - hole_rx - 5)
+                ry = hole_ry + 1.5 + t * (TUB_WATER_RY - hole_ry - 2.5)
+                pts = _arc(TUB_CX, cy, rx, ry, 10, 170, 24)
+                for (x0, y0), (x1, y1) in zip(pts, pts[1:]):
+                    c.line(x0, y0, x1, y1, (168, 222, 228, int(150 * (1 - t))), 1.4)
+            _tub_near_wall(c, band)
+            _tub_front_fittings(c, facing, electric)
+            c.save(os.path.join(OUT, "%s%s_%d.png" % (name, facing.capitalize(), i)))
+    print("  %s{North,East,South,West}_0..%d.png  (128x128)" % (name, total - 1))
 
 
 # ---------------------------------------------------------------------------
@@ -2649,48 +2702,113 @@ def hammock():
 # 24. Cornhole set  (1x5, a board at each end, wood and cloth)
 # ---------------------------------------------------------------------------
 
-def cornhole_board():
-    """One sloped plank board with a hole near the high end.
+CH_PLANK = (176, 132, 82, 255)
+CH_PLANK_LT = (204, 166, 116, 255)
+CH_PLANK_DK = (140, 100, 60, 255)
+CH_SEAM = (156, 114, 70, 220)
+# Side-on (east; west is the same drawing mirrored): the hole end is raised,
+# so the board's top is a slanted strip, higher at that end. These place it;
+# CompCornholeGame lands sacks on the same strip.
+CH_SIDE_X = (12, 244)
+CH_SIDE_EDGE = (66, 96)           # the top's near edge at each end, y
+CH_SIDE_DEPTH = 34                # how deep the top reads, foreshortened
+CH_SIDE_GROUND = 106
 
-    Two tiles, seen from above: the far edge is the raised end, so the slope
-    runs pale to dark toward the player. One bold line round the board and
-    nothing like it inside - the plank seams, the slope and the hole's rim are
-    all tints of the timber."""
+
+def _ch_side_edge(x):
+    x0, x1 = CH_SIDE_X
+    return CH_SIDE_EDGE[0] + (x - x0) * float(CH_SIDE_EDGE[1] - CH_SIDE_EDGE[0]) / (x1 - x0)
+
+
+def _ch_hole(c, x, y, rx=15, ry=15):
+    c.ellipse(x, y, rx, ry, CH_PLANK_DK)
+    c.ellipse(x, y, rx * 0.8, ry * 0.8, (34, 28, 22, 255))
+    c.ellipse(x, y - ry * 0.12, rx * 0.6, ry * 0.6, (22, 18, 14, 255))
+
+
+def _ch_slope(c, x0, x1, y0, y1, dark_at_bottom):
+    """Plank shading in bands: pale at the raised end, darker toward the low."""
+    for k in range(12):
+        t = k / 11.0
+        ya = y0 + (y1 - y0) * k / 12.0
+        yb = y0 + (y1 - y0) * (k + 1) / 12.0 + 1
+        f = (1 - t) if dark_at_bottom else t
+        shade = tuple(int(CH_PLANK_DK[i] + (CH_PLANK_LT[i] - CH_PLANK_DK[i]) * f) for i in range(3))
+        c.rect(x0, ya, x1, yb, shade + (255,), 0)
+
+
+def cornhole_view(facing):
+    """A two-tile board with its hole end raised on folding legs.
+
+    Facing south the thrower's end is nearest and low, so the board is mostly
+    its top. Facing north the raised end is nearest: its end panel and legs
+    stand at the bottom and the top slopes away. Side-on it is a slanted strip
+    over its side rail, with the legs under the high end."""
+    if facing in ("east", "west"):
+        base = Canvas(256, 128)
+        c = MirrorCanvas(base) if facing == "west" else base
+        x0, x1 = CH_SIDE_X
+        edge, depth, ground = _ch_side_edge, CH_SIDE_DEPTH, CH_SIDE_GROUND
+        c.ellipse(128, ground + 2, 118, 6, (0, 0, 0, 50))
+        for lx, col in ((x0 + 20, CH_PLANK_DK), (x0 + 8, darker(CH_PLANK_DK, 0.8))):   # legs
+            c.rect(lx - 4, edge(lx) + 6, lx + 4, ground, DARK, 2)
+            c.rect(lx - 2.5, edge(lx) + 7, lx + 2.5, ground - 1, col, 1.5)
+        top = [(x0, edge(x0) - depth), (x1, edge(x1) - depth), (x1, edge(x1)), (x0, edge(x0))]
+        rail = [(x0, edge(x0)), (x1, edge(x1)), (x1, edge(x1) + 10), (x0, edge(x0) + 10)]
+        silhouette(c, [("poly", top, CH_PLANK), ("poly", rail, CH_PLANK_DK)], 3.5)
+        for k in range(12):                                     # the slope
+            t = k / 12.0
+            xa = x0 + (x1 - x0) * t
+            xb = x0 + (x1 - x0) * (t + 1 / 12.0) + 1
+            shade = tuple(int(CH_PLANK_LT[i] + (CH_PLANK_DK[i] - CH_PLANK_LT[i]) * t * 0.6) for i in range(3))
+            c.poly([(xa, edge(xa) - depth + 2), (xb, edge(xb) - depth + 2),
+                    (xb, edge(xb) - 1), (xa, edge(xa) - 1)], shade + (255,))
+        for k in range(1, 4):                                   # plank seams, foreshortened
+            c.line(x0 + 4, edge(x0) - depth * k / 4.0, x1 - 4, edge(x1) - depth * k / 4.0,
+                   (156, 114, 70, 200), 1.2)
+        hx = x0 + 46
+        _ch_hole(c, hx, edge(hx) - depth / 2.0, 14, 7.5)
+        c.line(x0 + 2, edge(x0) + 5, x1 - 2, edge(x1) + 5, darker(CH_PLANK_DK, 0.75), 1.2)
+        return base
+
     c = Canvas(128, 256)
     mid = 64
-    OUT = 4.5
-    wood_lt = (204, 166, 116, 255)
-    wood_dk = (140, 100, 60, 255)
-    wood = (176, 132, 82, 255)
-    seam = (156, 114, 70, 220)
-    rail = (120, 86, 52, 255)
+    if facing == "south":
+        top, bottom = 6, 238
+        c.ellipse(mid, 248, 50, 5, (0, 0, 0, 50))
+        silhouette(c, [("rect", mid - 44, top, mid + 44, bottom, 6, CH_PLANK),
+                       ("rect", mid - 44, bottom - 4, mid + 44, bottom + 7, 2, CH_PLANK_DK)], 4.0)
+        _ch_slope(c, mid - 40, mid + 40, top, bottom, True)
+        for k in range(4):
+            x = mid - 40 + (k + 1) * 16
+            c.line(x, top + 6, x, bottom - 6, CH_SEAM, 1.6)
+        _ch_hole(c, mid, top + 40)
+        c.rect(mid - 44, bottom - 1, mid + 44, bottom + 6, CH_PLANK_DK, 2)   # the low front edge
+        return c
 
-    top, bottom = 14, 242
-    silhouette(c, [("rect", mid - 44, top, mid + 44, bottom, 8, wood)], OUT)
-
-    # Slope, paler toward the raised far end where the hole is.
-    steps = 12
-    for k in range(steps):
-        t = k / float(steps - 1)
-        y0 = top + (bottom - top) * (k / float(steps))
-        y1 = top + (bottom - top) * ((k + 1) / float(steps))
-        shade = tuple(int(wood_dk[i] + (wood_lt[i] - wood_dk[i]) * (1 - t))
-                      for i in range(3))
-        c.rect(mid - 40, y0, mid + 40, y1 + 1, shade + (255,), 0)
-
-    for k in range(4):                                       # plank seams
+    top, edge_y, ground = 12, 196, 244
+    c.ellipse(mid, ground + 2, 50, 5, (0, 0, 0, 50))
+    for lx in (mid - 36, mid + 36):                             # legs under the near, raised end
+        c.rect(lx - 5, edge_y + 20, lx + 5, ground, DARK, 2)
+        c.rect(lx - 3, edge_y + 21, lx + 3, ground - 1, CH_PLANK_DK, 1.5)
+    silhouette(c, [("rect", mid - 44, top, mid + 44, edge_y, 6, CH_PLANK),
+                   ("rect", mid - 44, edge_y - 4, mid + 44, edge_y + 22, 3, CH_PLANK_DK)], 4.0)
+    _ch_slope(c, mid - 40, mid + 40, top, edge_y, False)
+    for k in range(4):
         x = mid - 40 + (k + 1) * 16
-        c.line(x, top + 6, x, bottom - 6, seam, 1.6)
-
-    c.circle(mid, top + 46, 15, rail)                        # the hole
-    c.circle(mid, top + 46, 12, (34, 28, 22, 255))
-    c.circle(mid, top + 44, 9, (22, 18, 14, 255))
-
-    for sx in (-1, 1):                                        # side rails
-        c.line(mid + sx * 40, top + 5, mid + sx * 40, bottom - 5, seam, 1.8)
-    c.line(mid - 38, bottom - 10, mid + 38, bottom - 10, seam, 1.6)   # near lip
-    save_rotations(c, "CornholeBoard")
+        c.line(x, top + 6, x, edge_y - 4, CH_SEAM, 1.6)
+    _ch_hole(c, mid, edge_y - 36)
+    c.rect(mid - 44, edge_y, mid + 44, edge_y + 20, CH_PLANK_DK, 3)          # the raised end's face
+    for k in range(3):
+        c.line(mid - 42, edge_y + 5 + k * 5, mid + 42, edge_y + 5 + k * 5, darker(CH_PLANK_DK, 0.8), 1.2)
     return c
+
+
+def cornhole_board():
+    for facing in ("north", "east", "south", "west"):
+        cornhole_view(facing).save(os.path.join(OUT, "CornholeBoard_%s.png" % facing))
+    print("  CornholeBoard_{north,east,south,west}.png")
+    return cornhole_view("south")
 
 
 def cornhole_sack():
@@ -2824,6 +2942,7 @@ def _build_soakingtub():
     canvas = soaking_tub()
     electric = soaking_tub("SoakingTubElectric", electric=True)
     soaking_tub_water_frames()
+    soaking_tub_water_frames("SoakingTubElectricWater", electric=True)
     return {"SoakingTub": canvas, "SoakingTubElectric": electric}
 
 

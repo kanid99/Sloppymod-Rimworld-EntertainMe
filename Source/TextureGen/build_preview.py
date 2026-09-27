@@ -18,7 +18,7 @@ TEX = os.path.join(ROOT, "Textures", "EntertainingIdeas", "Buildings")
 SOURCES = {
     "KnuckleboneMat": "KnuckleboneMat.png",
     "ShadowLanternTheater": "ShadowLanternTheaterPlaySouth_4.png",
-    "SoakingTub": "SoakingTub.png",
+    "SoakingTub": "SoakingTub_south.png",
     "KaraokeMachine": "KaraokeMachine_south.png",
     "Aquarium": "Aquarium_south.png",
     "GravballCourt": "GravballCourt_south.png",

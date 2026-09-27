@@ -22,6 +22,16 @@ namespace EntertainingIdeas
         public int rippleInterval = 35;
         /// <summary>How far off centre effects appear, in tiles.</summary>
         public float radius = 0.34f;
+        /// <summary>
+        /// Where the middle of the water is, from the building's centre. A tub
+        /// drawn standing shows its water up at the rim, not on the floor.
+        /// </summary>
+        public Vector3 surfaceOffset = Vector3.zero;
+        /// <summary>
+        /// How round the water looks: 1 seen straight down, less for a rim seen
+        /// at the camera's slant, which reads as an ellipse.
+        /// </summary>
+        public float surfaceSquash = 1f;
         /// <summary>Only while a refuelable parent is lit.</summary>
         public bool requireFuel = false;
         /// <summary>Only while a powered parent is on.</summary>
@@ -124,9 +134,9 @@ namespace EntertainingIdeas
         private Vector3 SurfacePoint()
         {
             Vector2 offset = Rand.InsideUnitCircle * Props.radius;
-            Vector3 point = parent.DrawPos;
+            Vector3 point = parent.DrawPos + Props.surfaceOffset;
             point.x += offset.x;
-            point.z += offset.y;
+            point.z += offset.y * Props.surfaceSquash;
             return point;
         }
     }

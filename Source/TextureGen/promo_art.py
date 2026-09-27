@@ -56,12 +56,12 @@ def lineup():
     rows = [
         ("NEOLITHIC AND MEDIEVAL - NO POWER NO RESEARCH",
          [("KnuckleboneMat.png", "KNUCKLEBONES"), ("ShadowLanternTheaterPlaySouth_4.png", "SHADOW THEATER"),
-          ("SoakingTub.png", "SOAKING TUB"), ("SkittlesLane_south.png", "SKITTLES LANE")]),
+          ("SoakingTub_south.png", "SOAKING TUB"), ("SkittlesLane_south.png", "SKITTLES LANE")]),
         ("INDUSTRIAL",
          [("PinballClassic_south.png", "PINBALL"), ("PinballBoomalope_south.png", "BOOMALOPE BLITZ"),
           ("PinballMechRampage_south.png", "MECH RAMPAGE"), ("CocktailArcade_south.png", "COCKTAIL ARCADE"),
           ("MassageChair_south.png", "MASSAGE CHAIR"), ("Aquarium_south.png", "AQUARIUM"),
-          ("KaraokeMachine_south.png", "KARAOKE"), ("SoakingTubElectric.png", "HEATED TUB")]),
+          ("KaraokeMachine_south.png", "KARAOKE"), ("SoakingTubElectric_south.png", "HEATED TUB")]),
         ("SPACER AND ULTRA",
          [("PinballArchotech_south.png", "DREAMTABLE"), ("HologamePod_south.png", "HOLOGAME POD"),
           ("VistaPanel3Day_2.png", "VISTA PANEL"), ("DreamloopHolotheater_south.png", "HOLOTHEATER"),
@@ -150,7 +150,7 @@ def tub():
     header(c, W, "COLONISTS GET IN", "THE TUB PAINTS ITS WATERLINE OVER WHOEVER IS IN IT")
     y = 130
     def pawn_stack(x, mask, label):
-        px, w, h = img('SoakingTub.png')
+        px, w, h = img('SoakingTub_south.png')
         s = 1.7
         preview.blit(c, px, w, h, x, y, s)
         p = Canvas(128, 128, ss=1)
@@ -159,13 +159,13 @@ def tub():
         p.rect(50, 94, 78, 116, (86, 106, 156, 255), 4)
         preview.blit(c, p.pixels(), 128, 128, x, y, s)
         if mask:
-            for f in ('SoakingTubWater_2.png', 'SoakingTubSteam_2.png'):
+            for f in ('SoakingTubWaterSouth_2.png', 'SoakingTubSteam_2.png'):
                 op, ow, oh = img(f)
                 preview.blit(c, op, ow, oh, x, y, s)
         preview.text(c, label, x, y + 224, 1, DIM)
     pawn_stack(70, False, "WITHOUT THE WATERLINE")
     pawn_stack(330, True, "WITH IT")
-    place(c, "SoakingTubElectric.png", 640, y, 200, 200)
+    place(c, "SoakingTubElectric_south.png", 640, y, 200, 200)
     preview.text(c, "ELECTRIC VERSION", 640, y + 224, 1, DIM)
     for i, line in enumerate(["HOLDS ONE SOAK - A COLONIST CARRIES WATER OUT BETWEEN USES",
                               "PLUMB IT INTO DUBS BAD HYGIENE AND IT FILLS ITSELF",

@@ -43,7 +43,7 @@ SECTIONS = [
     ("DREAMLOOP HOLOTHEATER  ULTRA  3X1",
      ["DreamloopHolotheater_south.png", "DreamloopHolotheater_east.png"]),
     ("SOAKING TUB  MEDIEVAL  WOOD FIRED  PAWNS GET IN",
-     ["SoakingTub.png", "SoakingTubSteam_1.png", "SoakingTubSteam_4.png"]),
+     ["SoakingTub_south.png", "SoakingTubSteam_1.png", "SoakingTubSteam_4.png"]),
     ("AQUARIUM  INDUSTRIAL  2X1",
      ["Aquarium_south.png", "AquariumLife_0.png", "AquariumLife_4.png"]),
     ("SKITTLES LANE  MEDIEVAL  1X5",
