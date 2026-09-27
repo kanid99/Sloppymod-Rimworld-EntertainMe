@@ -16,6 +16,7 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from pnglib import Canvas, rotate, write_png  # noqa: E402
+from views import blit_quad, blit_rect  # noqa: E402
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".."))
 OUT = os.path.join(ROOT, "Textures", "EntertainingIdeas", "Buildings")
@@ -244,19 +245,111 @@ def draw_shadow_theater(c, frame=None, total=10):
     c.rect(20, 118, 236, 126, DARK, 4)                      # foot rail
 
 
+def draw_shadow_theater_back(c, frame=None, total=10):
+    """Facing north, from behind: the same frame and cloth, the procession
+    walking the other way, and the lantern on this side of the cloth -
+    nearest the eye, at the bottom - with the puppets' rods running to it."""
+    import math
+    x0, y0, x1, y1 = CLOTH
+    p = 0.0 if frame is None else float(frame) / total
+    c.rect(3, 13, 253, 123, DARK, 10)
+    c.rect(7, 17, 249, 119, (104, 74, 46, 255), 8)
+    flicker = 0 if frame is None else int(10 * math.sin(2 * math.pi * p * 3))
+    cloth = (236 + flicker // 3, 212 + flicker // 2, 160 + flicker, 255)
+    c.rect(x0, y0, x1, y1, (168, 140, 96, 255), 5)
+    c.rect(x0 + 2, y0 + 2, x1 - 2, y1 - 2, cloth, 4)
+    for gy in range(y0 + 4, y1 - 2, 6):
+        c.line(x0 + 3, gy, x1 - 3, gy, (214, 190, 142, 90), 1.6)
+
+    # The puppets themselves, flat cut-outs on rods, seen from their back.
+    m = MirrorCanvas(c)
+    shadow = (58, 40, 28, 245)
+    travel = (x1 - x0) + 56
+    lead = x0 - 26 + travel * p
+    shadow_figure(m, "horse", lead, y1 - 8, 1.0, shadow)
+    shadow_figure(m, "rider", lead + 4, y1 - 8, 1.0, shadow)
+    trailing = x0 - 26 + travel * ((p + 0.5) % 1.0)
+    shadow_figure(m, "horse", trailing, y1 - 6, 0.75, shadow)
+    for k in range(2):
+        bx = x0 - 20 + travel * ((p + 0.4 + k * 0.25) % 1.0)
+        shadow_figure(m, "bird", bx, y0 + 22 + 5 * math.sin(2 * math.pi * (p * 2 + k)), 1.0, shadow)
+    for fx in (lead, trailing):
+        if x0 < fx < x1:
+            m.line(fx, y1 - 14, fx + 10, 126, (70, 48, 30, 230), 1.6)
+
+    wood = (86, 60, 38, 255)
+    for px in (14, 242):                                    # posts
+        c.rect(px - 6, 14, px + 6, 122, DARK, 5)
+        c.rect(px - 4, 16, px + 4, 120, wood, 4)
+    c.rect(20, 118, 236, 126, DARK, 4)                      # foot rail
+    c.rect(100, 96, 156, 124, DARK, 8)                      # lantern, this side
+    c.rect(104, 99, 152, 121, (74, 52, 34, 255), 6)
+    lamp = 230 + (0 if frame is None else int(25 * math.sin(2 * math.pi * p * 3)))
+    c.circle(128, 106, 14, (255, 206, 120, 80))
+    c.circle(128, 106, 8, (255, 232, 176, lamp))
+    c.rect(118, 96, 138, 101, darker((74, 52, 34, 255), 0.6), 2)
+
+
+def draw_shadow_theater_side(c, frame=None, total=10):
+    """Facing east (and mirrored for west): the whole front - frame, cloth,
+    posts, the show on it - tipped back a little, so it reads as a narrowed
+    strip running up the picture. Its top leans toward the lantern, which
+    peeks out behind; its foot is toward the audience, where the light falls."""
+    import math
+    p = 0.0 if frame is None else float(frame) / total
+    lamp = 1.0 if frame is None else 0.85 + 0.15 * math.sin(2 * math.pi * p * 3)
+    if frame is not None:                                   # light on the floor in front
+        for d in range(0, 40, 2):
+            t = d / 40.0
+            c.rect(96 + d, 20 - 10 * t, 98 + d, 236 + 10 * t,
+                   (255, 214, 140, int(70 * lamp * (1 - t) ** 1.4)), 0)
+    c.rect(14, 110, 42, 146, DARK, 6)                       # the lantern, behind
+    c.rect(17, 113, 39, 143, (74, 52, 34, 255), 5)
+    c.circle(30, 128, 6, (255, 232, 176, int(220 * lamp)))
+    c.circle(30, 128, 12, (255, 206, 120, int(60 * lamp)))
+    front = Canvas(256, 128)
+    draw_shadow_theater(front, frame, total)
+    depth = 52
+    blit_quad(c, front.pixels(), 256, 128, (3, 6, 253, 127), (44 + depth, 250), (0, -244), (-depth, 0))
+
+
+def _theater_views(frame=None, total=10):
+    south = Canvas(256, 128)
+    draw_shadow_theater(south, frame, total)
+    north = Canvas(256, 128)
+    draw_shadow_theater_back(north, frame, total)
+    east = Canvas(128, 256)
+    draw_shadow_theater_side(east, frame, total)
+    return {"south": south, "north": north, "east": east, "west": mirrored(east)}
+
+
+def mirrored(canvas):
+    """A finished canvas flipped left to right, as a new canvas."""
+    px, w, h = canvas.pixels(), canvas.w, canvas.h
+    out = Canvas(w, h, ss=1)
+    for y in range(h):
+        for x in range(w):
+            si = (y * w + x) * 4
+            di = (y * w + (w - 1 - x)) * 4
+            out.buf[di:di + 4] = px[si:si + 4]
+    return out
+
+
 def shadow_lantern_theater():
-    c = Canvas(256, 128)
-    draw_shadow_theater(c, None)
-    save_rotations(c, "ShadowLanternTheater")
-    return c
+    views = _theater_views()
+    for facing, view in views.items():
+        view.save(os.path.join(OUT, "ShadowLanternTheater_%s.png" % facing))
+    print("  ShadowLanternTheater_{north,east,south,west}.png")
+    return views["south"]
 
 
 def shadow_theater_frames(total=10):
+    """One strip per facing (CompAnimatedScreen perFacing). The frames redraw
+    the whole building, so each is its facing's view at that moment."""
     for i in range(total):
-        c = Canvas(256, 128)
-        draw_shadow_theater(c, i, total)
-        c.save(os.path.join(OUT, "ShadowLanternTheaterPlay_%d.png" % i))
-    print("  ShadowLanternTheaterPlay_0..%d.png  (256x128)" % (total - 1))
+        for facing, view in _theater_views(i, total).items():
+            view.save(os.path.join(OUT, "ShadowLanternTheaterPlay%s_%d.png" % (facing.capitalize(), i)))
+    print("  ShadowLanternTheaterPlay{North,East,South,West}_0..%d.png" % (total - 1))
 
 
 # ---------------------------------------------------------------------------
@@ -290,7 +383,14 @@ def shadow_theater_frames(total=10):
 # south edge of its footprint and rises over the tile behind, the way tall
 # furniture does.
 PB_W, PB_H = 160, 320             # north and south, before centring
-PB_SQ = 320                       # every saved texture, square
+PB_SIDE_SQ = 320                  # east and west, before centring
+# Facing south, the backbox stands up off the back of the footprint and over
+# the tile behind - against the wall, when there is one - the way a tall
+# cabinet does, rather than squeezed inside the footprint in front of it. The
+# south drawing is that much taller, and every texture is a square big enough
+# for it: 160 px to a tile throughout, so the other facings only gain margin.
+PB_S_RISE = 96                    # how far the south backbox rises past the footprint
+PB_SQ = PB_H + PB_S_RISE          # every saved texture, square: drawSize 2.6
 PB_FOOT_Y = 238                   # side-on: the near feet, at the footprint's south edge
 PB_METAL = (158, 162, 172, 255)
 PB_CHROME = (212, 214, 222, 255)
@@ -391,7 +491,7 @@ class PinballView:
 
     def pt(self, u, v):
         if self.facing == "south":
-            return 24 + v * 112, 104 + u * (PB_LOCKBAR - 112)
+            return 24 + v * 112, 104 + u * (PB_LOCKBAR + PB_S_RISE - 112)
         if self.facing == "north":
             # Seen from the other end: the player's left is on the right.
             return 136 - v * 112, PB_NORTH_BOX_TOP + 20 - u * (PB_NORTH_BOX_TOP - 10)
@@ -413,21 +513,27 @@ class PinballView:
         return self.facing == "north" and self.pt(u, v)[1] > PB_NORTH_BOX_TOP - 4
 
     def canvas(self):
-        base = Canvas(PB_SQ, PB_SQ) if self.side else Canvas(PB_W, PB_H)
+        if self.side:
+            base = Canvas(PB_SIDE_SQ, PB_SIDE_SQ)
+        else:
+            base = Canvas(PB_W, PB_H + (PB_S_RISE if self.facing == "south" else 0))
         return base, (MirrorCanvas(base) if self.facing == "west" else base)
 
     def save(self, base, path):
-        """Write a drawing out square, centring an end view in it."""
+        """Write a drawing out square. Every facing is centred on the
+        footprint, except south: that one fills the square from the bottom,
+        and drawOffsetSouth lifts it so its footprint part sits on the
+        footprint and its backbox rises over the tile behind."""
         px = base.pixels()
-        if not self.side:
-            sq = bytearray(PB_SQ * PB_SQ * 4)
-            pad = (PB_SQ - PB_W) // 2
-            for y in range(PB_H):
-                row = y * PB_W * 4
-                at = (y * PB_SQ + pad) * 4
-                sq[at:at + PB_W * 4] = px[row:row + PB_W * 4]
-            px = sq
-        write_png(path, PB_SQ, PB_SQ, px)
+        w, h = base.w, base.h
+        pad_x = (PB_SQ - w) // 2
+        pad_y = PB_SQ - h if self.facing == "south" else (PB_SQ - h) // 2
+        sq = bytearray(PB_SQ * PB_SQ * 4)
+        for y in range(h):
+            row = y * w * 4
+            at = ((y + pad_y) * PB_SQ + pad_x) * 4
+            sq[at:at + w * 4] = px[row:row + w * 4]
+        write_png(path, PB_SQ, PB_SQ, sq)
 
 
 # A seven-segment digit, the way a real score reel reads.
@@ -531,19 +637,21 @@ def pinball_south(cab, cab_dark, field, accent, accent2, glass, motif):
     base, c = view.canvas()
     L, R, mid = 16, 144, 80
     box_l, box_r = 10, 150
-    lock, apron = PB_LOCKBAR, PB_LOCKBAR + 10
+    lock = PB_LOCKBAR + PB_S_RISE
+    apron = lock + 10
+    cab_bot, floor = PB_CAB_BOT + PB_S_RISE, 316 + PB_S_RISE
     silhouette(c, [
-        ("rect", L + 1, 309, L + 15, 316, 2, darker(PB_METAL, 0.6)),     # leveller feet
-        ("rect", R - 15, 309, R - 1, 316, 2, darker(PB_METAL, 0.6)),
-        ("rect", L + 4, PB_CAB_BOT - 2, L + 12, 312, 2, PB_METAL),        # front legs
-        ("rect", R - 12, PB_CAB_BOT - 2, R - 4, 312, 2, PB_METAL),
-        ("rect", L, 90, R, PB_CAB_BOT, 6, cab),                            # cabinet
+        ("rect", L + 1, floor - 7, L + 15, floor, 2, darker(PB_METAL, 0.6)),     # leveller feet
+        ("rect", R - 15, floor - 7, R - 1, floor, 2, darker(PB_METAL, 0.6)),
+        ("rect", L + 4, cab_bot - 2, L + 12, floor - 4, 2, PB_METAL),        # front legs
+        ("rect", R - 12, cab_bot - 2, R - 4, floor - 4, 2, PB_METAL),
+        ("rect", L, 90, R, cab_bot, 6, cab),                            # cabinet
         ("rect", L - 5, lock - 8, L + 2, lock + 4, 2, accent2),            # flipper buttons
         ("rect", R - 2, lock - 8, R + 5, lock + 4, 2, accent2),
         ("rect", box_l, PB_BOX_TOP, box_r, PB_BOX_BOT, 6, cab),           # backbox
     ])
     for x in (L + 6, R - 10):                                              # chrome on the legs
-        c.line(x, PB_CAB_BOT + 1, x, 310, (255, 255, 255, 90), 1.5)
+        c.line(x, cab_bot + 1, x, floor - 6, (255, 255, 255, 90), 1.5)
 
     # Playfield under glass, with the rails of the cabinet either side of it.
     c.rect(L + 5, PB_BOX_BOT, R - 5, lock + 3, darker(cab_dark, 0.55), 4)
@@ -561,8 +669,8 @@ def pinball_south(cab, cab_dark, field, accent, accent2, glass, motif):
     # Lockbar, then the apron: the front face, in its own shade.
     c.rect(L + 1, lock - 1, R - 1, apron, (182, 186, 196, 255), 3)
     c.rect(L + 3, lock, R - 3, lock + 3, (230, 232, 240, 255), 2)
-    c.rect(L, apron, R, PB_CAB_BOT - 10, cab_dark)
-    c.rect(L, apron + 8, R, PB_CAB_BOT, cab_dark, 6)
+    c.rect(L, apron, R, cab_bot - 10, cab_dark)
+    c.rect(L, apron + 8, R, cab_bot, cab_dark, 6)
     c.line(L, apron + 0.5, R, apron + 0.5, darker(cab_dark, 0.6), 1.5)
     c.rect(mid - 16, apron + 3, mid + 16, apron + 25, (24, 22, 26, 255), 3)   # coin door
     c.rect(mid - 14, apron + 5, mid + 14, apron + 23, (40, 38, 44, 255), 2)
@@ -1168,7 +1276,53 @@ def draw_climb_title(c, frame, total):
 # The cabinet both games live in.
 # ---------------------------------------------------------------------------
 
+# Seen the way vanilla draws a table: the top a little foreshortened, and the
+# cabinet's south side - whichever side that is for the facing - showing below
+# it with the legs. From the ends that is a player's end; turned east or west
+# it is the cabinet's long side, with its side art and the control ledges
+# sticking out at each end. The top is the flat drawing turned for the facing
+# and squeezed into COCKTAIL_TOP_H, and the screen frames go through exactly
+# the same squeeze, so they sit on the glass in every facing.
+COCKTAIL_TURNS = {"south": 0, "west": 1, "north": 2, "east": 3}
+COCKTAIL_TOP_H = 122
+COCKTAIL_FACE = (12, 110, 148, 140)
+
+
+def cocktail_top(c, px, facing):
+    rp, rw, rh = rotate(px, 160, 160, COCKTAIL_TURNS[facing])
+    blit_rect(c, rp, rw, rh, (0, 0, 160, 160), (0, 0, 160, COCKTAIL_TOP_H))
+
+
+def cocktail_face(c, facing, trim):
+    body = (52, 48, 58, 255)
+    side = darker(body, 0.8)
+    x0, y0, x1, y1 = COCKTAIL_FACE
+    for lx in (x0 + 8, x1 - 8):                                 # legs
+        c.rect(lx - 6, y1 - 4, lx + 6, 156, DARK, 3)
+        c.rect(lx - 4, y1 - 2, lx + 4, 153, darker(body, 0.6), 2)
+    c.rect(x0 - 3, y0 - 2, x1 + 3, y1 + 3, DARK, 6)
+    c.rect(x0, y0, x1, y1, side, 5)
+    c.rect(x0, y0, x1, y0 + 3, lighter(side, 0.2), 2)           # lip under the glass top
+    c.rect(x0 + 4, y1 - 6, x1 - 4, y1 - 3, trim, 1)              # trim stripe
+    cx = 80
+    if facing in ("south", "north"):                            # a player's end: the coin door
+        c.rect(cx - 10, y0 + 11, cx + 10, y1 - 9, darker(side, 0.6), 2)
+        c.rect(cx - 7, y0 + 14, cx - 2, y0 + 20, (226, 182, 78, 255), 1)
+        c.rect(cx + 2, y0 + 14, cx + 7, y0 + 20, (226, 182, 78, 255), 1)
+    else:                                                       # the long side: side art
+        c.rect(x0 + 6, y0 + 8, x1 - 6, y1 - 9, darker(side, 0.85), 3)
+        c.poly([(x0 + 10, y1 - 10), (x0 + 40, y0 + 9), (x0 + 58, y0 + 9), (x0 + 28, y1 - 10)], trim)
+        c.poly([(x1 - 10, y0 + 9), (x1 - 40, y1 - 10), (x1 - 58, y1 - 10), (x1 - 28, y0 + 9)], trim)
+        c.rect(cx - 22, y0 + 10, cx + 22, y1 - 11, (20, 20, 26, 255), 3)     # marquee
+        c.rect(cx - 19, y0 + 13, cx + 19, y1 - 14, lighter(trim, 0.35), 2)
+        for sx in (x0 - 3, x1 - 4):                             # control ledges, side-on
+            c.rect(sx - 4, y0 - 4, sx + 7, y0 + 6, DARK, 2)
+            c.rect(sx - 2, y0 - 2, sx + 5, y0 + 4, (68, 64, 78, 255), 1)
+
+
 def cocktail_cabinet(name, screen_drawer, trim):
+    """The flat drawing - the top, looked straight down on - then each facing
+    built from it. Returns the flat drawing, which the previews use."""
     c = Canvas(160, 160)
     cx = cy = 80
 
@@ -1189,8 +1343,14 @@ def cocktail_cabinet(name, screen_drawer, trim):
         for i in range(2):
             c.circle(cx + 6 + i * 11, sy, 3.4, (236, 196, 76, 255))
     c.rect(cx + 44, cy - 10, cx + 52, cy + 10, (28, 26, 32, 255), 3)   # coin slot
-    # Four ways round, so the two seats can be lined up with the chairs.
-    save_rotations(c, name)
+
+    px = c.pixels()
+    for facing in COCKTAIL_TURNS:
+        view = Canvas(160, 160)
+        cocktail_face(view, facing, trim)
+        cocktail_top(view, px, facing)
+        view.save(os.path.join(OUT, "%s_%s.png" % (name, facing)))
+    print("  %s_{north,east,south,west}.png  (160x160)" % name)
     return c
 
 
@@ -1203,11 +1363,17 @@ def cocktail_climb():
 
 
 def _screen_strip(name, drawer, total):
+    """One strip per facing (CompAnimatedScreen perFacing), each frame put
+    through the same turn and squeeze as the cabinet top it lies on."""
     for i in range(total):
         c = Canvas(160, 160)
         drawer(c, i, total)
-        c.save(os.path.join(OUT, "%s_%d.png" % (name, i)))
-    print("  %s_0..%d.png  (160x160)" % (name, total - 1))
+        px = c.pixels()
+        for facing in COCKTAIL_TURNS:
+            view = Canvas(160, 160)
+            cocktail_top(view, px, facing)
+            view.save(os.path.join(OUT, "%s%s_%d.png" % (name, facing.capitalize(), i)))
+    print("  %s{North,East,South,West}_0..%d.png  (160x160)" % (name, total - 1))
 
 
 def cocktail_arcade_frames(total=16):

@@ -17,7 +17,7 @@ TEX = os.path.join(ROOT, "Textures", "EntertainingIdeas", "Buildings")
 # Preview slot -> the texture that represents it.
 SOURCES = {
     "KnuckleboneMat": "KnuckleboneMat.png",
-    "ShadowLanternTheater": "ShadowLanternTheaterPlay_4.png",
+    "ShadowLanternTheater": "ShadowLanternTheaterPlaySouth_4.png",
     "SoakingTub": "SoakingTub.png",
     "KaraokeMachine": "KaraokeMachine_south.png",
     "Aquarium": "Aquarium_south.png",

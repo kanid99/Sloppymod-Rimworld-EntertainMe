@@ -117,7 +117,10 @@
         <frameCount>10</frameCount>
         <ticksPerFrame>9</ticksPerFrame>
         <drawSize>(2,1)</drawSize>
-        <rotateWithBuilding>true</rotateWithBuilding>
+        <!-- Each facing is its own drawing - the show from the front, the
+             puppets from behind, the screen tipped back from the sides - so
+             the frames are too. -->
+        <perFacing>true</perFacing>
         <requireUser>false</requireUser>
       </li>
     </comps>
@@ -137,19 +140,24 @@
     <graphicData>
       <graphicClass>Graphic_Multi</graphicClass>
       <shaderType>CutoutComplex</shaderType>
-      <!-- Drawn bigger than the 1x2 footprint. From the ends the cabinet fills
-           its own two tiles, centred in the square; side-on a pinball is about
-           as tall as it is long, so it stands on its footprint and rises over
-           the tile behind, the way tall furniture does. -->
-      <drawSize>(2,2)</drawSize>
+      <!-- Drawn bigger than the 1x2 footprint, the way tall furniture is.
+           Side-on a pinball is about as tall as it is long, so it stands on
+           its footprint and rises over the tile behind. Facing south the
+           playfield fills the footprint and the backbox stands up past its
+           far end, over the tile behind - so against a wall it overlaps the
+           wall's face, like any cabinet stood against one, and takes no more
+           floor. The south texture is drawn from the bottom of its square;
+           drawOffsetSouth lifts the square to put that on the footprint. -->
+      <drawSize>(2.6,2.6)</drawSize>
+      <drawOffsetSouth>(0,0,0.3)</drawOffsetSouth>
       <shadowData>
         <volume>(0.75,0.5,1.7)</volume>
       </shadowData>
       <damageData>
-        <rectN>(0.3,0.02,0.4,0.96)</rectN>
-        <rectS>(0.3,0.02,0.4,0.96)</rectS>
-        <rectE>(0.08,0.34,0.84,0.3)</rectE>
-        <rectW>(0.08,0.34,0.84,0.3)</rectW>
+        <rectN>(0.35,0.13,0.3,0.74)</rectN>
+        <rectS>(0.35,0.01,0.3,0.98)</rectS>
+        <rectE>(0.18,0.38,0.64,0.23)</rectE>
+        <rectW>(0.18,0.38,0.64,0.23)</rectW>
       </damageData>
     </graphicData>
     <size>(1,2)</size>
@@ -190,7 +198,7 @@
         <framePath>EntertainingIdeas/Buildings/PinballPlay</framePath>
         <frameCount>8</frameCount>
         <ticksPerFrame>6</ticksPerFrame>
-        <drawSize>(2,2)</drawSize>
+        <drawSize>(2.6,2.6)</drawSize>
         <playJobs>
           <li>EI_Play_Pinball</li>
         </playJobs>
@@ -202,7 +210,7 @@
         <framePath>EntertainingIdeas/Buildings/PinballPlayNorth</framePath>
         <frameCount>8</frameCount>
         <ticksPerFrame>6</ticksPerFrame>
-        <drawSize>(2,2)</drawSize>
+        <drawSize>(2.6,2.6)</drawSize>
         <playJobs>
           <li>EI_Play_Pinball</li>
         </playJobs>
@@ -214,7 +222,7 @@
         <framePath>EntertainingIdeas/Buildings/PinballPlayEast</framePath>
         <frameCount>8</frameCount>
         <ticksPerFrame>6</ticksPerFrame>
-        <drawSize>(2,2)</drawSize>
+        <drawSize>(2.6,2.6)</drawSize>
         <playJobs>
           <li>EI_Play_Pinball</li>
         </playJobs>
@@ -226,7 +234,7 @@
         <framePath>EntertainingIdeas/Buildings/PinballPlayWest</framePath>
         <frameCount>8</frameCount>
         <ticksPerFrame>6</ticksPerFrame>
-        <drawSize>(2,2)</drawSize>
+        <drawSize>(2.6,2.6)</drawSize>
         <playJobs>
           <li>EI_Play_Pinball</li>
         </playJobs>
@@ -396,7 +404,8 @@
       </damageData>
     </graphicData>
     <!-- Turns, so the two seats - joystick sides - can be lined up with
-         wherever the chairs are. The screen turns with it. -->
+         wherever the chairs are. Seen like a vanilla table: the top a little
+         foreshortened, the cabinet's side and legs below it. -->
     <rotatable>true</rotatable>
     <fillPercent>0.4</fillPercent>
     <pathCost>50</pathCost>
@@ -453,7 +462,8 @@
         <frameCount>16</frameCount>
         <ticksPerFrame>8</ticksPerFrame>
         <drawSize>(1.15,1.15)</drawSize>
-        <rotateWithBuilding>true</rotateWithBuilding>
+        <!-- Drawn onto the cabinet top for each facing, squeezed the same way. -->
+        <perFacing>true</perFacing>
         <idleFramePath>EntertainingIdeas/Buildings/CocktailArcadeTitle</idleFramePath>
         <idleFrameCount>8</idleFrameCount>
         <idleTicksPerFrame>20</idleTicksPerFrame>
@@ -1954,7 +1964,8 @@
         <frameCount>16</frameCount>
         <ticksPerFrame>8</ticksPerFrame>
         <drawSize>(1.15,1.15)</drawSize>
-        <rotateWithBuilding>true</rotateWithBuilding>
+        <!-- Drawn onto the cabinet top for each facing, squeezed the same way. -->
+        <perFacing>true</perFacing>
         <idleFramePath>EntertainingIdeas/Buildings/CocktailClimbTitle</idleFramePath>
         <idleFrameCount>8</idleFrameCount>
         <idleTicksPerFrame>20</idleTicksPerFrame>

@@ -55,7 +55,7 @@ def lineup():
 
     rows = [
         ("NEOLITHIC AND MEDIEVAL - NO POWER NO RESEARCH",
-         [("KnuckleboneMat.png", "KNUCKLEBONES"), ("ShadowLanternTheaterPlay_4.png", "SHADOW THEATER"),
+         [("KnuckleboneMat.png", "KNUCKLEBONES"), ("ShadowLanternTheaterPlaySouth_4.png", "SHADOW THEATER"),
           ("SoakingTub.png", "SOAKING TUB"), ("SkittlesLane_south.png", "SKITTLES LANE")]),
         ("INDUSTRIAL",
          [("PinballClassic_south.png", "PINBALL"), ("PinballBoomalope_south.png", "BOOMALOPE BLITZ"),
@@ -93,7 +93,7 @@ def animation():
     preview.text(c, "ARCADE TABLE - THE MAZE GAME RUNS DURING PLAY", 610, y + 6, 1, DIM)
     for i, f in enumerate(("0", "5", "10", "15")):
         place(c, "CocktailArcade_south.png", 610 + i*145, y + 26, 132, 132,
-              overlay="CocktailArcadeScreen_%s.png" % f)
+              overlay="CocktailArcadeScreenSouth_%s.png" % f)
     preview.text(c, "KARAOKE - LYRICS SCROLL, SPEAKERS PULSE", 610, y + 176, 1, DIM)
     for i, f in enumerate(("0", "2", "4")):
         place(c, "KaraokeMachine_south.png", 610 + i*130, y + 196, 118, 118,

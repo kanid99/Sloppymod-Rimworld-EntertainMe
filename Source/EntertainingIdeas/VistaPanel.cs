@@ -28,6 +28,13 @@ namespace EntertainingIdeas
         public Vector2 drawSize = new Vector2(3f, 1f);
         public float altitudeOffset = 0.05f;
         public bool rotateWithBuilding = true;
+        /// <summary>
+        /// Only show the view when the building faces one of these. A panel on
+        /// a wall's north, east or west face is seen edge-on or over the top
+        /// of the wall, and its own texture draws that; the view belongs to
+        /// the south face. Empty = every facing.
+        /// </summary>
+        public List<Rot4> drawRotations = new List<Rot4>();
 
         public CompProperties_DayCycleDisplay()
         {
@@ -156,6 +163,11 @@ namespace EntertainingIdeas
                 return;
             }
             if (power != null && !power.PowerOn)
+            {
+                return;
+            }
+            if (Props.drawRotations != null && Props.drawRotations.Count > 0
+                && !Props.drawRotations.Contains(parent.Rotation))
             {
                 return;
             }

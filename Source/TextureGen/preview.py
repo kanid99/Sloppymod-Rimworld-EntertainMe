@@ -126,8 +126,8 @@ def build(sprites, out_path):
                               "PinballMechRampage", "PinballArchotech",
                               "SkittlesLane"]):
         px, sw, sh = sprites[name]
-        scale = 208.0 / sh
-        blit(c, px, sw, sh, 20 + i * 62, 322, scale)
+        scale = min(208.0 / sh, 58.0 / sw)          # tall, but kept to its slot
+        blit(c, px, sw, sh, 20 + i * 62 + (58 - sw * scale) / 2, 322 + 208 - sh * scale, scale)
 
     px, sw, sh = sprites["DreamloopHolotheater"]
     scale = 268.0 / sw

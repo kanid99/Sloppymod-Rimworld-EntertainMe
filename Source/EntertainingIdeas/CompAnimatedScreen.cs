@@ -58,6 +58,13 @@ namespace EntertainingIdeas
         /// <summary>Turn the frames to match a rotatable building's facing.</summary>
         public bool rotateWithBuilding = false;
         /// <summary>
+        /// A separately drawn set of frames for each facing, for a building
+        /// whose four views are drawn rather than turned: the frames are
+        /// framePath + North/East/South/West (and the same for the idle loop),
+        /// and drawSize is swapped for east and west as a Graphic_Multi's is.
+        /// </summary>
+        public bool perFacing = false;
+        /// <summary>
         /// Draw above pawns instead of on the building. Used to hide the lower
         /// half of whoever is in a soaking tub.
         ///
@@ -147,6 +154,10 @@ namespace EntertainingIdeas
             {
                 yield return "CompProperties_AnimatedScreen idleSoundIntervalTicks under 60 would nag.";
             }
+            if (perFacing && rotateWithBuilding)
+            {
+                yield return "CompProperties_AnimatedScreen: perFacing frames are drawn per facing already, so rotateWithBuilding must be false.";
+            }
             if (requireUser && (playJobs == null || playJobs.Count == 0))
             {
                 yield return "CompProperties_AnimatedScreen needs at least one entry in playJobs when requireUser is true.";
@@ -156,8 +167,11 @@ namespace EntertainingIdeas
 
     public class CompAnimatedScreen : ThingComp
     {
-        private FrameSet frames;
-        private FrameSet idleFrames;
+        private static readonly string[] FacingNames = { "North", "East", "South", "West" };
+
+        // Indexed by Rot4.AsInt; one entry, used for every facing, unless perFacing.
+        private FrameSet[] frames;
+        private FrameSet[] idleFrames;
         private CompPowerTrader power;
         private CompRefuelable fuel;
         private bool inUse;
@@ -175,10 +189,21 @@ namespace EntertainingIdeas
             base.PostSpawnSetup(respawningAfterLoad);
             power = parent.TryGetComp<CompPowerTrader>();
             fuel = parent.TryGetComp<CompRefuelable>();
-            frames = new FrameSet(Props.framePath, Props.frameCount, Props.drawSize);
-            idleFrames = Props.idleFrameCount > 0
-                ? new FrameSet(Props.idleFramePath, Props.idleFrameCount, Props.drawSize)
-                : null;
+            int sets = Props.perFacing ? 4 : 1;
+            frames = new FrameSet[sets];
+            idleFrames = Props.idleFrameCount > 0 ? new FrameSet[sets] : null;
+            for (int i = 0; i < sets; i++)
+            {
+                string suffix = Props.perFacing ? FacingNames[i] : "";
+                Vector2 size = Props.perFacing && new Rot4(i).IsHorizontal
+                    ? new Vector2(Props.drawSize.y, Props.drawSize.x)
+                    : Props.drawSize;
+                frames[i] = new FrameSet(Props.framePath + suffix, Props.frameCount, size);
+                if (idleFrames != null)
+                {
+                    idleFrames[i] = new FrameSet(Props.idleFramePath + suffix, Props.idleFrameCount, size);
+                }
+            }
             nextRecheckTick = -99999;
         }
 
@@ -205,7 +230,9 @@ namespace EntertainingIdeas
             }
             // Playing wins; otherwise fall back to the attract loop if the def
             // has one, and to nothing at all if it does not.
-            FrameSet set = frames;
+            int facing = Props.perFacing ? parent.Rotation.AsInt : 0;
+            FrameSet playing = frames[facing];
+            FrameSet set = playing;
             int ticksPerFrame = Props.ticksPerFrame;
             if (Props.requireUser && !AnyoneStillPlaying())
             {
@@ -213,14 +240,14 @@ namespace EntertainingIdeas
                 {
                     return;
                 }
-                set = idleFrames;
+                set = idleFrames[facing];
                 ticksPerFrame = Props.idleTicksPerFrame > 0
                     ? Props.idleTicksPerFrame
                     : Props.ticksPerFrame * 3;
             }
 
             int index = set.IndexFor(ticksPerFrame);
-            if (set == frames)
+            if (set == playing)
             {
                 PlayFrameSounds(index);
             }
