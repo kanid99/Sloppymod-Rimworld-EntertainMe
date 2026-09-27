@@ -45,7 +45,7 @@ SECTIONS = [
     ("SOAKING TUB  MEDIEVAL  WOOD FIRED  PAWNS GET IN",
      ["SoakingTub_south.png", "SoakingTubSteam_1.png", "SoakingTubSteam_4.png"]),
     ("AQUARIUM  INDUSTRIAL  2X1",
-     ["Aquarium_south.png", "AquariumLife_0.png", "AquariumLife_4.png"]),
+     ["Aquarium_south.png", "AquariumLifeSouth_0.png", "AquariumLifeSouth_4.png"]),
     ("SKITTLES LANE  MEDIEVAL  1X5",
      ["SkittlesLane_south.png", "SkittlesLaneRoll_2.png", "SkittlesLaneRoll_5.png"]),
     ("KARAOKE MACHINE  INDUSTRIAL  A CROWD GATHERS",

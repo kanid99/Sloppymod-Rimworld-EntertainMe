@@ -35,6 +35,12 @@ namespace EntertainingIdeas
         /// <summary>Laps per in-game day, roughly. Small fish dart, big fish cruise.</summary>
         public float speed = 1f;
         public Color color = Color.white;
+        /// <summary>
+        /// Seen through the side of a tank: the fish in profile, nose east.
+        /// The same path with "Left" appended is the fish facing west. Needed
+        /// when the tank has a side glass (sideGlassSize).
+        /// </summary>
+        public string sideTexPath;
     }
 
     public class CompProperties_SwimmingFish : CompProperties
@@ -48,6 +54,26 @@ namespace EntertainingIdeas
         /// <summary>Degrees of tail waggle, and how fast it waggles.</summary>
         public float waggleDegrees = 9f;
         public float waggleSpeed = 7f;
+
+        /// <summary>
+        /// A tank drawn standing: facing north or south the camera looks
+        /// through its long glass, so the fish swim in that plane - x along
+        /// the tank, z up and down in the water - drawn in profile. Centre
+        /// and size in tiles, from the drawn texture's centre. Zero = off.
+        /// </summary>
+        public Vector2 sideGlassCenter = Vector2.zero;
+        public Vector2 sideGlassSize = Vector2.zero;
+        /// <summary>
+        /// Facing east or west the same tank runs away from the camera and is
+        /// looked down into: the fish swim from above inside this area (x
+        /// across the tank, z along it). Zero = off.
+        /// </summary>
+        public Vector2 topCenter = Vector2.zero;
+        public Vector2 topSize = Vector2.zero;
+        /// <summary>The fish's size in the top view, as a share: it is a narrower space.</summary>
+        public float topFishScale = 1f;
+        /// <summary>How far a fish in profile tips its nose as it climbs or dives.</summary>
+        public float maxPitch = 22f;
 
         public CompProperties_SwimmingFish()
         {
@@ -76,6 +102,10 @@ namespace EntertainingIdeas
                     {
                         yield return "CompProperties_SwimmingFish stock " + i + " needs count >= 1.";
                     }
+                    if (sideGlassSize != Vector2.zero && stocks[i].sideTexPath.NullOrEmpty())
+                    {
+                        yield return "CompProperties_SwimmingFish stock " + i + " needs a sideTexPath: the tank has a side glass.";
+                    }
                 }
             }
         }
@@ -89,7 +119,7 @@ namespace EntertainingIdeas
             public int stock;
             public float phase;      // its own offset along the loop
             public float speed;
-            public float ax, az;     // ellipse radii
+            public float ax, az;     // ellipse radii, as a share of the swimming area
             public float w;          // lap rate
             public float wb, wd;     // breathing and centre-drift rates
             public float px, pb, pd; // phases for each
@@ -104,6 +134,9 @@ namespace EntertainingIdeas
 
         private CompPowerTrader power;
         private Graphic[] graphics;
+        private Graphic[] graphicsTop;   // from above, in a standing tank's top
+        private Graphic[] profiles;      // nose east
+        private Graphic[] profilesLeft;  // nose west
         private Fish[] fish;
 
         // A clock of our own, advanced by real time scaled to game speed, so
@@ -127,6 +160,9 @@ namespace EntertainingIdeas
         {
             List<FishStock> stocks = Props.stocks;
             graphics = new Graphic[stocks.Count];
+            graphicsTop = new Graphic[stocks.Count];
+            profiles = new Graphic[stocks.Count];
+            profilesLeft = new Graphic[stocks.Count];
 
             List<Fish> shoal = new List<Fish>();
             // Seeded off the building, so two tanks side by side do not swim in
@@ -146,8 +182,10 @@ namespace EntertainingIdeas
                         // Shrunk so that breathing and drift together still fit
                         // inside the glass at full stretch.
                         float room = 1f + Breathe + Drift;
-                        f.ax = Props.tankSize.x * 0.5f * Rand.Range(0.60f, 0.92f) / room;
-                        f.az = Props.tankSize.y * 0.5f * Rand.Range(0.55f, 0.92f) / room;
+                        // A share of the area, so the same fish fits whichever
+                        // view of the tank is being drawn.
+                        f.ax = 0.5f * Rand.Range(0.60f, 0.92f) / room;
+                        f.az = 0.5f * Rand.Range(0.55f, 0.92f) / room;
                         f.w = Rand.Range(0.55f, 0.80f);
                         f.wb = f.w * Rand.Range(0.11f, 0.19f);
                         f.wd = f.w * Rand.Range(0.07f, 0.13f);
@@ -165,18 +203,35 @@ namespace EntertainingIdeas
             fish = shoal.ToArray();
         }
 
-        private Graphic GraphicFor(int stock)
+        private Graphic GraphicFor(int stock, bool top = false)
         {
-            if (graphics[stock] == null)
+            Graphic[] cache = top ? graphicsTop : graphics;
+            if (cache[stock] == null)
             {
                 FishStock s = Props.stocks[stock];
-                graphics[stock] = GraphicDatabase.Get<Graphic_Single>(
+                float size = s.size * (top ? Props.topFishScale : 1f);
+                cache[stock] = GraphicDatabase.Get<Graphic_Single>(
                     s.texPath,
+                    ShaderDatabase.TransparentPostLight,
+                    new Vector2(size, size),
+                    s.color);
+            }
+            return cache[stock];
+        }
+
+        private Graphic ProfileFor(int stock, bool left)
+        {
+            Graphic[] cache = left ? profilesLeft : profiles;
+            if (cache[stock] == null)
+            {
+                FishStock s = Props.stocks[stock];
+                cache[stock] = GraphicDatabase.Get<Graphic_Single>(
+                    s.sideTexPath + (left ? "Left" : ""),
                     ShaderDatabase.TransparentPostLight,
                     new Vector2(s.size, s.size),
                     s.color);
             }
-            return graphics[stock];
+            return cache[stock];
         }
 
         public override void PostDraw()
@@ -199,7 +254,25 @@ namespace EntertainingIdeas
                 + (data == null ? Vector3.zero : data.DrawOffsetForRot(parent.Rotation));
             origin.y += Props.altitudeOffset;
 
+            bool horizontal = parent.Rotation.IsHorizontal;
+            if (!horizontal && Props.sideGlassSize != Vector2.zero)
+            {
+                DrawInProfile(origin);
+                return;
+            }
+
+            // From above: the whole tank turned with the building, or - for a
+            // standing tank seen end-on - the top it is looked down into.
+            Vector2 size = Props.tankSize;
             float tankAngle = Props.rotateWithBuilding ? parent.Rotation.AsAngle - 180f : 0f;
+            bool inTop = horizontal && Props.topSize != Vector2.zero;
+            if (inTop)
+            {
+                size = Props.topSize;
+                origin.x += Props.topCenter.x;
+                origin.z += Props.topCenter.y;
+                tankAngle = 0f;
+            }
             Quaternion tankTurn = Quaternion.Euler(0f, tankAngle, 0f);
 
             for (int i = 0; i < fish.Length; i++)
@@ -210,8 +283,8 @@ namespace EntertainingIdeas
                 // A breathing, drifting ellipse. Sampled twice a hair apart so
                 // the heading comes from the path itself rather than from a
                 // derivative that has to be kept in step with it by hand.
-                Vector2 here = PointOn(f, t);
-                Vector2 ahead = PointOn(f, t + 0.0005f);
+                Vector2 here = PointOn(f, t, size);
+                Vector2 ahead = PointOn(f, t + 0.0005f, size);
                 float x = here.x;
                 float z = here.y;
 
@@ -237,7 +310,7 @@ namespace EntertainingIdeas
                               + Props.waggleDegrees * Mathf.Sin(t * Props.waggleSpeed);
 
                 Vector3 local = tankTurn * new Vector3(x, 0f, z);
-                Graphic graphic = GraphicFor(f.stock);
+                Graphic graphic = GraphicFor(f.stock, inTop);
                 if (graphic != null)
                 {
                     graphic.Draw(origin + local, Rot4.North, parent, angle + tankAngle);
@@ -245,13 +318,63 @@ namespace EntertainingIdeas
             }
         }
 
-        /// <summary>Where a fish is on its lap at parameter t.</summary>
-        private static Vector2 PointOn(Fish f, float t)
+        /// <summary>
+        /// Through the long glass: the same laps, but in the glass's plane -
+        /// along the tank and up and down in the water - with each fish in
+        /// profile, facing the way it is going and tipping its nose up or down
+        /// as it climbs or dives.
+        /// </summary>
+        private void DrawInProfile(Vector3 origin)
         {
-            float rx = f.ax * (1f + Breathe * Mathf.Sin(f.wb * t + f.pb));
-            float rz = f.az * (1f + Breathe * Mathf.Cos(f.wb * t + f.pb));
-            float cx = f.ax * Drift * Mathf.Sin(f.wd * t + f.pd);
-            float cz = f.az * Drift * Mathf.Cos(f.wd * t * 1.3f + f.pd);
+            Vector2 size = Props.sideGlassSize;
+            origin.x += Props.sideGlassCenter.x;
+            origin.z += Props.sideGlassCenter.y;
+            for (int i = 0; i < fish.Length; i++)
+            {
+                Fish f = fish[i];
+                float t = clock * f.speed + f.phase;
+                Vector2 here = PointOn(f, t, size);
+                Vector2 ahead = PointOn(f, t + 0.0005f, size);
+                float dx = ahead.x - here.x;
+                float dz = ahead.y - here.y;
+                bool left = dx < 0f;
+
+                // Pitch from the climb, eased so a fish levels out smoothly at
+                // the ends of its lap rather than flicking. Stored in angle,
+                // which the view from above uses for heading.
+                float pitch = Mathf.Clamp(Mathf.Atan2(dz, Mathf.Abs(dx)) * Mathf.Rad2Deg,
+                                          -Props.maxPitch, Props.maxPitch);
+                if (!f.angleSet || lastDelta <= 0f)
+                {
+                    fish[i].angle = pitch;
+                    fish[i].angleSet = true;
+                }
+                else
+                {
+                    fish[i].angle = Mathf.Lerp(f.angle, pitch, 1f - Mathf.Exp(-4f * lastDelta));
+                }
+                // Nose-east sprites turn clockwise to point down; climbing is
+                // the other way, and for the west-facing sprite it mirrors.
+                float tilt = (left ? fish[i].angle : -fish[i].angle)
+                             + 0.4f * Props.waggleDegrees * Mathf.Sin(t * Props.waggleSpeed);
+
+                Graphic graphic = ProfileFor(f.stock, left);
+                if (graphic != null)
+                {
+                    graphic.Draw(origin + new Vector3(here.x, 0f, here.y), Rot4.North, parent, tilt);
+                }
+            }
+        }
+
+        /// <summary>Where a fish is on its lap at parameter t.</summary>
+        private static Vector2 PointOn(Fish f, float t, Vector2 size)
+        {
+            float ax = f.ax * size.x;
+            float az = f.az * size.y;
+            float rx = ax * (1f + Breathe * Mathf.Sin(f.wb * t + f.pb));
+            float rz = az * (1f + Breathe * Mathf.Cos(f.wb * t + f.pb));
+            float cx = ax * Drift * Mathf.Sin(f.wd * t + f.pd);
+            float cz = az * Drift * Mathf.Cos(f.wd * t * 1.3f + f.pd);
             return new Vector2(cx + rx * Mathf.Cos(f.w * t + f.px),
                                cz + rz * Mathf.Sin(f.w * t + f.px));
         }

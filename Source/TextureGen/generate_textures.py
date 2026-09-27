@@ -2129,32 +2129,189 @@ def aquarium_fish_sprites():
         c.save(os.path.join(OUT, "%s.png" % name))
     print("  AquariumFish_0..3.png  (64x64)")
 
-def aquarium():
-    c = Canvas(256, 128)
-    x0, y0, x1, y1 = TANK
+# The aquarium, drawn standing: a glass tank on a cabinet stand, 2x2 tiles of
+# canvas. Facing north or south the footprint is the bottom half and the tank
+# rises over the tile behind (drawOffsetNorth/South 0.5); you look through the
+# long glass at gravel, planting and bubbles, and CompSwimmingFish swims the
+# fish across it in profile. Facing east or west the tank runs away from the
+# camera, 2 tiles long, so most of what shows is its top - looked down into
+# through the glass lid, the same water and planting the flat view always had,
+# with the fish swimming from above - and the near end's glass and the stand
+# below it, with a sliver of the long glass on the side it faces.
+AQ_GLASS = (18, 46, 238, 162)          # facing north/south: the long glass
+AQ_SIDE_X = (70, 186)                  # facing east: the tank's width
+AQ_SIDE_TOP = (8, 150)                 # its top, running away up the picture
+AQ_SIDE_END = 206                      # the near end's glass, top..here
+AQ_FLOOR = 252
+AQ_WOOD = (70, 52, 40, 255)
+AQ_FRAME = (40, 44, 50, 255)
 
-    c.rect(10, 14, 246, y1 + GLASS_BAND + 6, DARK, 10)          # cabinet shell
-    c.rect(13, 17, 243, y1 + GLASS_BAND + 3, (62, 66, 80, 255), 8)
 
-    draw_tank_contents(c, None)
+def _aq_water(c, x0, y0, x1, y1, dim=1.0, fronds=True, seed=1):
+    """Water seen through glass from the side: paler toward the surface, a
+    gravel bed, planting standing up out of it."""
+    import random
+    for k in range(10):
+        t = k / 9.0
+        col = tuple(int(v * (0.85 + 0.25 * (1 - t)) * dim) for v in (58, 132, 150)) + (255,)
+        c.rect(x0, y0 + (y1 - y0) * k / 10.0, x1, y0 + (y1 - y0) * (k + 1) / 10.0 + 1, col, 0)
+    c.rect(x0, y1 - 12, x1, y1, tuple(int(v * dim) for v in (176, 150, 110)) + (255,), 0)
+    for i in range(int((x1 - x0) / 9)):
+        c.circle(x0 + 4 + i * 9 + (i * 7) % 5, y1 - 8 + (i * 3) % 5, 2,
+                 tuple(int(v * dim) for v in (140, 116, 84)) + (255,))
+    if not fronds:
+        return
+    r = random.Random(seed)
+    for px in (x0 + (x1 - x0) * f for f in (0.12, 0.3, 0.72, 0.9)):
+        for k in range(4):
+            h = r.uniform(0.35, 0.8) * (y1 - y0)
+            c.line(px + k * 3, y1 - 10, px + k * 3 + r.uniform(-6, 6), y1 - 10 - h,
+                   tuple(int(v * dim) for v in (70, 150, 80)) + (255,), 2.2)
 
-    # The bit of near wall the camera can see, below the water line.
-    c.rect(x0, y1, x1, y1 + GLASS_BAND, (38, 74, 96, 235), 3)
-    c.rect(x0, y1, x1, y1 + 3, (150, 206, 224, 120), 2)
-    c.frame(x0 - 3, y0 - 3, x1 + 3, y1 + GLASS_BAND, (176, 200, 214, 110), 2.5, 5)
 
-    c.rect(86, 8, 170, 20, DARK, 5)                              # hood lamp
-    c.rect(89, 10, 167, 18, (214, 232, 240, 235), 4)
-    save_rotations(c, "Aquarium")
+def _aq_top_pixels(frame=None, total=8, facing="east"):
+    """The tank from above - the drawing the flat view used - turned to run
+    up the picture, and the part of it that is water."""
+    tmp = Canvas(256, 128)
+    draw_tank_contents(tmp, frame, total)
+    tx0, ty0, tx1, ty1 = TANK
+    rp, rw, rh = rotate(tmp.pixels(), 256, 128, 3 if facing == "east" else 1)
+    src = (128 - ty1, tx0, 128 - ty0, tx1) if facing == "east" else (ty0, 256 - tx1, ty1, 256 - tx0)
+    return rp, rw, rh, src
+
+
+def _aq_top_rect():
+    x0, x1 = AQ_SIDE_X
+    return (x0 + 3, AQ_SIDE_TOP[0] + 12, x1 - 3, AQ_SIDE_TOP[1] - 1)
+
+
+def _fish_in_profile(c, x, y, length, col, left=False):
+    """A fish side-on, nose east (or west): body, tail, fins, an eye."""
+    d = -1 if left else 1
+    h = length * 0.36
+    c.ellipse(x, y, length * 0.45, h * 0.62, col)
+    c.poly([(x - d * length * 0.38, y), (x - d * length * 0.62, y - h * 0.7),
+            (x - d * length * 0.56, y), (x - d * length * 0.62, y + h * 0.7)], darker(col, 0.8))
+    c.poly([(x - d * length * 0.12, y - h * 0.5), (x + d * length * 0.08, y - h * 0.5),
+            (x - d * length * 0.2, y - h * 1.0)], darker(col, 0.8))             # dorsal fin
+    c.ellipse(x + d * length * 0.02, y + h * 0.18, length * 0.24, h * 0.24, lighter(col, 0.25))
+    c.circle(x + d * length * 0.28, y - h * 0.1, max(1.6, length * 0.05), (20, 20, 24, 255))
+
+
+def aquarium_fish_profiles():
+    """The same four fish in profile for the long-glass views: nose east, and
+    "Left" nose west. CompSwimmingFish picks by which way each is swimming."""
+    kinds = [(54, (240, 156, 60)), (46, (226, 96, 96)), (38, (244, 214, 96)), (42, (118, 186, 232))]
+    for k, (length, col) in enumerate(kinds):
+        for left in (False, True):
+            c = Canvas(64, 64)
+            _fish_in_profile(c, 32, 32, length, col + (255,), left)
+            c.save(os.path.join(OUT, "AquariumFishSide_%d%s.png" % (k, "Left" if left else "")))
+    print("  AquariumFishSide_0..3{,Left}.png  (64x64)")
+
+
+def aquarium_view(facing):
+    c = Canvas(256, 256)
+    if facing in ("south", "north"):
+        c.ellipse(128, 252, 124, 5, (0, 0, 0, 55))
+        silhouette(c, [("rect", 10, 30, 246, 250, 4, darker(AQ_WOOD, 0.9))], 4.0)
+        c.rect(10, 170, 246, 250, AQ_WOOD, 4)                            # the stand
+        for dx in (64, 128, 192):
+            c.line(dx, 176, dx, 244, darker(AQ_WOOD, 0.6), 1.5)
+        for kx in (60, 68, 188, 196):
+            c.circle(kx, 210, 2.2, (190, 160, 90, 255))
+        c.rect(10, 164, 246, 172, darker(AQ_WOOD, 0.7), 2)
+        c.rect(14, 30, 242, 44, (54, 58, 66, 255), 3)                    # hood, its top catching light
+        c.rect(14, 30, 242, 35, (96, 102, 112, 255), 2)
+        x0, y0, x1, y1 = AQ_GLASS
+        c.rect(x0 - 2, y0 - 2, x1 + 2, y1 + 2, (30, 40, 44, 255), 1)
+        _aq_water(c, x0, y0, x1, y1, 1.0 if facing == "south" else 0.7)
+        c.rect(x0, y0, x1, y0 + 10, (255, 255, 255, 26), 0)             # waterline sheen
+        c.line(x0 + 2, y0 + 4, x1 - 2, y0 + 4, (200, 235, 245, 120), 1.2)
+        c.frame(x0 - 2, y0 - 2, x1 + 2, y1 + 2, AQ_FRAME, 3, 1)
+        if facing == "north":
+            c.rect(190, 26, 230, 70, DARK, 3)                            # the filter, on the back
+            c.rect(193, 29, 227, 67, (60, 64, 70, 255), 2)
+        c.poly([(24, 52), (40, 52), (70, 158), (54, 158)], (255, 255, 255, 20))   # a glint
+        return c
+
+    x0, x1 = AQ_SIDE_X
+    top0, top1 = AQ_SIDE_TOP
+    c.ellipse(128, AQ_FLOOR, 66, 5, (0, 0, 0, 55))
+    silhouette(c, [("rect", x0, top0, x1, AQ_FLOOR - 2, 4, darker(AQ_WOOD, 0.9))], 4.0)
+    c.rect(x0, top0, x1, top1, (30, 40, 44, 255), 1)
+    rp, rw, rh, src = _aq_top_pixels(None, 8, facing)
+    blit_rect(c, rp, rw, rh, src, _aq_top_rect())
+    c.rect(x0 + 2, top0 + 2, x1 - 2, top0 + 12, (54, 58, 66, 255), 2)   # the light, across the far end
+    c.rect(x0 + 8, top0 + 9, x1 - 8, top0 + 12, (240, 246, 220, 255), 1)
+    c.poly([(x0 + 8, top0 + 16), (x0 + 22, top0 + 16), (x0 + 40, top1 - 4), (x0 + 26, top1 - 4)],
+           (255, 255, 255, 22))
+    c.frame(x0, top0, x1, top1, AQ_FRAME, 3, 2)
+    end = AQ_SIDE_END                                                    # the near end's glass
+    c.rect(x0, top1, x1, end, (30, 40, 44, 255), 1)
+    _aq_water(c, x0 + 2, top1 + 2, x1 - 2, end - 2, 0.85, seed=5)
+    c.frame(x0, top1, x1, end, AQ_FRAME, 3, 1)
+    c.line(x0 + 2, top1 + 1.5, x1 - 2, top1 + 1.5, (200, 235, 245, 150), 1.4)
+    c.rect(x0, end, x1, AQ_FLOOR - 2, AQ_WOOD, 3)                        # the stand's end
+    c.line(x0 + 4, end + 4, x1 - 4, end + 4, darker(AQ_WOOD, 0.6), 1.4)
+    c.circle((x0 + x1) / 2.0, (end + AQ_FLOOR) / 2.0, 2.2, (190, 160, 90, 255))
+    m = MirrorCanvas(c) if facing == "west" else c                       # the long glass, a sliver
+    m.rect(x1, top0 + 4, x1 + 12, end, (30, 40, 44, 255), 1)
+    for k in range(10):
+        t = k / 9.0
+        col = tuple(int(v * (0.85 + 0.25 * (1 - t))) for v in (58, 132, 150)) + (255,)
+        m.rect(x1 + 1, top0 + 6 + (end - top0 - 8) * k / 10.0,
+               x1 + 11, top0 + 6 + (end - top0 - 8) * (k + 1) / 10.0 + 1, col, 0)
+    m.rect(x1 + 1, end - 12, x1 + 11, end - 1, (176, 150, 110, 255), 0)
+    for yy in (top0 + 60, top0 + 120):
+        m.line(x1 + 5, end - 10, x1 + 7, yy, (70, 150, 80, 255), 2)
+    m.rect(x1, end, x1 + 12, AQ_FLOOR - 2, darker(AQ_WOOD, 0.8), 2)
+    m.line(x1 + 12, top0 + 4, x1 + 12, AQ_FLOOR - 2, AQ_FRAME, 2.5)
     return c
 
 
+def aquarium():
+    for facing in ("north", "east", "south", "west"):
+        aquarium_view(facing).save(os.path.join(OUT, "Aquarium_%s.png" % facing))
+    print("  Aquarium_{north,east,south,west}.png  (256x256)")
+    return aquarium_view("south")
+
+
 def aquarium_frames(total=8):
+    """Per facing (perFacing), at the same 2x2 canvas as the tank. Through the
+    long glass: bubbles rising from the airstone and light rippling down from
+    the surface. From above, on the east and west views: the old looking-down
+    loop - swaying planting, drifting caustics - on the top the same way the
+    tank's own texture lays it there."""
+    import math
     for i in range(total):
-        c = Canvas(256, 128)
-        draw_tank_contents(c, i, total)
-        c.save(os.path.join(OUT, "AquariumLife_%d.png" % i))
-    print("  AquariumLife_0..%d.png  (256x128)" % (total - 1))
+        p = float(i) / total
+        for facing in ("south", "north"):
+            c = Canvas(256, 256)
+            x0, y0, x1, y1 = AQ_GLASS
+            bright = 1.0 if facing == "south" else 0.6
+            for k in range(7):                                           # bubbles
+                t = (p + k / 7.0) % 1.0
+                bx = x0 + (x1 - x0) * 0.86 + 3 * math.sin(2 * math.pi * (t * 2 + k * 0.3))
+                by = y1 - 14 - t * (y1 - y0 - 18)
+                c.circle(bx, by, 1.6 + t, (220, 240, 250, int(170 * bright)))
+            for k in range(4):                                           # light from the surface
+                lx = x0 + ((p * 0.5 + k / 4.0) % 1.0) * (x1 - x0)
+                c.poly([(lx - 6, y0 + 6), (lx + 6, y0 + 6), (lx + 20, y1 - 14), (lx + 4, y1 - 14)],
+                       (200, 240, 250, int(16 * bright)))
+            c.line(x0 + 2, y0 + 4 + math.sin(2 * math.pi * p) * 1.2, x1 - 2,
+                   y0 + 4 - math.sin(2 * math.pi * p) * 1.2, (220, 245, 250, int(110 * bright)), 1.2)
+            c.save(os.path.join(OUT, "AquariumLife%s_%d.png" % (facing.capitalize(), i)))
+        for facing in ("east", "west"):
+            c = Canvas(256, 256)
+            rp, rw, rh, src = _aq_top_pixels(i, total, facing)
+            blit_rect(c, rp, rw, rh, src, _aq_top_rect())
+            x0, x1 = AQ_SIDE_X
+            top0 = AQ_SIDE_TOP[0]
+            c.rect(x0 + 2, top0 + 2, x1 - 2, top0 + 12, (54, 58, 66, 255), 2)   # keep the light on top
+            c.rect(x0 + 8, top0 + 9, x1 - 8, top0 + 12, (240, 246, 220, 255), 1)
+            c.save(os.path.join(OUT, "AquariumLife%s_%d.png" % (facing.capitalize(), i)))
+    print("  AquariumLife{North,East,South,West}_0..%d.png  (256x256)" % (total - 1))
 
 
 # ---------------------------------------------------------------------------
@@ -3205,6 +3362,7 @@ def _build_aquarium():
     canvas = aquarium()
     aquarium_frames()
     aquarium_fish_sprites()
+    aquarium_fish_profiles()
     return {"Aquarium": canvas}
 
 

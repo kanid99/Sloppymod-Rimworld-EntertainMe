@@ -1279,7 +1279,13 @@
     <graphicData>
       <texPath>EntertainingIdeas/Buildings/Aquarium</texPath>
       <graphicClass>Graphic_Multi</graphicClass>
-      <drawSize>(2,1)</drawSize>
+      <!-- A tank standing on its cabinet, drawn on 2x2 tiles. Facing north or
+           south the footprint is the bottom half and the tank rises over the
+           tile behind, so the square is lifted half a tile; facing east or
+           west the tank runs away up the picture and the square is centred. -->
+      <drawSize>(2,2)</drawSize>
+      <drawOffsetNorth>(0,0,0.5)</drawOffsetNorth>
+      <drawOffsetSouth>(0,0,0.5)</drawOffsetSouth>
       <shadowData>
         <volume>(1.7,0.5,0.5)</volume>
       </shadowData>
@@ -1332,8 +1338,8 @@
         <framePath>EntertainingIdeas/Buildings/AquariumLife</framePath>
         <frameCount>8</frameCount>
         <ticksPerFrame>11</ticksPerFrame>
-        <drawSize>(2,1)</drawSize>
-        <rotateWithBuilding>true</rotateWithBuilding>
+        <drawSize>(2,2)</drawSize>
+        <perFacing>true</perFacing>
         <requireUser>false</requireUser>
       </li>
       <!-- Each fish is placed every rendered frame from a continuous clock, so
@@ -1341,27 +1347,39 @@
            anyone is watching, and stop when the game is paused. -->
       <li Class="EntertainingIdeas.CompProperties_SwimmingFish">
         <tankSize>(1.62,0.44)</tankSize>
+        <!-- Facing north or south the fish swim across the long glass, in
+             profile; facing east or west, from above, in the top that is
+             looked down into. Both in tiles from the texture's centre. -->
+        <sideGlassCenter>(0,0.22)</sideGlassCenter>
+        <sideGlassSize>(1.56,0.6)</sideGlassSize>
+        <topCenter>(0,0.34)</topCenter>
+        <topSize>(0.66,0.84)</topSize>
+        <topFishScale>0.7</topFishScale>
         <stocks>
           <li>
             <texPath>EntertainingIdeas/Buildings/AquariumFish_0</texPath>
+            <sideTexPath>EntertainingIdeas/Buildings/AquariumFishSide_0</sideTexPath>
             <size>0.30</size>
             <count>2</count>
             <speed>0.85</speed>
           </li>
           <li>
             <texPath>EntertainingIdeas/Buildings/AquariumFish_1</texPath>
+            <sideTexPath>EntertainingIdeas/Buildings/AquariumFishSide_1</sideTexPath>
             <size>0.26</size>
             <count>2</count>
             <speed>1.05</speed>
           </li>
           <li>
             <texPath>EntertainingIdeas/Buildings/AquariumFish_2</texPath>
+            <sideTexPath>EntertainingIdeas/Buildings/AquariumFishSide_2</sideTexPath>
             <size>0.21</size>
             <count>3</count>
             <speed>1.35</speed>
           </li>
           <li>
             <texPath>EntertainingIdeas/Buildings/AquariumFish_3</texPath>
+            <sideTexPath>EntertainingIdeas/Buildings/AquariumFishSide_3</sideTexPath>
             <size>0.23</size>
             <count>2</count>
             <speed>1.15</speed>
