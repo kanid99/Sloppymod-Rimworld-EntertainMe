@@ -177,15 +177,58 @@
          of them. Power differs per table, so each table declares its own. -->
     <comps>
       <li Class="CompProperties_Flickable"/>
+      <!-- One overlay per facing rather than one turned to match: each view
+           shows a different part of the machine (the score only faces south;
+           from the north the backbox hides the back of the playfield; the
+           sides are side-on), so the frames are drawn per facing. Only the
+           one matching the building's rotation draws. -->
       <li Class="EntertainingIdeas.CompProperties_AnimatedScreen">
         <framePath>EntertainingIdeas/Buildings/PinballPlay</framePath>
         <frameCount>8</frameCount>
         <ticksPerFrame>6</ticksPerFrame>
         <drawSize>(1,2)</drawSize>
-        <rotateWithBuilding>true</rotateWithBuilding>
         <playJobs>
           <li>EI_Play_Pinball</li>
         </playJobs>
+        <drawRotations>
+          <li>South</li>
+        </drawRotations>
+      </li>
+      <li Class="EntertainingIdeas.CompProperties_AnimatedScreen">
+        <framePath>EntertainingIdeas/Buildings/PinballPlayNorth</framePath>
+        <frameCount>8</frameCount>
+        <ticksPerFrame>6</ticksPerFrame>
+        <drawSize>(1,2)</drawSize>
+        <playJobs>
+          <li>EI_Play_Pinball</li>
+        </playJobs>
+        <drawRotations>
+          <li>North</li>
+        </drawRotations>
+      </li>
+      <li Class="EntertainingIdeas.CompProperties_AnimatedScreen">
+        <framePath>EntertainingIdeas/Buildings/PinballPlayEast</framePath>
+        <frameCount>8</frameCount>
+        <ticksPerFrame>6</ticksPerFrame>
+        <drawSize>(2,1)</drawSize>
+        <playJobs>
+          <li>EI_Play_Pinball</li>
+        </playJobs>
+        <drawRotations>
+          <li>East</li>
+        </drawRotations>
+      </li>
+      <li Class="EntertainingIdeas.CompProperties_AnimatedScreen">
+        <framePath>EntertainingIdeas/Buildings/PinballPlayWest</framePath>
+        <frameCount>8</frameCount>
+        <ticksPerFrame>6</ticksPerFrame>
+        <drawSize>(2,1)</drawSize>
+        <playJobs>
+          <li>EI_Play_Pinball</li>
+        </playJobs>
+        <drawRotations>
+          <li>West</li>
+        </drawRotations>
       </li>
       <!-- Electric games wear out like a television does: a breakdown cuts
            the power until someone repairs it with a component. -->
