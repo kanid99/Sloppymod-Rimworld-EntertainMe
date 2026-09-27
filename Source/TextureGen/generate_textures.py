@@ -260,21 +260,175 @@ def shadow_theater_frames(total=10):
 
 
 # ---------------------------------------------------------------------------
-# 3. Pinball machines  (four themed tables, 1x1 footprint, rotatable)
+# 3. Pinball machines  (four themed tables, 1x2 footprint, rotatable)
+#
+# Each facing is its own drawing rather than a turn of one picture. RimWorld
+# looks down at a slant from the south, so anything upright shows the face that
+# points south and rises up the screen from where it stands:
+#
+#   south   the player's end is nearest. The backbox stands at the far end,
+#           against the wall, showing its backglass; the front apron, coin
+#           door and legs show at the bottom.
+#   north   the backbox is nearest and shows its plain back panel, hiding the
+#           back of the playfield; the flippers are at the far end.
+#   east/west  side-on: legs, a cabinet sloping down toward the player, and
+#           the backbox standing up at the back.
+#
+# Turning the south drawing instead put the backglass flat on the floor, upside
+# down facing north, and sideways on the side views.
+#
+# Everything on the playfield is placed in (u, v): u runs from the back of the
+# playfield (0) to the flippers (1), v across it from the player's left (0) to
+# their right (1). Each view projects (u, v) onto its own canvas, and the play
+# overlay goes through the same projection, which is what keeps the ball on
+# the bumpers painted on every facing.
 # ---------------------------------------------------------------------------
-# Cabinet geometry, shared by the static art and the play-frame overlay so the
-# ball always lands on the bumpers that are actually painted on the table.
-PB_W, PB_H = 160, 320             # 1x2
-PB_TOP, PB_BOT = 6, 314
-PB_BACKBOX = 92                   # backbox shell ends here
-PB_GLASS_TOP = 12                 # backglass artwork band
-PB_SCORE_TOP, PB_SCORE_BOT = 60, 82   # score reels along the bottom of it
-PB_FIELD_BOT = 282                # playfield ends here, lockbar below
-PB_FLIP_Y = 266                   # flipper pivots
-PB_LOCKBAR = 28                   # how deep the front rail is
-BUMPERS = [(60, 153, 15), (102, 143, 13), (78, 187, 12)]
-BALL_PATH = [(126, 231), (126, 175), (117, 129), (96, 140),
-             (66, 152), (76, 183), (60, 229), (98, 261)]
+# The machine is drawn bigger than its 1x2 footprint (drawSize 2x2), because a
+# pinball side-on is about as tall as it is long: squeezed into a 2x1 strip it
+# read as a low bench. Seen from the ends it still fits its own two tiles and
+# is drawn 160 wide, then centred in the square; side-on it stands on the
+# south edge of its footprint and rises over the tile behind, the way tall
+# furniture does.
+PB_W, PB_H = 160, 320             # north and south, before centring
+PB_SQ = 320                       # every saved texture, square
+PB_FOOT_Y = 238                   # side-on: the near feet, at the footprint's south edge
+PB_METAL = (158, 162, 172, 255)
+PB_CHROME = (212, 214, 222, 255)
+
+# (u, v, radius as a share of the playfield's width)
+PB_BUMPERS = [(0.30, 0.33, 0.13), (0.24, 0.69, 0.112), (0.48, 0.48, 0.103)]
+PB_TARGETS_U = (0.13, 0.17)
+PB_TARGETS_V = [(0.19, 0.30), (0.345, 0.455), (0.50, 0.61)]
+PB_LANE = (0.90, 0.07, 0.71)      # shooter lane: v, from u, to u
+PB_RAIL = (0.09, 0.10, 0.52)      # guide rail on the left
+PB_SLING = (0.05, 0.29, 0.75, 0.80, 0.86)   # outer v, inner v, top/tip/bottom u
+PB_FLIP_U, PB_FLIP_TIP_U, PB_FLIP_UP_U = 0.915, 0.865, 0.75
+PB_FLIPPERS = [(0.414, 0.207), (0.586, 0.793)]   # (pivot v, tip v), left then right
+PB_BALL_REST = (0.65, 0.90)
+PB_BALL_PATH = [(0.72, 0.90), (0.415, 0.90), (0.165, 0.82), (0.225, 0.64),
+                (0.29, 0.38), (0.46, 0.47), (0.71, 0.33), (0.885, 0.655)]
+
+# The same machine seen four ways has to keep its proportions, so heights are
+# shared: legs PB_LEG, the cabinet body PB_BODY deep at the player's end, and
+# the backbox standing PB_BOX_RISE above the playfield with a PB_LID lid.
+PB_LEG = 36
+PB_BODY = 30
+PB_BOX_RISE = 96
+PB_LID = 15
+PB_BOX_THICK = 30                 # side-on, back to front
+# South: the backbox and its glass, the lockbar and the apron below it.
+PB_BOX_TOP, PB_BOX_BOT = 4, 98
+PB_GLASS = (20, 24, 140, 86)
+PB_SCORE_TOP = 66
+PB_LAMP_Y = 92
+PB_CAB_BOT = 316 - 4 - PB_LEG     # cabinet underside, both end views
+PB_LOCKBAR = PB_CAB_BOT - PB_BODY - 10
+# North: where the backbox's back panel starts hiding the playfield.
+PB_NORTH_BOX_TOP = 170
+PB_NORTH_BOX_BOT = PB_CAB_BOT - 12
+# East/west: the cabinet runs from x 24 to x 298, its top sloping down toward
+# the player, and the backbox's side stands at the back end.
+PB_SIDE_BACK, PB_SIDE_FRONT = 24, 298
+PB_SIDE_DEPTH = 44                # how deep the top face reads, foreshortened
+PB_SIDE_BOTTOM = PB_FOOT_Y - 4 - PB_LEG
+PB_SIDE_SLOPE = 8                 # how much higher the back of the cabinet is
+PB_SIDE_TOP = PB_SIDE_BOTTOM - PB_BODY - PB_SIDE_SLOPE - PB_SIDE_DEPTH
+PB_SIDE_BOX = (22, 22 + PB_BOX_THICK)   # backbox, back to front
+PB_SIDE_BOX_TOP = PB_SIDE_TOP - PB_BOX_RISE
+PB_SIDE_GLASS = (PB_SIDE_BOX_TOP + 18, PB_SIDE_TOP - 4)   # lit edge of the backglass
+
+
+def lighter(color, amount=0.28):
+    """A lighter tint of a colour, for the tops of things catching the light."""
+    r, g, b = color[0], color[1], color[2]
+    a = color[3] if len(color) > 3 else 255
+    return (int(r + (255 - r) * amount), int(g + (255 - g) * amount),
+            int(b + (255 - b) * amount), a)
+
+
+def _side_top(x):
+    """The top edge of the cabinet's top face in the side view, at x."""
+    return PB_SIDE_TOP + (x - PB_SIDE_BACK) * float(PB_SIDE_SLOPE) / (PB_SIDE_FRONT - PB_SIDE_BACK)
+
+
+class MirrorCanvas:
+    """Draws onto a canvas flipped left to right, so the west side view is the
+    east one drawn again rather than a second copy of the code."""
+
+    def __init__(self, canvas):
+        self.c = canvas
+        self.w, self.h = canvas.w, canvas.h
+
+    def rect(self, x0, y0, x1, y1, color, radius=0.0):
+        self.c.rect(self.w - x1, y0, self.w - x0, y1, color, radius)
+
+    def frame(self, x0, y0, x1, y1, color, width=1.0, radius=0.0):
+        self.c.frame(self.w - x1, y0, self.w - x0, y1, color, width, radius)
+
+    def ellipse(self, cx, cy, rx, ry, color):
+        self.c.ellipse(self.w - cx, cy, rx, ry, color)
+
+    def circle(self, cx, cy, r, color):
+        self.c.circle(self.w - cx, cy, r, color)
+
+    def ring(self, cx, cy, r_outer, r_inner, color):
+        self.c.ring(self.w - cx, cy, r_outer, r_inner, color)
+
+    def poly(self, points, color):
+        self.c.poly([(self.w - x, y) for x, y in points], color)
+
+    def line(self, x0, y0, x1, y1, color, width=1.0):
+        self.c.line(self.w - x0, y0, self.w - x1, y1, color, width)
+
+
+class PinballView:
+    """Where a point on the playfield lands in one facing's drawing."""
+
+    def __init__(self, facing):
+        self.facing = facing
+        self.side = facing in ("east", "west")
+        self.scale = 0.75 if self.side else 1.0     # for line widths
+
+    def pt(self, u, v):
+        if self.facing == "south":
+            return 24 + v * 112, 104 + u * (PB_LOCKBAR - 112)
+        if self.facing == "north":
+            # Seen from the other end: the player's left is on the right.
+            return 136 - v * 112, PB_NORTH_BOX_TOP + 20 - u * (PB_NORTH_BOX_TOP - 10)
+        # East, drawn as is; west goes through a MirrorCanvas, which turns the
+        # player's left from the top of the strip to the bottom unless v is
+        # flipped back here.
+        if self.facing == "west":
+            v = 1.0 - v
+        x = PB_SIDE_BOX[1] + 6 + u * 228
+        return x, _side_top(x) + 4 + v * (PB_SIDE_DEPTH - 8)
+
+    def radii(self, r):
+        if self.side:
+            return r * 104, r * 36
+        return r * 112, r * 104
+
+    def hidden(self, u, v):
+        """True where the backbox stands between the camera and the playfield."""
+        return self.facing == "north" and self.pt(u, v)[1] > PB_NORTH_BOX_TOP - 4
+
+    def canvas(self):
+        base = Canvas(PB_SQ, PB_SQ) if self.side else Canvas(PB_W, PB_H)
+        return base, (MirrorCanvas(base) if self.facing == "west" else base)
+
+    def save(self, base, path):
+        """Write a drawing out square, centring an end view in it."""
+        px = base.pixels()
+        if not self.side:
+            sq = bytearray(PB_SQ * PB_SQ * 4)
+            pad = (PB_SQ - PB_W) // 2
+            for y in range(PB_H):
+                row = y * PB_W * 4
+                at = (y * PB_SQ + pad) * 4
+                sq[at:at + PB_W * 4] = px[row:row + PB_W * 4]
+            px = sq
+        write_png(path, PB_SQ, PB_SQ, px)
+
 
 # A seven-segment digit, the way a real score reel reads.
 SEVEN_SEG = {
@@ -301,105 +455,296 @@ def seg_digit(c, x, y, w, h, value, on, off):
         c.rect(x0, y0, x1, y1, on if name in lit else off, 1)
 
 
-def score_reels(c, L, R, digits_left, digits_right, glow):
-    """Two score windows, the way a solid-state table shows two players."""
+def pb_reels(c, top, digits_left, digits_right, glow):
+    """Two score windows across the bottom of the backglass, one per player."""
     dark = (18, 16, 20, 255)
     off = (52, 26, 18, 255)
-    for side, digits in ((0, digits_left), (1, digits_right)):
-        x0 = L + 4 if side == 0 else R - 62
-        c.rect(x0, PB_SCORE_TOP, x0 + 58, PB_SCORE_BOT, (10, 9, 12, 255), 3)
-        c.rect(x0 + 2, PB_SCORE_TOP + 2, x0 + 56, PB_SCORE_BOT - 2, dark, 2)
+    for x0, digits in ((24, digits_left), (82, digits_right)):
+        c.rect(x0, top, x0 + 54, top + 18, (10, 9, 12, 255), 3)
+        c.rect(x0 + 2, top + 2, x0 + 52, top + 16, dark, 2)
         for i, value in enumerate(digits):
-            seg_digit(c, x0 + 5 + i * 9, PB_SCORE_TOP + 5, 6.5, 12, value, glow, off)
+            seg_digit(c, x0 + 4.5 + i * 8, top + 3, 5.8, 12, value, glow, off)
+
+
+def _pb_playfield(c, view, field, accent, accent2):
+    """Lanes, targets, bumpers, slingshots, flippers and the waiting ball."""
+    p, s = view.pt, view.scale
+
+    lane_v, lane_u0, lane_u1 = PB_LANE
+    c.line(*p(lane_u0, lane_v), *p(lane_u1, lane_v), (238, 238, 244, 150), 3 * s)
+    rail_v, rail_u0, rail_u1 = PB_RAIL
+    c.line(*p(rail_u0, rail_v), *p(rail_u1, rail_v), (238, 238, 244, 105), 2.4 * s)
+
+    u0, u1 = PB_TARGETS_U
+    for v0, v1 in PB_TARGETS_V:
+        c.poly([p(u0, v0), p(u0, v1), p(u1, v1), p(u1, v0)], accent2)
+
+    # Pop bumpers stand up off the playfield, so the cap sits above its skirt.
+    lift = 3 if view.side else 1.5
+    for u, v, r in PB_BUMPERS:
+        x, y = p(u, v)
+        rx, ry = view.radii(r)
+        c.ellipse(x, y, rx + 2, ry + 2, darker(field, 0.5))
+        c.ellipse(x, y, rx, ry, darker(accent, 0.6))
+        c.ellipse(x, y - lift, rx, ry, accent)
+        c.ellipse(x, y - lift, rx * 0.62, ry * 0.62, (250, 250, 252, 255))
+        c.ellipse(x, y - lift, rx * 0.34, ry * 0.34, accent2)
+        c.ellipse(x - rx * 0.3, y - lift - ry * 0.3, rx * 0.16, ry * 0.16, (255, 255, 255, 190))
+
+    out_v, in_v, top_u, tip_u, bot_u = PB_SLING
+    for mirror in (False, True):
+        ov, iv = (1 - out_v, 1 - in_v) if mirror else (out_v, in_v)
+        c.poly([p(tip_u, ov), p(top_u, iv), p(bot_u, iv)], darker(field, 0.5))
+        inset = 0.03 if mirror else -0.03
+        c.poly([p(tip_u, ov - inset), p(top_u + 0.02, iv + inset), p(bot_u - 0.02, iv + inset)],
+               accent2)
+        c.line(*p(tip_u, ov), *p(top_u, iv), (255, 255, 255, 120), 2 * s)   # rubber
+        c.line(*p(tip_u, ov), *p(bot_u, iv), (255, 255, 255, 120), 2 * s)
+
+    for pivot_v, tip_v in PB_FLIPPERS:
+        x0, y0 = p(PB_FLIP_U, pivot_v)
+        x1, y1 = p(PB_FLIP_TIP_U, tip_v)
+        c.line(x0, y0, x1, y1, darker(field, 0.45), 12 * s)
+        c.line(x0, y0, x1, y1, accent, 8 * s)
+        c.circle(x0, y0, 4.2 * s, (236, 236, 240, 255))
+
+    x, y = p(*PB_BALL_REST)
+    pb_ball(c, x, y, view)
+
+
+def pb_ball(c, x, y, view, shade=(20, 22, 30, 255)):
+    r = 4.4 if view.side else 5.4
+    c.circle(x, y, r + 1.3, darker(shade, 1.0))
+    c.circle(x, y, r, (226, 228, 236, 255))
+    c.circle(x - r * 0.3, y - r * 0.3, r * 0.4, (255, 255, 255, 220))
+
+
+def _pb_glass(c, pts, alpha=16):
+    """Two streaks of reflected light across the playfield glass."""
+    c.poly(pts[0], (255, 255, 255, alpha))
+    c.poly(pts[1], (255, 255, 255, alpha // 2))
+
+
+def pinball_south(cab, cab_dark, field, accent, accent2, glass, motif):
+    """The player's end nearest: backglass at the far end, apron and legs here."""
+    view = PinballView("south")
+    base, c = view.canvas()
+    L, R, mid = 16, 144, 80
+    box_l, box_r = 10, 150
+    lock, apron = PB_LOCKBAR, PB_LOCKBAR + 10
+    silhouette(c, [
+        ("rect", L + 1, 309, L + 15, 316, 2, darker(PB_METAL, 0.6)),     # leveller feet
+        ("rect", R - 15, 309, R - 1, 316, 2, darker(PB_METAL, 0.6)),
+        ("rect", L + 4, PB_CAB_BOT - 2, L + 12, 312, 2, PB_METAL),        # front legs
+        ("rect", R - 12, PB_CAB_BOT - 2, R - 4, 312, 2, PB_METAL),
+        ("rect", L, 90, R, PB_CAB_BOT, 6, cab),                            # cabinet
+        ("rect", L - 5, lock - 8, L + 2, lock + 4, 2, accent2),            # flipper buttons
+        ("rect", R - 2, lock - 8, R + 5, lock + 4, 2, accent2),
+        ("rect", box_l, PB_BOX_TOP, box_r, PB_BOX_BOT, 6, cab),           # backbox
+    ])
+    for x in (L + 6, R - 10):                                              # chrome on the legs
+        c.line(x, PB_CAB_BOT + 1, x, 310, (255, 255, 255, 90), 1.5)
+
+    # Playfield under glass, with the rails of the cabinet either side of it.
+    c.rect(L + 5, PB_BOX_BOT, R - 5, lock + 3, darker(cab_dark, 0.55), 4)
+    c.rect(L + 8, PB_BOX_BOT, R - 8, lock, field, 3)
+    _pb_playfield(c, view, field, accent, accent2)
+    _pb_glass(c, ([(28, lock - 4), (46, lock - 4), (112, 100), (94, 100)],
+                  [(58, lock - 4), (66, lock - 4), (132, 100), (124, 100)]))
+    c.line(L + 1.5, PB_BOX_BOT, L + 1.5, lock + 1, (255, 255, 255, 40), 2)  # rail highlight
+
+    # The backbox stands up off the back of the cabinet, so it throws a shadow
+    # down the glass in front of it: this is most of what makes it read upright.
+    for k in range(6):
+        c.rect(L + 5, PB_BOX_BOT + k * 2, R - 5, PB_BOX_BOT + k * 2 + 2, (0, 0, 0, 84 - k * 14))
+
+    # Lockbar, then the apron: the front face, in its own shade.
+    c.rect(L + 1, lock - 1, R - 1, apron, (182, 186, 196, 255), 3)
+    c.rect(L + 3, lock, R - 3, lock + 3, (230, 232, 240, 255), 2)
+    c.rect(L, apron, R, PB_CAB_BOT - 10, cab_dark)
+    c.rect(L, apron + 8, R, PB_CAB_BOT, cab_dark, 6)
+    c.line(L, apron + 0.5, R, apron + 0.5, darker(cab_dark, 0.6), 1.5)
+    c.rect(mid - 16, apron + 3, mid + 16, apron + 25, (24, 22, 26, 255), 3)   # coin door
+    c.rect(mid - 14, apron + 5, mid + 14, apron + 23, (40, 38, 44, 255), 2)
+    for sx in (-1, 1):
+        c.rect(mid + sx * 8 - 3, apron + 8, mid + sx * 8 + 3, apron + 16, accent, 1)   # coin slots
+    c.rect(mid - 7, apron + 18, mid + 7, apron + 21, (18, 16, 20, 255), 1)          # coin return
+
+    # Shooter rod, on the player's right, pointing out of the apron at them.
+    rod_x = R - 16
+    c.circle(rod_x, apron + 8, 4.6, (120, 124, 134, 255))                 # collar
+    c.rect(rod_x - 2, apron + 8, rod_x + 2, apron + 17, PB_CHROME, 1.5)
+    c.circle(rod_x, apron + 19, 7.2, DARK)
+    c.circle(rod_x, apron + 19, 6, accent)
+    c.circle(rod_x - 2, apron + 17, 2.2, (255, 255, 255, 160))
+
+    # Backbox: the lid catching the light, then the front with its backglass.
+    lid = PB_BOX_TOP + PB_LID
+    c.rect(box_l, PB_BOX_TOP, box_r, lid, lighter(cab), 6)
+    c.rect(box_l, lid - 5, box_r, lid, lighter(cab))
+    c.line(box_l, lid, box_r, lid, darker(cab, 0.6), 1.5)
+    gx0, gy0, gx1, gy1 = PB_GLASS
+    c.rect(gx0 - 2, gy0 - 2, gx1 + 2, gy1 + 2, (14, 12, 16, 255), 4)
+    c.rect(gx0, gy0, gx1, gy1, glass, 3)
+    motif(c, gx0, gx1, 8)
+    pb_reels(c, PB_SCORE_TOP, (0, 1, 2, 4, 8, 0), (0, 0, 3, 9, 6, 0), accent)
+    c.rect(gx0, gy0, gx1, gy0 + 12, (255, 255, 255, 34), 3)                # glass sheen
+    for i in range(6):                                                     # marquee lamps
+        c.circle(25 + i * 22, PB_LAMP_Y, 3.2, (255, 244, 208, 230))
+    c.line(box_l + 1.5, lid + 1, box_l + 1.5, PB_BOX_BOT - 2, (255, 255, 255, 44), 2)
+    return base
+
+
+def pinball_north(cab, cab_dark, field, accent, accent2, glass, motif):
+    """The backbox nearest, showing its back; the flippers at the far end."""
+    view = PinballView("north")
+    base, c = view.canvas()
+    L, R, mid = 16, 144, 80
+    box_l, box_r = 10, 150
+    rod_x = L + 16                         # the player's right is on our left
+    box_bot = PB_NORTH_BOX_BOT
+    silhouette(c, [
+        ("rect", L + 1, 309, L + 15, 316, 2, darker(PB_METAL, 0.6)),
+        ("rect", R - 15, 309, R - 1, 316, 2, darker(PB_METAL, 0.6)),
+        ("rect", L + 4, PB_CAB_BOT - 2, L + 12, 312, 2, PB_METAL),        # back legs
+        ("rect", R - 12, PB_CAB_BOT - 2, R - 4, 312, 2, PB_METAL),
+        ("circle", rod_x, 9, 6.2, accent),                                 # shooter knob
+        ("rect", L, 14, R, PB_CAB_BOT, 6, cab),                            # cabinet
+        ("rect", L - 5, 26, L + 2, 38, 2, accent2),                        # flipper buttons
+        ("rect", R - 2, 26, R + 5, 38, 2, accent2),
+        ("rect", box_l, PB_NORTH_BOX_TOP, box_r, box_bot, 6, cab),        # backbox
+    ])
+    for x in (L + 6, R - 10):
+        c.line(x, PB_CAB_BOT + 1, x, 310, (255, 255, 255, 90), 1.5)
+    c.circle(rod_x - 2, 7, 2.1, (255, 255, 255, 150))
+
+    # Lockbar at the far end, then the playfield running back to the backbox.
+    c.rect(L + 1, 16, R - 1, 27, (182, 186, 196, 255), 3)
+    c.rect(L + 3, 17, R - 3, 20, (230, 232, 240, 255), 2)
+    c.rect(L + 5, 27, R - 5, PB_NORTH_BOX_TOP + 6, darker(cab_dark, 0.55), 4)
+    c.rect(L + 8, 30, R - 8, PB_NORTH_BOX_TOP + 6, field, 3)
+    _pb_playfield(c, view, field, accent, accent2)
+    _pb_glass(c, ([(28, PB_NORTH_BOX_TOP), (46, PB_NORTH_BOX_TOP), (112, 32), (94, 32)],
+                  [(58, PB_NORTH_BOX_TOP), (66, PB_NORTH_BOX_TOP), (132, 32), (124, 32)]))
+    c.line(L + 1.5, 28, L + 1.5, PB_NORTH_BOX_TOP, (255, 255, 255, 40), 2)
+    for k in range(4):                     # contact shadow where the box stands
+        c.rect(L + 5, PB_NORTH_BOX_TOP - 8 + k * 2, R - 5, PB_NORTH_BOX_TOP - 6 + k * 2,
+               (0, 0, 0, 20 + k * 16))
+
+    # Backbox from behind: a lid, then a plain back panel - no art on this side.
+    back = darker(cab, 0.72)
+    lid = PB_NORTH_BOX_TOP + PB_LID
+    c.rect(box_l, PB_NORTH_BOX_TOP, box_r, lid, lighter(cab), 6)
+    c.rect(box_l, lid - 5, box_r, lid, lighter(cab))
+    c.rect(box_l, lid, box_r, box_bot, back, 6)
+    c.rect(box_l, lid, box_r, box_bot - 10, back)
+    c.line(box_l, lid, box_r, lid, darker(cab, 0.5), 1.5)
+    c.frame(box_l + 8, PB_NORTH_BOX_TOP + 20, box_r - 8, box_bot - 8, darker(back, 0.7), 1.5, 4)
+    for row in range(5):                   # vent slots
+        y = PB_NORTH_BOX_TOP + 30 + row * 7
+        for x0 in (28, 94):
+            c.rect(x0, y, x0 + 38, y + 3, darker(back, 0.5), 1.5)
+    c.circle(mid, PB_NORTH_BOX_TOP + 44, 4.6, PB_METAL)                    # lock
+    c.circle(mid, PB_NORTH_BOX_TOP + 44, 1.6, DARK)
+    c.rect(mid - 16, box_bot - 22, mid + 16, box_bot - 14, (214, 204, 176, 255), 1.5)   # maker's plate
+    c.line(box_l + 1.5, PB_NORTH_BOX_TOP + 14, box_l + 1.5, box_bot - 4, (255, 255, 255, 36), 2)
+
+    # The back of the cabinet under the box, in shadow.
+    c.rect(L, box_bot, R, PB_CAB_BOT, darker(cab_dark, 0.8), 6)
+    c.rect(L, box_bot, R, PB_CAB_BOT - 6, darker(cab_dark, 0.8))
+    c.line(L, box_bot + 0.5, R, box_bot + 0.5, darker(cab_dark, 0.5), 1.5)
+    return base
+
+
+def pinball_side(facing, cab, cab_dark, field, accent, accent2, glass, motif):
+    """Side-on: drawn facing east, and mirrored for west."""
+    view = PinballView(facing)
+    base, c = view.canvas()
+    B, F, bot, depth = PB_SIDE_BACK, PB_SIDE_FRONT, PB_SIDE_BOTTOM, PB_SIDE_DEPTH
+    bx0, bx1 = PB_SIDE_BOX
+    gy0, gy1 = PB_SIDE_GLASS
+    top = _side_top
+    foot = PB_FOOT_Y - 4                   # where the near legs meet the floor
+    far = darker(PB_METAL, 0.62)
+    # The far pair of legs stands further back, so it shows higher up and a
+    # little in from the near pair, and in shade; the near pair is drawn over it.
+    silhouette(c, [
+        ("rect", B + 30, foot - 14, B + 48, foot - 8, 2, darker(far, 0.7)),
+        ("rect", F - 48, foot - 14, F - 30, foot - 8, 2, darker(far, 0.7)),
+        ("poly", [(B + 36, bot - 6), (B + 45, bot - 6), (B + 42, foot - 12), (B + 34, foot - 12)], far),
+        ("poly", [(F - 45, bot - 6), (F - 36, bot - 6), (F - 34, foot - 12), (F - 42, foot - 12)], far),
+    ])
+    silhouette(c, [
+        ("rect", B, foot - 2, B + 20, foot + 4, 2, darker(PB_METAL, 0.6)),       # leveller feet
+        ("rect", F - 20, foot - 2, F, foot + 4, 2, darker(PB_METAL, 0.6)),
+        ("poly", [(B + 11, bot - 6), (B + 21, bot - 6), (B + 14, foot), (B + 5, foot)], PB_METAL),
+        ("poly", [(F - 21, bot - 6), (F - 11, bot - 6), (F - 5, foot), (F - 14, foot)], PB_METAL),
+        ("poly", [(B, top(B)), (F, top(F)), (F, bot), (B, bot)], cab),    # cabinet
+        ("rect", F - 2, bot - 20, F + 10, bot - 15, 1, PB_CHROME),        # shooter rod
+        ("circle", F + 13, bot - 17.5, 6, accent),                         # and its knob
+        ("rect", bx0, PB_SIDE_BOX_TOP, bx1, top(bx1) + depth, 4, cab),    # backbox
+    ])
+    c.line(B + 13, bot - 2, B + 8, foot - 2, (255, 255, 255, 80), 1.5)    # chrome on the legs
+    c.line(F - 14, bot - 2, F - 9, foot - 2, (255, 255, 255, 80), 1.5)
+    c.circle(F + 11, bot - 19.5, 2, (255, 255, 255, 150))
+
+    # Top face: the playfield under glass, foreshortened, rising to the back.
+    rim = darker(cab_dark, 0.55)
+    c.poly([(bx1, top(bx1)), (F, top(F)), (F, top(F) + depth), (bx1, top(bx1) + depth)], rim)
+    c.poly([(bx1 + 2, top(bx1) + 2), (F - 12, top(F - 12) + 2),
+            (F - 12, top(F - 12) + depth - 2), (bx1 + 2, top(bx1) + depth - 2)], field)
+    _pb_playfield(c, view, field, accent, accent2)
+    for x0, w, a in ((110, 30, 18), (172, 12, 12)):                        # glass streaks
+        c.poly([(x0, top(x0) + depth - 2), (x0 + w, top(x0 + w) + depth - 2),
+                (x0 + w + 26, top(x0 + w + 26) + 2), (x0 + 26, top(x0 + 26) + 2)],
+               (255, 255, 255, a))
+    c.poly([(F - 12, top(F - 12)), (F, top(F)), (F, top(F) + depth),
+            (F - 12, top(F - 12) + depth)], (182, 186, 196, 255))         # lockbar
+    c.line(F - 11, top(F - 11) + 1, F - 11, top(F - 11) + depth - 1, (230, 232, 240, 255), 2)
+    for k in range(4):                     # the backbox shades the glass in front of it
+        c.rect(bx1 + k * 3, top(bx1) + 1, bx1 + k * 3 + 3, top(bx1) + depth - 1,
+               (0, 0, 0, 70 - k * 16))
+
+    # Side panel, with the table's colours run along it as side art.
+    y_edge = lambda x: top(x) + depth
+    c.poly([(B, y_edge(B)), (F, y_edge(F)), (F, bot), (B, bot)], cab)
+    c.line(bx1, y_edge(bx1) + 1, F, y_edge(F) + 1, lighter(cab, 0.35), 2)
+    c.poly([(bx1 + 14, bot - 9), (F - 34, bot - 17), (F - 27, bot - 11), (bx1 + 18, bot - 4)], accent)
+    c.poly([(bx1 + 36, bot - 18), (F - 64, bot - 23), (F - 60, bot - 20), (bx1 + 39, bot - 15)], accent2)
+    c.rect(B, bot - 3, F, bot, darker(cab, 0.7))
+    c.circle(F - 18, y_edge(F - 18) + 7, 4.6, DARK)                        # flipper button
+    c.circle(F - 18, y_edge(F - 18) + 7, 3.4, accent2)
+
+    # Backbox side: a lid on top, the table's accent across it, and the lit
+    # edge of the backglass at the front.
+    bt = PB_SIDE_BOX_TOP
+    lid = bt + PB_LID - 3
+    c.rect(bx0, bt, bx1, lid, lighter(cab), 4)
+    c.rect(bx0, lid - 4, bx1, lid, lighter(cab))
+    c.line(bx0, lid, bx1, lid, darker(cab, 0.6), 1.5)
+    c.rect(bx0, bt + 62, bx1, bt + 69, accent)
+    c.rect(bx0, bt + 70, bx1, bt + 72, accent2)
+    c.rect(bx1 - 4, gy0, bx1 - 1, gy1, glass, 1)
+    c.rect(bx1 - 3, gy0 + 2, bx1 - 2, gy1 - 2, lighter(glass, 0.45))
+    c.line(bx0 + 1.5, lid + 2, bx0 + 1.5, y_edge(bx0) - 2, (255, 255, 255, 40), 2)
+    for y in (bt + 24, bt + 46):                                           # hinges
+        c.rect(bx0 - 1, y, bx0 + 3, y + 8, PB_METAL, 1)
+    return base
 
 
 def pinball(name, cab, cab_dark, field, accent, accent2, glass, motif):
-    """A 1x2 cabinet: backbox at the far end, playfield, lockbar at the player
-    end. The backbox carries painted art over a pair of score reels, the way a
-    real backglass does, and the shooter rod stands proud of the front rail."""
-    c = Canvas(PB_W, PB_H)
-    L, R = 14, 146        # cabinet sides
-    TOP, BOT = PB_TOP, PB_BOT
-    mid = (L + R) / 2
-
-    c.rect(L - 4, TOP - 4, R + 4, BOT + 4, DARK, 12)           # outline
-    c.rect(L, TOP, R, BOT, cab_dark, 10)                       # cabinet
-    c.rect(L, TOP, R, PB_BACKBOX, DARK, 10)                    # backbox shell
-
-    # Backglass: painted art above, score reels below.
-    c.rect(L + 6, PB_GLASS_TOP - 6, R - 6, PB_BACKBOX - 6, glass, 6)
-    c.rect(L + 6, PB_GLASS_TOP - 6, R - 6, PB_GLASS_TOP + 14, (255, 255, 255, 40), 6)
-    motif(c, L, R, 2)
-    score_reels(c, L, R, (0, 1, 2, 4, 8, 0), (0, 0, 3, 9, 6, 0), accent)
-    for i in range(6):                                          # marquee lamps
-        c.circle(L + 16 + i * 21.6, PB_BACKBOX - 4, 3.2, (255, 244, 208, 230))
-
-    # Playfield, now running further forward than the three-tile cabinet did.
-    # The playfield's wooden rim sits inside the cabinet, so it is a tint of
-    # the cabinet rather than the line that goes round the outside.
-    c.rect(L + 5, PB_BACKBOX + 4, R - 5, PB_FIELD_BOT + 3, darker(cab_dark, 0.55), 6)
-    c.rect(L + 8, PB_BACKBOX + 7, R - 8, PB_FIELD_BOT, field, 5)
-    c.rect(L + 8, PB_BACKBOX + 7, R - 8, PB_BACKBOX + 56, (255, 255, 255, 20), 5)
-
-    # Plunger lane and a guide rail sweeping back up the playfield.
-    c.line(R - 20, 111, R - 20, 229, (238, 238, 244, 150), 3)
-    c.line(L + 18, 117, L + 18, 194, (238, 238, 244, 105), 2.4)
-
-    # Drop target bank.
-    for tx in range(3):
-        c.rect(L + 30 + tx * 18, 122, L + 43 + tx * 18, 130, accent2, 2)
-
-    # Pop bumpers.
-    for bx, by, rr in BUMPERS:
-        c.circle(bx, by, rr + 2, darker(field, 0.5))
-        c.circle(bx, by, rr, accent)
-        c.circle(bx, by, rr * 0.62, (250, 250, 252, 255))
-        c.circle(bx, by, rr * 0.34, accent2)
-        c.circle(bx - rr * 0.3, by - rr * 0.3, rr * 0.16, (255, 255, 255, 190))
-
-    # Slingshots.
-    for sx in (-1, 1):
-        ex = L + 14 if sx < 0 else R - 14
-        ix = L + 42 if sx < 0 else R - 42
-        c.poly([(ex, 246), (ix, 236), (ix, 256)], darker(field, 0.5))
-        c.poly([(ex + sx * -3, 246), (ix - sx * -3, 239), (ix - sx * -3, 253)], accent2)
-        c.line(ex, 246, ix, 236, (255, 255, 255, 120), 2)     # rubber, catching light
-        c.line(ex, 246, ix, 256, (255, 255, 255, 120), 2)
-
-    # Flippers at the player end.
-    for sx in (-1, 1):
-        x0, x1 = mid + sx * 10, mid + sx * 34
-        c.line(x0, PB_FLIP_Y, x1, PB_FLIP_Y - 9, darker(field, 0.45), 12)
-        c.line(x0, PB_FLIP_Y, x1, PB_FLIP_Y - 9, accent, 8)
-        c.circle(x0, PB_FLIP_Y, 4.2, (236, 236, 240, 255))
-
-    # Ball sitting in the lane.
-    c.circle(R - 20, 218, 6.5, darker(field, 0.45))
-    c.circle(R - 20, 218, 5.2, (226, 228, 236, 255))
-    c.circle(R - 21.6, 216.4, 2.0, (255, 255, 255, 220))
-
-    # Lockbar: shallower than it was, to give the playfield the room.
-    c.rect(L, BOT - PB_LOCKBAR, R, BOT, cab, 10)
-    c.rect(L + 5, BOT - PB_LOCKBAR + 4, R - 5, BOT - 5, cab_dark, 6)
-    for bx in (L + 20, R - 34):
-        c.circle(bx, BOT - 13, 5.2, darker(cab, 0.45))
-        c.circle(bx, BOT - 13, 3.8, accent2)
-    c.rect(mid - 14, BOT - 20, mid + 14, BOT - 7, (24, 22, 26, 255), 3)   # coin door
-    c.circle(mid, BOT - 13, 3.4, accent)
-
-    # Shooter rod: through the rail and out the front, with a knob you can see.
-    rod_x = R - 12
-    c.rect(rod_x - 5, PB_FIELD_BOT - 6, rod_x + 5, BOT - 4, darker(cab_dark, 0.5), 4)
-    c.rect(rod_x - 3, PB_FIELD_BOT - 4, rod_x + 3, BOT - 6, (206, 208, 216, 255), 3)
-    c.circle(rod_x, PB_FIELD_BOT - 2, 4.2, (176, 180, 190, 255))          # spring collar
-    c.circle(rod_x, BOT - 5, 8.0, darker(cab, 0.45))                      # knob
-    c.circle(rod_x, BOT - 5, 6.2, accent)
-    c.circle(rod_x - 2, BOT - 7, 2.3, (255, 255, 255, 150))
-
-    # Side-rail highlight.
-    c.frame(L, TOP, R, BOT, (255, 255, 255, 36), 2.5, 10)
-    save_rotations(c, name)
-    return c
+    """One table in all four facings. Returns the south view for the preview."""
+    colours = (cab, cab_dark, field, accent, accent2, glass, motif)
+    views = {
+        "south": pinball_south(*colours),
+        "north": pinball_north(*colours),
+        "east": pinball_side("east", *colours),
+        "west": pinball_side("west", *colours),
+    }
+    for facing, canvas in views.items():
+        PinballView(facing).save(canvas, os.path.join(OUT, "%s_%s.png" % (name, facing)))
+    print("  %s_{north,east,south,west}.png  (%dx%d)" % (name, PB_SQ, PB_SQ))
+    return views["south"]
 
 
 def motif_classic(c, L, R, TOP):
@@ -1181,53 +1526,84 @@ def vista_panel_frames(total=6):
 
 
 # ---------------------------------------------------------------------------
-# Pinball in play  (one overlay strip shared by all four tables)
+# Pinball in play  (one overlay set per facing, shared by all four tables)
 #
 # Only the ball, its trail and the lamps that just got hit are drawn, all in
 # neutral white and silver, so the same frames sit correctly on the red, green,
-# steel and violet cabinets.
+# steel and violet cabinets. Each facing gets its own set because each shows a
+# different part of the machine: the score only faces south, and from the
+# north the backbox hides the back of the playfield, ball and all.
 # ---------------------------------------------------------------------------
+PB_PLAY_FILES = {"south": "PinballPlay", "north": "PinballPlayNorth",
+                 "east": "PinballPlayEast", "west": "PinballPlayWest"}
 
-def pinball_play_frames(total=8):
+
+def pinball_play_frame(view, i, total):
     import math
-    for i in range(total):
-        c = Canvas(PB_W, PB_H)
-        bx, by = BALL_PATH[i % len(BALL_PATH)]
-        px, py = BALL_PATH[(i - 1) % len(BALL_PATH)]
+    base, c = view.canvas()
+    p, s = view.pt, view.scale
+    bu, bv = PB_BALL_PATH[i % len(PB_BALL_PATH)]
+    pu, pv = PB_BALL_PATH[(i - 1) % len(PB_BALL_PATH)]
+    lamp = (255, 250, 220, 200)
 
-        # Motion trail back toward the previous position.
-        c.line(px, py, bx, by, (226, 232, 248, 70), 7)
-        c.line((px + bx) / 2, (py + by) / 2, bx, by, (238, 242, 255, 110), 8)
+    # Motion trail back toward the previous position.
+    if not view.hidden(bu, bv) and not view.hidden(pu, pv):
+        (px, py), (bx, by) = p(pu, pv), p(bu, bv)
+        c.line(px, py, bx, by, (226, 232, 248, 70), 7 * s)
+        c.line((px + bx) / 2, (py + by) / 2, bx, by, (238, 242, 255, 110), 8 * s)
 
-        # Lamps flare when the ball is on top of them.
-        for mx, my, mr in BUMPERS:
-            if math.hypot(bx - mx, by - my) < mr + 14:
-                c.circle(mx, my, mr + 9, (255, 252, 226, 60))
-                c.ring(mx, my, mr + 5, mr + 1, (255, 250, 214, 190))
-                c.circle(mx, my, mr * 0.5, (255, 255, 244, 220))
+    # Lamps flare when the ball is on top of them. Distance is measured on the
+    # playfield itself, so every facing lights the same bumper.
+    lift = 2.5 if view.side else 1.5
+    for mu, mv, mr in PB_BUMPERS:
+        if math.hypot((bu - mu) * 132, (bv - mv) * 112) < mr * 112 + 14 and not view.hidden(mu, mv):
+            mx, my = p(mu, mv)
+            rx, ry = view.radii(mr)
+            c.ellipse(mx, my - lift, rx + 9 * s, ry + 9 * (ry / rx), (255, 252, 226, 60))
+            c.ellipse(mx, my - lift, rx + 3, ry + 3 * (ry / rx), (255, 250, 214, 150))
+            c.ellipse(mx, my - lift, rx * 0.5, ry * 0.5, (255, 255, 244, 220))
 
-        # Flippers snap up as the ball comes down to them.
-        if by > 210:
-            for sx in (-1, 1):
-                x0, x1 = 80 + sx * 10, 80 + sx * 34
-                c.line(x0, PB_FLIP_Y, x1, PB_FLIP_Y - 22, (255, 250, 220, 210), 9)
+    # Flippers snap up as the ball comes down to them.
+    if bu > 0.7:
+        for pivot_v, tip_v in PB_FLIPPERS:
+            c.line(*p(PB_FLIP_U, pivot_v), *p(PB_FLIP_UP_U, tip_v), (255, 250, 220, 210), 9 * s)
 
-        # Backglass keeps flashing while the table is live.
-        if i % 2 == 0:
-            c.rect(20, 6, 140, PB_BACKBOX - 6, (255, 248, 210, 26), 6)
+    # The backglass keeps flashing while the table is live - on its face from
+    # the south, as light spilling past it everywhere else.
+    bright = i % 2 == 0
+    if view.facing == "south":
+        gx0, gy0, gx1, gy1 = PB_GLASS
+        if bright:
+            c.rect(gx0, gy0, gx1, gy1, (255, 248, 210, 26), 3)
         for k in range(6):
             if (i + k) % 3 == 0:
-                c.circle(30 + k * 21.6, PB_BACKBOX - 4, 4.4, (255, 250, 220, 200))
-
+                c.circle(25 + k * 22, PB_LAMP_Y, 4.4, lamp)
         # The score climbing, which is the whole reason anyone plays.
         left = tuple((d * (i + 1) + i) % 10 for d in (1, 3, 7, 2, 9, 0))
-        score_reels(c, 14, 146, left, (0, 0, 3, 9, 6, 0), (255, 176, 72, 255))
+        pb_reels(c, PB_SCORE_TOP, left, (0, 0, 3, 9, 6, 0), (255, 176, 72, 255))
+    elif view.facing == "north":
+        c.rect(24, PB_NORTH_BOX_TOP - 22, 136, PB_NORTH_BOX_TOP,
+               (255, 248, 210, 34 if bright else 16), 4)
+    else:
+        bx0, bx1 = PB_SIDE_BOX
+        gy0, gy1 = PB_SIDE_GLASS
+        c.rect(bx1 - 4, gy0, bx1 - 1, gy1, (255, 248, 214, 200 if bright else 120), 1)
+        top, depth = _side_top, PB_SIDE_DEPTH           # light falling on the glass
+        c.poly([(bx1, top(bx1) + 1), (bx1 + 24, top(bx1 + 24) + 1),
+                (bx1 + 24, top(bx1 + 24) + depth - 1), (bx1, top(bx1) + depth - 1)],
+               (255, 248, 210, 44 if bright else 22))
 
-        c.circle(bx, by, 7.5, (30, 30, 36, 220))
-        c.circle(bx, by, 6, (232, 236, 246, 255))
-        c.circle(bx - 1.8, by - 1.8, 2.4, (255, 255, 255, 240))
-        c.save(os.path.join(OUT, "PinballPlay_%d.png" % i))
-    print("  PinballPlay_0..%d.png  (%dx%d)" % (total - 1, PB_W, PB_H))
+    if not view.hidden(bu, bv):
+        pb_ball(c, *p(bu, bv), view)
+    return base
+
+
+def pinball_play_frames(total=8):
+    for facing, stem in PB_PLAY_FILES.items():
+        view = PinballView(facing)
+        for i in range(total):
+            view.save(pinball_play_frame(view, i, total), os.path.join(OUT, "%s_%d.png" % (stem, i)))
+        print("  %s_0..%d.png  (%dx%d)" % (stem, total - 1, PB_SQ, PB_SQ))
 
 
 # ---------------------------------------------------------------------------

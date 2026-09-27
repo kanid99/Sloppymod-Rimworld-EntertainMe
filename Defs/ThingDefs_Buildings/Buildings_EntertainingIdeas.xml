@@ -137,15 +137,19 @@
     <graphicData>
       <graphicClass>Graphic_Multi</graphicClass>
       <shaderType>CutoutComplex</shaderType>
-      <drawSize>(1,2)</drawSize>
+      <!-- Drawn bigger than the 1x2 footprint. From the ends the cabinet fills
+           its own two tiles, centred in the square; side-on a pinball is about
+           as tall as it is long, so it stands on its footprint and rises over
+           the tile behind, the way tall furniture does. -->
+      <drawSize>(2,2)</drawSize>
       <shadowData>
         <volume>(0.75,0.5,1.7)</volume>
       </shadowData>
       <damageData>
-        <rectN>(0.1,0.02,0.8,0.96)</rectN>
-        <rectS>(0.1,0.02,0.8,0.96)</rectS>
-        <rectE>(0.02,0.1,0.96,0.8)</rectE>
-        <rectW>(0.02,0.1,0.96,0.8)</rectW>
+        <rectN>(0.3,0.02,0.4,0.96)</rectN>
+        <rectS>(0.3,0.02,0.4,0.96)</rectS>
+        <rectE>(0.08,0.34,0.84,0.3)</rectE>
+        <rectW>(0.08,0.34,0.84,0.3)</rectW>
       </damageData>
     </graphicData>
     <size>(1,2)</size>
@@ -177,15 +181,58 @@
          of them. Power differs per table, so each table declares its own. -->
     <comps>
       <li Class="CompProperties_Flickable"/>
+      <!-- One overlay per facing rather than one turned to match: each view
+           shows a different part of the machine (the score only faces south;
+           from the north the backbox hides the back of the playfield; the
+           sides are side-on), so the frames are drawn per facing. Only the
+           one matching the building's rotation draws. -->
       <li Class="EntertainingIdeas.CompProperties_AnimatedScreen">
         <framePath>EntertainingIdeas/Buildings/PinballPlay</framePath>
         <frameCount>8</frameCount>
         <ticksPerFrame>6</ticksPerFrame>
-        <drawSize>(1,2)</drawSize>
-        <rotateWithBuilding>true</rotateWithBuilding>
+        <drawSize>(2,2)</drawSize>
         <playJobs>
           <li>EI_Play_Pinball</li>
         </playJobs>
+        <drawRotations>
+          <li>South</li>
+        </drawRotations>
+      </li>
+      <li Class="EntertainingIdeas.CompProperties_AnimatedScreen">
+        <framePath>EntertainingIdeas/Buildings/PinballPlayNorth</framePath>
+        <frameCount>8</frameCount>
+        <ticksPerFrame>6</ticksPerFrame>
+        <drawSize>(2,2)</drawSize>
+        <playJobs>
+          <li>EI_Play_Pinball</li>
+        </playJobs>
+        <drawRotations>
+          <li>North</li>
+        </drawRotations>
+      </li>
+      <li Class="EntertainingIdeas.CompProperties_AnimatedScreen">
+        <framePath>EntertainingIdeas/Buildings/PinballPlayEast</framePath>
+        <frameCount>8</frameCount>
+        <ticksPerFrame>6</ticksPerFrame>
+        <drawSize>(2,2)</drawSize>
+        <playJobs>
+          <li>EI_Play_Pinball</li>
+        </playJobs>
+        <drawRotations>
+          <li>East</li>
+        </drawRotations>
+      </li>
+      <li Class="EntertainingIdeas.CompProperties_AnimatedScreen">
+        <framePath>EntertainingIdeas/Buildings/PinballPlayWest</framePath>
+        <frameCount>8</frameCount>
+        <ticksPerFrame>6</ticksPerFrame>
+        <drawSize>(2,2)</drawSize>
+        <playJobs>
+          <li>EI_Play_Pinball</li>
+        </playJobs>
+        <drawRotations>
+          <li>West</li>
+        </drawRotations>
       </li>
       <!-- Electric games wear out like a television does: a breakdown cuts
            the power until someone repairs it with a component. -->
