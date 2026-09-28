@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using RimWorld;
+using UnityEngine;
 using Verse;
 using Verse.AI;
 
@@ -27,6 +28,30 @@ namespace EntertainingIdeas
     /// </summary>
     public interface ICarriedWater
     {
+    }
+
+    /// <summary>
+    /// The "fill by hand" switch on a tub or pool that is not plumbed in. Off,
+    /// nobody carries water to it, so a player can stop colonists making long
+    /// trips to a river for something they are not using.
+    /// </summary>
+    [StaticConstructorOnStartup]
+    public static class HandFillToggle
+    {
+        private static readonly Texture2D Icon = ContentFinder<Texture2D>.Get("EntertainingIdeas/UI/HandFill");
+
+        public static Command_Toggle Make(Func<bool> isActive, Action toggle, string what)
+        {
+            return new Command_Toggle
+            {
+                defaultLabel = "Fill by hand",
+                defaultDesc = "When on, colonists carry water from the nearest river, lake or marsh to keep "
+                              + what + " filled. Turn it off to stop them.",
+                icon = Icon,
+                isActive = isActive,
+                toggleAction = toggle
+            };
+        }
     }
 
     /// <summary>
@@ -282,6 +307,7 @@ namespace EntertainingIdeas
     public class CompWaterBasin : ThingComp, IServiceable, ICarriedWater
     {
         private bool filled;
+        private bool handFill = true;
 
         // A thing's comps are fixed when it is constructed, so whether this tub
         // is piped never changes. Worth resolving once: NeedsService is asked
@@ -307,6 +333,7 @@ namespace EntertainingIdeas
         {
             base.PostExposeData();
             Scribe_Values.Look(ref filled, "EI_filled", false);
+            Scribe_Values.Look(ref handFill, "EI_handFill", true);
         }
 
         private ThingComp Pipe
@@ -344,7 +371,7 @@ namespace EntertainingIdeas
         // --- IServiceable: a tub off the plumbing needs carrying to ----------
         public bool NeedsService
         {
-            get { return !Plumbed && !filled; }
+            get { return handFill && !Plumbed && !filled; }
         }
 
         public int ServiceWorkTicks
@@ -371,6 +398,18 @@ namespace EntertainingIdeas
             }
         }
 
+        public override IEnumerable<Gizmo> CompGetGizmosExtra()
+        {
+            foreach (Gizmo gizmo in base.CompGetGizmosExtra())
+            {
+                yield return gizmo;
+            }
+            if (!Plumbed && parent.Faction == Faction.OfPlayer)
+            {
+                yield return HandFillToggle.Make(() => handFill, () => handFill = !handFill, "the tub");
+            }
+        }
+
         public override string CompInspectStringExtra()
         {
             if (Plumbed)
@@ -380,6 +419,10 @@ namespace EntertainingIdeas
             if (filled)
             {
                 return "Full";
+            }
+            if (!handFill)
+            {
+                return "Empty - filling by hand is switched off";
             }
             return WaterSources.MapHasWater(parent.Map)
                 ? "Empty - needs filling before the next soak"

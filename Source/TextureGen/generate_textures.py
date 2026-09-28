@@ -21,6 +21,7 @@ from views import blit_quad, blit_rect  # noqa: E402
 ROOT = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".."))
 OUT = os.path.join(ROOT, "Textures", "EntertainingIdeas", "Buildings")
 TERRAIN = os.path.join(ROOT, "Textures", "EntertainingIdeas", "Terrain")
+UI = os.path.join(ROOT, "Textures", "EntertainingIdeas", "UI")
 
 DARK = (26, 22, 20, 255)          # shared outline colour
 
@@ -3530,6 +3531,40 @@ def pool_water_terrain():
                 specks=((150, 150, 104), 520, 8))
 
 
+def hand_fill_icon():
+    """The 'fill by hand' gizmo: a wooden bucket of water, a drop falling in."""
+    c = Canvas(64, 64)
+    # Bucket body: a tapered stave tub, outlined, with two iron hoops.
+    body = [(14, 26), (50, 26), (45, 58), (19, 58)]
+    c.poly([(x + (1.6 if x > 32 else -1.6), y + (1.6 if y > 40 else -1.6)) for x, y in body], DARK)
+    c.poly(body, (150, 108, 64, 255))
+    c.poly([(33, 26), (50, 26), (45, 58), (33, 58)], (126, 88, 50, 255))
+    for x in (22, 28, 38, 44):
+        c.line(x, 27, x - (2 if x < 32 else -2) * 0.9, 57, (112, 78, 44, 255), 1.0)
+    for y, inset in ((33, 1.1), (51, 2.6)):
+        c.line(14 + inset, y, 50 - inset, y, DARK, 3.2)
+        c.line(14 + inset, y, 50 - inset, y, (150, 152, 156, 255), 1.8)
+    # Water surface and rim.
+    c.ellipse(32, 26, 19, 5.5, DARK)
+    c.ellipse(32, 26, 17.2, 4.2, (58, 140, 196, 255))
+    c.ellipse(29, 25, 8, 1.6, (150, 214, 244, 255))
+    # Handle.
+    for k in range(18):
+        t0 = math.pi * k / 18.0
+        t1 = math.pi * (k + 1) / 18.0
+        c.line(32 - 17 * math.cos(t0), 24 - 16 * math.sin(t0),
+               32 - 17 * math.cos(t1), 24 - 16 * math.sin(t1), DARK, 2.4)
+    # A falling drop.
+    c.circle(46, 12, 4.6, DARK)
+    c.poly([(46, 2), (42.2, 11), (49.8, 11)], DARK)
+    c.circle(46, 12, 3.4, (70, 160, 220, 255))
+    c.poly([(46, 4.2), (43.2, 11), (48.8, 11)], (70, 160, 220, 255))
+    c.circle(44.8, 11.2, 1.1, (200, 236, 252, 255))
+    os.makedirs(UI, exist_ok=True)
+    c.save(os.path.join(UI, "HandFill.png"))
+    print("  UI/HandFill.png  (64x64)")
+
+
 def _pool_filter_view(facing):
     """A filter tank and a pump on a skid. The pump, its fan cover and the
     control box face the way the unit does; the tank stands taller than the
@@ -3982,6 +4017,7 @@ def _build_orreries():
 def _build_pool():
     pool_basin_terrain()
     pool_water_terrain()
+    hand_fill_icon()
     return {"PoolFilter": pool_filter()}
 
 

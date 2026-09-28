@@ -257,6 +257,7 @@ namespace EntertainingIdeas
     {
         private float litres;
         private float dirt;
+        private bool handFill = true;
         private CompPowerTrader power;
 
         // Resolved once: a thing's comps are fixed when it is constructed, so
@@ -352,6 +353,7 @@ namespace EntertainingIdeas
             base.PostExposeData();
             Scribe_Values.Look(ref litres, "EI_poolLitres", 0f);
             Scribe_Values.Look(ref dirt, "EI_poolDirt", 0f);
+            Scribe_Values.Look(ref handFill, "EI_handFill", true);
         }
 
 #if RW16
@@ -536,7 +538,7 @@ namespace EntertainingIdeas
         // --- IServiceable: a pool off the plumbing is filled by the bucket ---
         public bool NeedsService
         {
-            get { return !Plumbed && cells.Count > 0 && litres < Capacity - 0.01f; }
+            get { return handFill && !Plumbed && cells.Count > 0 && litres < Capacity - 0.01f; }
         }
 
         public int ServiceWorkTicks
@@ -553,6 +555,18 @@ namespace EntertainingIdeas
         {
             litres = Mathf.Min(Capacity, litres + Props.litresPerLoad);
             ApplyWaterLine();
+        }
+
+        public override IEnumerable<Gizmo> CompGetGizmosExtra()
+        {
+            foreach (Gizmo gizmo in base.CompGetGizmosExtra())
+            {
+                yield return gizmo;
+            }
+            if (!Plumbed && parent.Faction == Faction.OfPlayer)
+            {
+                yield return HandFillToggle.Make(() => handFill, () => handFill = !handFill, "the pool");
+            }
         }
 
         public override string CompInspectStringExtra()
@@ -580,7 +594,11 @@ namespace EntertainingIdeas
             if (wet < cells.Count)
             {
                 line += "\nFilling: " + wet + " of " + cells.Count + " tiles under water.";
-                if (!Plumbed && !WaterSources.MapHasWater(parent.Map))
+                if (!Plumbed && !handFill)
+                {
+                    line += "\nFilling by hand is switched off.";
+                }
+                else if (!Plumbed && !WaterSources.MapHasWater(parent.Map))
                 {
                     line += "\nNo open water on this map to carry from.";
                 }
