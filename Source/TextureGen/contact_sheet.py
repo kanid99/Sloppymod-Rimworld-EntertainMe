@@ -35,7 +35,7 @@ SECTIONS = [
       "CocktailArcadeScreenSouth_8.png", "CocktailArcadeScreenSouth_12.png"]),
     ("MASSAGE CHAIR  INDUSTRIAL  PAWNS SIT IN IT",
      ["MassageChair_south.png", "MassageChair_east.png",
-      "MassageChairRollers_0.png", "MassageChairRollers_4.png"]),
+      "MassageChairRollersSouth_0.png", "MassageChairRollersSouth_4.png"]),
     ("HOLOGAME POD  SPACER", ["HologamePod_south.png", "HologamePod_east.png"]),
     ("VISTA PANEL  SPACER  3X1  OFF AND BY TIME OF DAY",
      ["VistaPanel3_south.png", "VistaPanel3Dawn_0.png", "VistaPanel3Day_2.png",

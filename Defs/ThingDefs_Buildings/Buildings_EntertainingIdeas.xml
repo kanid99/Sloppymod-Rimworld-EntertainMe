@@ -553,7 +553,9 @@
         <frameCount>8</frameCount>
         <ticksPerFrame>7</ticksPerFrame>
         <drawSize>(1.3,1.3)</drawSize>
-        <rotateWithBuilding>true</rotateWithBuilding>
+        <!-- Drawn for each view: up the raked backrest side-on, and only the
+             arm vibration from behind, where the rollers cannot be seen. -->
+        <perFacing>true</perFacing>
         <playJobs>
           <li>EI_UseMassageChair</li>
         </playJobs>
@@ -1828,6 +1830,10 @@
         <rect>(0.1,0.1,1.8,1.8)</rect>
       </damageData>
     </graphicData>
+    <!-- The texture above is the plinth and rings alone: the planets and the
+         glass are the overlay, which always runs, so a still set in the base
+         would show through as a second, frozen one. The menu gets the lot. -->
+    <uiIconPath>EntertainingIdeas/Buildings/GrandOrreryIcon</uiIconPath>
     <size>(2,2)</size>
     <fillPercent>0.5</fillPercent>
     <pathCost>60</pathCost>
@@ -2775,7 +2781,8 @@
         <playJobs>
           <li>EI_Play_FourInARow</li>
         </playJobs>
-        <!-- Face-on only. Edge-on from the sides there is nothing to see. -->
+        <!-- Face-on only. From the sides only a sliver of the face shows,
+             too narrow to follow a game on. -->
         <drawRotations>
           <li>South</li>
           <li>North</li>
@@ -2794,11 +2801,13 @@
     <description>A big white mat printed with rows of coloured spots, and a spinner card. Somebody spins; everyone has to get a hand or a foot onto the colour it lands on, without letting go of the spots they are already on. Up to three can play at once, which is two more than the mat was designed for.\n\nPeople fall over. That is the game.</description>
     <graphicData>
       <texPath>EntertainingIdeas/Buildings/TangleMat</texPath>
-      <graphicClass>Graphic_Single</graphicClass>
+      <graphicClass>Graphic_Multi</graphicClass>
       <drawSize>(3,3)</drawSize>
     </graphicData>
     <size>(3,3)</size>
-    <rotatable>false</rotatable>
+    <!-- Turns so the spinner card can sit in whichever corner suits the room. -->
+    <rotatable>true</rotatable>
+    <defaultPlacingRot>South</defaultPlacingRot>
     <passability>Standable</passability>
     <fillPercent>0</fillPercent>
     <pathCost>0</pathCost>
@@ -2822,6 +2831,7 @@
         <frameCount>8</frameCount>
         <ticksPerFrame>6</ticksPerFrame>
         <drawSize>(3,3)</drawSize>
+        <perFacing>true</perFacing>
         <playJobs>
           <li>EI_PlayTangle</li>
         </playJobs>
