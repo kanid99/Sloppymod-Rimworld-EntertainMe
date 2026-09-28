@@ -215,38 +215,36 @@ namespace EntertainingIdeas
     }
 
     /// <summary>
-    /// A display that lives in the wall itself and hangs no wider than it.
+    /// A display hung on a wall from the floor tile in front of it, the way a
+    /// picture is hung - and the way vanilla's wall lamps are placed.
     ///
-    /// It used to take the floor tiles in front of the wall. That placed fine,
-    /// but it meant the panel owned three tiles of room, so anything already
-    /// standing there - a shelf, an armchair - was marked for removal to make
-    /// space for a picture on the wall behind it. Wrong trade.
+    /// History, because this has gone round twice. It first took the floor
+    /// tiles in front of the wall as a 3x1 edifice, which marked a shelf or an
+    /// armchair standing there for removal. It then moved into the wall cell
+    /// itself (canPlaceOverWall), which left the floor alone but meant the
+    /// cursor had to be on the wall: pointing at the floor in front - which
+    /// is what everyone does - drew the picture on the wall above and then
+    /// refused to place it.
     ///
-    /// So the panel is one cell now, sitting in the wall cell itself the way a
-    /// power conduit does (canPlaceOverWall), and the picture is simply drawn
-    /// up to three tiles wide across the neighbouring wall. Nothing in the
-    /// room is touched.
+    /// So now: one floor tile, not an edifice (it takes no room from
+    /// furniture), with the picture drawn one tile back on the wall's face and
+    /// as wide as the def says. Its rotation is the way the picture faces, so
+    /// the wall is behind it: at Position - Rotation.FacingCell.
     ///
-    /// Deliberately not a vanilla wall attachment (isAttachment). Those sit on
-    /// the floor with the wall behind them - GenConstruct.GetWallAttachedTo
-    /// looks for the wall at the back of the thing - and vanilla turns them to
-    /// put one there. From inside a wall the only sides with wall behind are
-    /// along the wall, so the panel was forced to face sideways.
-    ///
-    /// What is checked: the cell is wall, the wall runs far enough either side
-    /// to carry the width of the picture, and the side it faces is open.
+    /// Deliberately not a vanilla attachment (isAttachment): vanilla re-aims
+    /// those every frame, so in a corner the player could never pick the
+    /// other wall. This aims once per cell and then leaves it to the player.
     /// </summary>
     public class PlaceWorker_WallMountedDisplay : PlaceWorker
     {
         /// <summary>
         /// The cells of wall the drawn picture covers, as offsets along the
-        /// wall from the panel's own cell.
+        /// wall from the one directly behind the panel.
         ///
         /// Read off the def rather than hard-coded, because the picture is not
-        /// always centred on its cell: a two-tile panel sits on one cell and
-        /// hangs over its neighbour on one side only, so the span is
-        /// asymmetric. Deriving it from drawSize and the def's own draw offset
-        /// keeps the check right for any width.
+        /// always centred: a two-tile panel hangs over its neighbour on one
+        /// side only, so the span is asymmetric. Deriving it from drawSize and
+        /// the def's own draw offset keeps the check right for any width.
         /// </summary>
         private static void SpanFor(BuildableDef def, Rot4 rot, out int low, out int high)
         {
@@ -261,64 +259,101 @@ namespace EntertainingIdeas
             float half = thingDef.graphicData.drawSize.x / 2f;
 
             // The wall runs left to right as the panel sees it, so that is the
-            // right-hand axis; whatever is left of the offset is the depth onto
-            // the wall's face and does not matter here.
+            // right-hand axis; the rest of the offset is depth onto the wall's
+            // face and does not matter here.
             Vector3 offset = thingDef.graphicData.DrawOffsetForRot(rot);
             IntVec3 across = rot.RighthandCell;
             float lateral = offset.x * across.x + offset.z * across.z;
 
             // A cell counts as covered when the picture reaches its centre.
-            // Ceil and floor rather than rounding, so a width that happens to
-            // land exactly on a cell boundary cannot fall foul of the
+            // Ceil and floor rather than rounding, so a width that lands
+            // exactly on a cell boundary cannot fall foul of the
             // round-half-to-even the rounding helpers use.
             low = Mathf.CeilToInt(lateral - half);
             high = Mathf.FloorToInt(lateral + half);
+        }
+
+        /// <summary>The wall cell directly behind a panel hung here.</summary>
+        public static IntVec3 WallBehind(IntVec3 loc, Rot4 rot)
+        {
+            return loc - rot.FacingCell;
         }
 
         // Both AllowsPlacing and DrawGhost want the run, both are called every
         // frame while the panel is on the cursor, and they are never in flight
         // at the same time, so one reused list serves both.
         private static readonly List<IntVec3> wallRun = new List<IntVec3>();
-        private static readonly List<IntVec3> facing = new List<IntVec3>();
+        private static readonly List<IntVec3> spot = new List<IntVec3>();
 
         private static List<IntVec3> WallRun(BuildableDef def, IntVec3 loc, Rot4 rot)
         {
             int low, high;
             SpanFor(def, rot, out low, out high);
+            IntVec3 behind = WallBehind(loc, rot);
             IntVec3 across = rot.RighthandCell;
             wallRun.Clear();
             for (int k = low; k <= high; k++)
             {
-                wallRun.Add(loc + across * k);
+                wallRun.Add(behind + across * k);
             }
             return wallRun;
+        }
+
+        private static bool WallRunComplete(BuildableDef def, Map map, IntVec3 loc, Rot4 rot, Thing ignore)
+        {
+            List<IntVec3> run = WallRun(def, loc, rot);
+            for (int i = 0; i < run.Count; i++)
+            {
+                if (!IsWall(map, run[i], ignore))
+                {
+                    return false;
+                }
+            }
+            return true;
         }
 
         public override AcceptanceReport AllowsPlacing(BuildableDef checkingDef, IntVec3 loc, Rot4 rot,
                                                        Map map, Thing thingToIgnore = null, Thing thing = null)
         {
-            if (!IsWall(map, loc, thingToIgnore))
+            if (IsWall(map, loc, thingToIgnore))
             {
-                return new AcceptanceReport("Must be mounted in a wall.");
+                return new AcceptanceReport("Hang it from the floor in front of the wall, not on the wall itself.");
+            }
+            Building edifice = loc.GetEdifice(map);
+            if (edifice is Building_Door)
+            {
+                return new AcceptanceReport("Cannot hang anything in a doorway.");
+            }
+            if (edifice != null && edifice != thingToIgnore && edifice.def.passability == Traversability.Impassable)
+            {
+                return new AcceptanceReport("Needs open floor in front of the wall.");
             }
 
-            // The picture can be wider than the cell it sits on, so the wall has
-            // to keep going or it would hang over open air.
-            List<IntVec3> run = WallRun(checkingDef, loc, rot);
-            for (int i = 0; i < run.Count; i++)
+            // The picture can be wider than the tile, so the wall behind has to
+            // keep going or it would hang over open air.
+            if (!WallRunComplete(checkingDef, map, loc, rot, thingToIgnore))
             {
-                if (!IsWall(map, run[i], thingToIgnore))
+                int span = WallRun(checkingDef, loc, rot).Count;
+                return new AcceptanceReport(span <= 1
+                    ? "Needs a wall behind it. Rotate it so its back is to the wall."
+                    : "Needs " + span + " tiles of unbroken wall behind it.");
+            }
+
+            // One picture per spot: two would draw over each other.
+            List<Thing> here = loc.GetThingList(map);
+            for (int i = 0; i < here.Count; i++)
+            {
+                Thing other = here[i];
+                if (other == thingToIgnore || other == thing)
                 {
-                    return new AcceptanceReport(
-                        "Needs " + run.Count + " tiles of unbroken wall to span.");
+                    continue;
                 }
-            }
-
-            // Any facing the player picks is theirs - a room, a doorway, the
-            // yard - except one that shows the picture to solid wall.
-            if (FacesIntoWall(map, loc, rot))
-            {
-                return new AcceptanceReport("Would face into a wall. Rotate it to face the room.");
+                ThingDef otherDef = other.def.entityDefToBuild as ThingDef ?? other.def;
+                if (otherDef.PlaceWorkers != null && otherDef.PlaceWorkers.Exists(w => w is PlaceWorker_WallMountedDisplay)
+                    && (other.Rotation == rot))
+                {
+                    return new AcceptanceReport("Something is already hanging here.");
+                }
             }
             return true;
         }
@@ -331,104 +366,60 @@ namespace EntertainingIdeas
                 return;
             }
 
-            // Auto-orient, the way a wall lamp does: face whichever side of the
-            // wall is actually a room - but only as a first guess at each new
-            // cell, never over the top of the player turning it themselves.
-            SnapPlacingRotation(map, center, rot);
+            // Aim the back at a wall, the way a wall lamp does - but only as a
+            // first guess at each new cell, never over the top of the player
+            // turning it themselves, so in a corner either wall can be chosen.
+            SnapPlacingRotation(def, map, center, rot);
 
             GenDraw.DrawFieldEdges(WallRun(def, center, rot), ghostCol);
-            facing.Clear();
-            facing.Add(center + rot.FacingCell);
-            GenDraw.DrawFieldEdges(facing, Color.cyan);
+            spot.Clear();
+            spot.Add(center);
+            GenDraw.DrawFieldEdges(spot, Color.cyan);
         }
 
-        private static void SnapPlacingRotation(Map map, IntVec3 center, Rot4 current)
+        private static void SnapPlacingRotation(ThingDef def, Map map, IntVec3 center, Rot4 current)
         {
             if (!AutoTurn.MaySuggest(center, current))
             {
                 return;
             }
             Rot4 wanted;
-            if (TryFindOpenSide(map, center, current, out wanted))
+            if (TryFindWallBehind(def, map, center, current, out wanted))
             {
                 AutoTurn.Suggested(wanted, current);
             }
         }
 
         /// <summary>
-        /// The side of this wall cell a room is on. A side already facing one
-        /// wins, so a wall with rooms on both faces leaves the player's choice
-        /// alone.
+        /// A facing that puts a whole run of wall behind this cell. The
+        /// current one wins if it already works, so a corner leaves the
+        /// player's choice alone.
         /// </summary>
-        public static bool TryFindOpenSide(Map map, IntVec3 cell, Rot4 current, out Rot4 result)
+        public static bool TryFindWallBehind(BuildableDef def, Map map, IntVec3 cell, Rot4 current, out Rot4 result)
         {
             result = current;
-
-            // Rank the four sides rather than taking the first that is merely
-            // not a wall. That was the bug: a wall in a base has open cells on
-            // both faces - a room one way, the weather the other - so "already
-            // faces something open" was true every time and the panel never
-            // turned at all.
-            int best = Score(map, cell, current);
-            if (best >= RoomSide)
+            if (WallRunComplete(def, map, cell, current, null))
             {
-                return false;       // already showing to a room: player's call
+                return false;
             }
-
-            bool found = false;
             for (int i = 0; i < 4; i++)
             {
                 Rot4 rot = new Rot4(i);
-                if (rot == current)
+                if (rot != current && WallRunComplete(def, map, cell, rot, null))
                 {
-                    continue;
-                }
-                int score = Score(map, cell, rot);
-                if (score > best)
-                {
-                    best = score;
                     result = rot;
-                    found = true;
+                    return true;
                 }
             }
-            return found;
+            return false;
         }
 
-        /// <summary>True when this rotation shows the picture to solid wall.</summary>
-        public static bool FacesIntoWall(Map map, IntVec3 cell, Rot4 rot)
+        public static bool HasWallBehind(Thing thing)
         {
-            return Score(map, cell, rot) == BlockedSide;
+            return thing.Spawned && IsWall(thing.Map, WallBehind(thing.Position, thing.Rotation), thing);
         }
 
-        private const int BlockedSide = 0;
-        private const int OpenSide = 1;
-        private const int RoomSide = 2;
-
-        /// <summary>
-        /// How good a side is to show a picture to: nothing through a wall,
-        /// little through a doorway to the weather, everything to a room.
-        /// </summary>
-        private static int Score(Map map, IntVec3 cell, Rot4 rot)
-        {
-            IntVec3 front = cell + rot.FacingCell;
-            if (!front.InBounds(map))
-            {
-                return BlockedSide;
-            }
-            Building edifice = front.GetEdifice(map);
-            if (edifice != null && edifice.def.passability == Traversability.Impassable)
-            {
-                return BlockedSide;
-            }
-            Room room = front.GetRoom(map);
-            if (room == null || room.PsychologicallyOutdoors)
-            {
-                return OpenSide;
-            }
-            return RoomSide;
-        }
-
-        private static bool IsWall(Map map, IntVec3 cell, Thing thingToIgnore)
+        public static bool IsWall(Map map, IntVec3 cell, Thing thingToIgnore)
         {
             if (!cell.InBounds(map))
             {
@@ -444,10 +435,16 @@ namespace EntertainingIdeas
     }
 
     /// <summary>
-    /// Turns a wall-mounted thing away from solid wall when it is built or
-    /// loaded - a wall put up in front of it after it was placed, or a panel
-    /// from before 0.9.49 that vanilla had turned along its wall. Any other
-    /// facing is the player's choice and is left alone.
+    /// Looks after a hung display once it is up.
+    ///
+    /// A panel from before 0.9.83 sits inside its wall cell; the first rare
+    /// tick after loading steps it out onto the floor tile it faces, keeping
+    /// its facing, so it looks the same as it did and is placed the way new
+    /// ones are. If that tile is taken, it is taken down and left boxed beside
+    /// the wall rather than wiping whatever is standing there.
+    ///
+    /// And when the wall behind a panel goes - deconstructed, blown up - the
+    /// panel comes down with it, boxed, rather than hanging on nothing.
     /// </summary>
     public class CompProperties_FaceOpenSide : CompProperties
     {
@@ -462,42 +459,86 @@ namespace EntertainingIdeas
             {
                 yield return error;
             }
-            // This is how the vista panel came to face along its wall. Vanilla
-            // treats isAttachment things as sitting on the floor with a wall at
-            // their back and turns them to match; for a thing inside the wall
-            // that is always the wrong way, and vanilla re-applies it every
-            // frame, over the top of this comp and the place worker.
+            // Vanilla re-aims isAttachment things at a wall every frame, which
+            // takes the choice of wall in a corner away from the player.
             if (parentDef != null && parentDef.building != null && parentDef.building.isAttachment)
             {
                 yield return "CompProperties_FaceOpenSide on " + parentDef.defName
-                             + ": use canPlaceOverWall, not isAttachment. Vanilla rotates attachments "
-                             + "to put a wall behind them, which turns an in-wall panel to face along the wall.";
+                             + ": leave isAttachment off. PlaceWorker_WallMountedDisplay aims the panel "
+                             + "itself; vanilla's attachment handling re-aims it every frame.";
+            }
+            if (parentDef != null && parentDef.tickerType != TickerType.Rare)
+            {
+                yield return "CompProperties_FaceOpenSide on " + parentDef.defName
+                             + " needs tickerType Rare: it checks the wall behind on the rare tick.";
             }
         }
     }
 
     public class CompFaceOpenSide : ThingComp
     {
-        public override void PostSpawnSetup(bool respawningAfterLoad)
+        public override void CompTickRare()
         {
-            base.PostSpawnSetup(respawningAfterLoad);
-            if (parent.Map == null)
+            base.CompTickRare();
+            if (!parent.Spawned)
             {
                 return;
             }
-            // Built or loaded, leave a panel alone unless it is showing its
-            // picture to solid wall. It used to re-aim every new panel at the
-            // "best" side on completion, which overrode a blueprint the player
-            // had deliberately turned to face a doorway or the yard.
-            if (!PlaceWorker_WallMountedDisplay.FacesIntoWall(parent.Map, parent.Position, parent.Rotation))
+            Map map = parent.Map;
+
+            if (PlaceWorker_WallMountedDisplay.IsWall(map, parent.Position, parent))
+            {
+                StepOutOfWall(map);
+                return;
+            }
+            if (!PlaceWorker_WallMountedDisplay.HasWallBehind(parent))
+            {
+                TakeDown("The wall behind " + parent.LabelShort + " is gone, so it has been taken down.");
+            }
+        }
+
+        /// <summary>Old in-wall placement: onto the floor tile it faces.</summary>
+        private void StepOutOfWall(Map map)
+        {
+            Rot4 rot = parent.Rotation;
+            IntVec3 target = parent.Position + rot.FacingCell;
+            if (!FloorIsFree(map, target))
+            {
+                TakeDown(parent.LabelShort + " was hung inside the wall, the old way, and the floor in front of it "
+                         + "is taken - it has been taken down to hang again.");
+                return;
+            }
+            parent.DeSpawn();
+            GenSpawn.Spawn(parent, target, map, rot);
+        }
+
+        private bool FloorIsFree(Map map, IntVec3 cell)
+        {
+            if (!cell.InBounds(map) || !cell.Standable(map))
+            {
+                return false;
+            }
+            List<Thing> things = cell.GetThingList(map);
+            for (int i = 0; i < things.Count; i++)
+            {
+                if (things[i] != parent && things[i].def.category == ThingCategory.Building)
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        private void TakeDown(string why)
+        {
+            if (!parent.def.Minifiable)
             {
                 return;
             }
-            Rot4 wanted;
-            if (PlaceWorker_WallMountedDisplay.TryFindOpenSide(
-                    parent.Map, parent.Position, parent.Rotation, out wanted))
+            Thing boxed = MinifyUtility.Uninstall(parent);
+            if (parent.Faction == Faction.OfPlayer)
             {
-                parent.Rotation = wanted;
+                Messages.Message(why, boxed, MessageTypeDefOf.NeutralEvent);
             }
         }
     }

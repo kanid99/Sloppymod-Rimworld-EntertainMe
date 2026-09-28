@@ -313,8 +313,10 @@ namespace EntertainingIdeas
         }
 
         /// <summary>
-        /// Mounted in a wall, the panel's own cell belongs to no room, so the
-        /// room it serves is the one it faces.
+        /// Hung from the floor in front of its wall, the panel's own tile is in
+        /// the room it serves. A panel from before 0.9.83 can still be inside
+        /// its wall for one rare tick after loading, and a wall cell belongs to
+        /// no room, so that falls back to the room it faces.
         /// </summary>
         private Room RoomServed()
         {
@@ -323,9 +325,13 @@ namespace EntertainingIdeas
             {
                 return null;
             }
+            Room own = parent.GetRoom();
+            if (own != null)
+            {
+                return own;
+            }
             IntVec3 front = parent.Position + parent.Rotation.FacingCell;
-            Room room = front.InBounds(map) ? front.GetRoom(map) : null;
-            return room ?? parent.GetRoom();
+            return front.InBounds(map) ? front.GetRoom(map) : null;
         }
 
         public override string CompInspectStringExtra()

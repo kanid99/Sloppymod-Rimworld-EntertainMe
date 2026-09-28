@@ -653,15 +653,12 @@
     <rotatable>true</rotatable>
     <defaultPlacingRot>South</defaultPlacingRot>
     <designatorDropdown>EI_VistaPanels</designatorDropdown>
-    <!-- Lives in the wall's own cell and takes no floor, so anything standing
-         in the room in front of it is left alone.
-
-         canPlaceOverWall, the way a power conduit shares a wall's cell - NOT
-         isAttachment. Vanilla's attachments (wall lamps) sit on the floor with
-         the wall behind them, and vanilla turns anything flagged isAttachment
-         to put a wall at its back. For a panel inside a wall, the only sides
-         with wall "behind" are along the wall, so it was spun to face along
-         it, every frame, over the top of this mod's own facing. -->
+    <!-- Hung like a picture: placed on the floor tile in front of a wall,
+         facing the room, with the picture drawn one tile back on the wall's
+         face (see PlaceWorker_WallMountedDisplay). Not an edifice, so it takes
+         no room from furniture on that tile. Not a vanilla isAttachment
+         either: vanilla re-aims those every frame, so in a corner the player
+         could never choose the other wall. -->
     <size>(1,1)</size>
     <altitudeLayer>BuildingOnTop</altitudeLayer>
     <passability>Standable</passability>
@@ -674,7 +671,6 @@
     <canOverlapZones>true</canOverlapZones>
     <building>
       <isEdifice>false</isEdifice>
-      <canPlaceOverWall>true</canPlaceOverWall>
     </building>
     <placeWorkers>
       <li>EntertainingIdeas.PlaceWorker_WallMountedDisplay</li>
@@ -694,15 +690,15 @@
     <graphicData>
       <texPath>EntertainingIdeas/Buildings/VistaPanel1</texPath>
       <graphicClass>Graphic_Multi</graphicClass>
-      <!-- One cell of wall, but the picture is painted 1 tile across it.
+      <!-- Hangs from one floor tile; the picture is painted 1 tile across the wall behind.
            Kept well under a tile deep so it reads as a panel on the wall's
            face rather than something standing in the room, and so it never
            covers a shelf or a chair put in front of it. -->
       <drawSize>(1,0.36)</drawSize>
-      <drawOffsetNorth>(0,0,0.54)</drawOffsetNorth>
-      <drawOffsetSouth>(0,0,-0.26)</drawOffsetSouth>
-      <drawOffsetEast>(0.34,0,0)</drawOffsetEast>
-      <drawOffsetWest>(-0.34,0,0)</drawOffsetWest>
+      <drawOffsetNorth>(0,0,-0.46)</drawOffsetNorth>
+      <drawOffsetSouth>(0,0,0.74)</drawOffsetSouth>
+      <drawOffsetEast>(-0.66,0,0)</drawOffsetEast>
+      <drawOffsetWest>(0.66,0,0)</drawOffsetWest>
       <damageData>
         <enabled>false</enabled>
       </damageData>
@@ -794,15 +790,15 @@
     <graphicData>
       <texPath>EntertainingIdeas/Buildings/VistaPanel2</texPath>
       <graphicClass>Graphic_Multi</graphicClass>
-      <!-- One cell of wall, but the picture is painted 2 tiles across it.
+      <!-- Hangs from one floor tile; the picture is painted 2 tiles across the wall behind.
            Kept well under a tile deep so it reads as a panel on the wall's
            face rather than something standing in the room, and so it never
            covers a shelf or a chair put in front of it. -->
       <drawSize>(2,0.36)</drawSize>
-      <drawOffsetNorth>(-0.5,0,0.54)</drawOffsetNorth>
-      <drawOffsetSouth>(0.5,0,-0.26)</drawOffsetSouth>
-      <drawOffsetEast>(0.34,0,0.5)</drawOffsetEast>
-      <drawOffsetWest>(-0.34,0,-0.5)</drawOffsetWest>
+      <drawOffsetNorth>(-0.5,0,-0.46)</drawOffsetNorth>
+      <drawOffsetSouth>(0.5,0,0.74)</drawOffsetSouth>
+      <drawOffsetEast>(-0.66,0,0.5)</drawOffsetEast>
+      <drawOffsetWest>(0.66,0,-0.5)</drawOffsetWest>
       <damageData>
         <enabled>false</enabled>
       </damageData>
@@ -894,15 +890,15 @@
     <graphicData>
       <texPath>EntertainingIdeas/Buildings/VistaPanel3</texPath>
       <graphicClass>Graphic_Multi</graphicClass>
-      <!-- One cell of wall, but the picture is painted 3 tiles across it.
+      <!-- Hangs from one floor tile; the picture is painted 3 tiles across the wall behind.
            Kept well under a tile deep so it reads as a panel on the wall's
            face rather than something standing in the room, and so it never
            covers a shelf or a chair put in front of it. -->
       <drawSize>(3,0.36)</drawSize>
-      <drawOffsetNorth>(0,0,0.54)</drawOffsetNorth>
-      <drawOffsetSouth>(0,0,-0.26)</drawOffsetSouth>
-      <drawOffsetEast>(0.34,0,0)</drawOffsetEast>
-      <drawOffsetWest>(-0.34,0,0)</drawOffsetWest>
+      <drawOffsetNorth>(0,0,-0.46)</drawOffsetNorth>
+      <drawOffsetSouth>(0,0,0.74)</drawOffsetSouth>
+      <drawOffsetEast>(-0.66,0,0)</drawOffsetEast>
+      <drawOffsetWest>(0.66,0,0)</drawOffsetWest>
       <damageData>
         <enabled>false</enabled>
       </damageData>
@@ -2264,11 +2260,12 @@
     <leaveResourcesWhenKilled>false</leaveResourcesWhenKilled>
     <building>
       <isEdifice>false</isEdifice>
-      <canPlaceOverWall>true</canPlaceOverWall>
     </building>
     <placeWorkers>
       <li>EntertainingIdeas.PlaceWorker_WallMountedDisplay</li>
     </placeWorkers>
+    <!-- Rare ticks let it notice its wall is gone and come down with it. -->
+    <tickerType>Rare</tickerType>
     <statBases>
       <MaxHitPoints>40</MaxHitPoints>
       <WorkToBuild>250</WorkToBuild>
@@ -2290,10 +2287,10 @@
       <texPath>EntertainingIdeas/Buildings/FramedJigsawThrumboDawn</texPath>
       <graphicClass>Graphic_Multi</graphicClass>
       <drawSize>(1,0.36)</drawSize>
-      <drawOffsetNorth>(0,0,0.54)</drawOffsetNorth>
-      <drawOffsetSouth>(0,0,-0.26)</drawOffsetSouth>
-      <drawOffsetEast>(0.34,0,0)</drawOffsetEast>
-      <drawOffsetWest>(-0.34,0,0)</drawOffsetWest>
+      <drawOffsetNorth>(0,0,-0.46)</drawOffsetNorth>
+      <drawOffsetSouth>(0,0,0.74)</drawOffsetSouth>
+      <drawOffsetEast>(-0.66,0,0)</drawOffsetEast>
+      <drawOffsetWest>(0.66,0,0)</drawOffsetWest>
       <damageData>
         <enabled>false</enabled>
       </damageData>
@@ -2308,10 +2305,10 @@
       <texPath>EntertainingIdeas/Buildings/FramedJigsawMuffaloCrossing</texPath>
       <graphicClass>Graphic_Multi</graphicClass>
       <drawSize>(1,0.36)</drawSize>
-      <drawOffsetNorth>(0,0,0.54)</drawOffsetNorth>
-      <drawOffsetSouth>(0,0,-0.26)</drawOffsetSouth>
-      <drawOffsetEast>(0.34,0,0)</drawOffsetEast>
-      <drawOffsetWest>(-0.34,0,0)</drawOffsetWest>
+      <drawOffsetNorth>(0,0,-0.46)</drawOffsetNorth>
+      <drawOffsetSouth>(0,0,0.74)</drawOffsetSouth>
+      <drawOffsetEast>(-0.66,0,0)</drawOffsetEast>
+      <drawOffsetWest>(0.66,0,0)</drawOffsetWest>
       <damageData>
         <enabled>false</enabled>
       </damageData>
@@ -2326,10 +2323,10 @@
       <texPath>EntertainingIdeas/Buildings/FramedJigsawLaunchDay</texPath>
       <graphicClass>Graphic_Multi</graphicClass>
       <drawSize>(1,0.36)</drawSize>
-      <drawOffsetNorth>(0,0,0.54)</drawOffsetNorth>
-      <drawOffsetSouth>(0,0,-0.26)</drawOffsetSouth>
-      <drawOffsetEast>(0.34,0,0)</drawOffsetEast>
-      <drawOffsetWest>(-0.34,0,0)</drawOffsetWest>
+      <drawOffsetNorth>(0,0,-0.46)</drawOffsetNorth>
+      <drawOffsetSouth>(0,0,0.74)</drawOffsetSouth>
+      <drawOffsetEast>(-0.66,0,0)</drawOffsetEast>
+      <drawOffsetWest>(0.66,0,0)</drawOffsetWest>
       <damageData>
         <enabled>false</enabled>
       </damageData>
@@ -2344,10 +2341,10 @@
       <texPath>EntertainingIdeas/Buildings/FramedJigsawBoomalopePicnic</texPath>
       <graphicClass>Graphic_Multi</graphicClass>
       <drawSize>(1,0.36)</drawSize>
-      <drawOffsetNorth>(0,0,0.54)</drawOffsetNorth>
-      <drawOffsetSouth>(0,0,-0.26)</drawOffsetSouth>
-      <drawOffsetEast>(0.34,0,0)</drawOffsetEast>
-      <drawOffsetWest>(-0.34,0,0)</drawOffsetWest>
+      <drawOffsetNorth>(0,0,-0.46)</drawOffsetNorth>
+      <drawOffsetSouth>(0,0,0.74)</drawOffsetSouth>
+      <drawOffsetEast>(-0.66,0,0)</drawOffsetEast>
+      <drawOffsetWest>(0.66,0,0)</drawOffsetWest>
       <damageData>
         <enabled>false</enabled>
       </damageData>

@@ -177,6 +177,16 @@ outdoors need of everyone sharing the room, but only to a ceiling (35% by
 default): enough to hold off cabin fever in a sealed base, never enough to
 replace going outside.
 
+**Wall pieces hang like pictures.** Vista panels and framed jigsaws are placed
+on the floor tile in front of a wall, facing the room, the way a wall lamp is;
+the picture is drawn on the wall's face behind, as wide as the panel. They are
+not edifices, so furniture is not displaced. The ghost turns its back to a
+wall as it reaches each new tile, but a turn by hand sticks, so in a corner
+either wall can be used. If the wall behind is removed the piece comes down,
+boxed. Panels hung inside the wall cell by builds before 0.9.83 step out onto
+the floor tile they face on the first rare tick after loading (or are boxed if
+that tile is taken), looking the same as before.
+
 **Some things run out and need a colonist.** The tub holds one soak; the
 skittles lane's pins stay where the ball leaves them. Both implement one
 `IServiceable` interface, so a single work giver and job driver cover "carry
