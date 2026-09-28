@@ -696,11 +696,11 @@
            Kept well under a tile deep so it reads as a panel on the wall's
            face rather than something standing in the room, and so it never
            covers a shelf or a chair put in front of it. -->
-      <drawSize>(1,0.75)</drawSize>
-      <drawOffsetNorth>(0,0,0.39)</drawOffsetNorth>
+      <drawSize>(1,0.36)</drawSize>
+      <drawOffsetNorth>(0,0,0.54)</drawOffsetNorth>
       <drawOffsetSouth>(0,0,-0.26)</drawOffsetSouth>
-      <drawOffsetEast>(0.26,0,0)</drawOffsetEast>
-      <drawOffsetWest>(-0.26,0,0)</drawOffsetWest>
+      <drawOffsetEast>(0.34,0,0)</drawOffsetEast>
+      <drawOffsetWest>(-0.34,0,0)</drawOffsetWest>
       <damageData>
         <enabled>false</enabled>
       </damageData>
@@ -731,7 +731,7 @@
       <li Class="EntertainingIdeas.CompProperties_FaceOpenSide"/>
       <li Class="EntertainingIdeas.CompProperties_DayCycleDisplay">
         <ticksPerFrame>14</ticksPerFrame>
-        <drawSize>(1,0.75)</drawSize>
+        <drawSize>(1,0.36)</drawSize>
         <!-- The view shows on the face the camera can see. On a north, east
              or west wall the panel's own texture draws what is visible. -->
         <rotateWithBuilding>false</rotateWithBuilding>
@@ -796,11 +796,11 @@
            Kept well under a tile deep so it reads as a panel on the wall's
            face rather than something standing in the room, and so it never
            covers a shelf or a chair put in front of it. -->
-      <drawSize>(2,0.75)</drawSize>
-      <drawOffsetNorth>(-0.5,0,0.39)</drawOffsetNorth>
+      <drawSize>(2,0.36)</drawSize>
+      <drawOffsetNorth>(-0.5,0,0.54)</drawOffsetNorth>
       <drawOffsetSouth>(0.5,0,-0.26)</drawOffsetSouth>
-      <drawOffsetEast>(0.26,0,0.5)</drawOffsetEast>
-      <drawOffsetWest>(-0.26,0,-0.5)</drawOffsetWest>
+      <drawOffsetEast>(0.34,0,0.5)</drawOffsetEast>
+      <drawOffsetWest>(-0.34,0,-0.5)</drawOffsetWest>
       <damageData>
         <enabled>false</enabled>
       </damageData>
@@ -831,7 +831,7 @@
       <li Class="EntertainingIdeas.CompProperties_FaceOpenSide"/>
       <li Class="EntertainingIdeas.CompProperties_DayCycleDisplay">
         <ticksPerFrame>14</ticksPerFrame>
-        <drawSize>(2,0.75)</drawSize>
+        <drawSize>(2,0.36)</drawSize>
         <!-- The view shows on the face the camera can see. On a north, east
              or west wall the panel's own texture draws what is visible. -->
         <rotateWithBuilding>false</rotateWithBuilding>
@@ -896,11 +896,11 @@
            Kept well under a tile deep so it reads as a panel on the wall's
            face rather than something standing in the room, and so it never
            covers a shelf or a chair put in front of it. -->
-      <drawSize>(3,0.75)</drawSize>
-      <drawOffsetNorth>(0,0,0.39)</drawOffsetNorth>
+      <drawSize>(3,0.36)</drawSize>
+      <drawOffsetNorth>(0,0,0.54)</drawOffsetNorth>
       <drawOffsetSouth>(0,0,-0.26)</drawOffsetSouth>
-      <drawOffsetEast>(0.26,0,0)</drawOffsetEast>
-      <drawOffsetWest>(-0.26,0,0)</drawOffsetWest>
+      <drawOffsetEast>(0.34,0,0)</drawOffsetEast>
+      <drawOffsetWest>(-0.34,0,0)</drawOffsetWest>
       <damageData>
         <enabled>false</enabled>
       </damageData>
@@ -931,7 +931,7 @@
       <li Class="EntertainingIdeas.CompProperties_FaceOpenSide"/>
       <li Class="EntertainingIdeas.CompProperties_DayCycleDisplay">
         <ticksPerFrame>14</ticksPerFrame>
-        <drawSize>(3,0.75)</drawSize>
+        <drawSize>(3,0.36)</drawSize>
         <!-- The view shows on the face the camera can see. On a north, east
              or west wall the panel's own texture draws what is visible. -->
         <rotateWithBuilding>false</rotateWithBuilding>
@@ -2283,11 +2283,11 @@
     <graphicData>
       <texPath>EntertainingIdeas/Buildings/FramedJigsawThrumboDawn</texPath>
       <graphicClass>Graphic_Multi</graphicClass>
-      <drawSize>(1,0.75)</drawSize>
-      <drawOffsetNorth>(0,0,0.39)</drawOffsetNorth>
+      <drawSize>(1,0.36)</drawSize>
+      <drawOffsetNorth>(0,0,0.54)</drawOffsetNorth>
       <drawOffsetSouth>(0,0,-0.26)</drawOffsetSouth>
-      <drawOffsetEast>(0.26,0,0)</drawOffsetEast>
-      <drawOffsetWest>(-0.26,0,0)</drawOffsetWest>
+      <drawOffsetEast>(0.34,0,0)</drawOffsetEast>
+      <drawOffsetWest>(-0.34,0,0)</drawOffsetWest>
       <damageData>
         <enabled>false</enabled>
       </damageData>
@@ -2301,11 +2301,11 @@
     <graphicData>
       <texPath>EntertainingIdeas/Buildings/FramedJigsawMuffaloCrossing</texPath>
       <graphicClass>Graphic_Multi</graphicClass>
-      <drawSize>(1,0.75)</drawSize>
-      <drawOffsetNorth>(0,0,0.39)</drawOffsetNorth>
+      <drawSize>(1,0.36)</drawSize>
+      <drawOffsetNorth>(0,0,0.54)</drawOffsetNorth>
       <drawOffsetSouth>(0,0,-0.26)</drawOffsetSouth>
-      <drawOffsetEast>(0.26,0,0)</drawOffsetEast>
-      <drawOffsetWest>(-0.26,0,0)</drawOffsetWest>
+      <drawOffsetEast>(0.34,0,0)</drawOffsetEast>
+      <drawOffsetWest>(-0.34,0,0)</drawOffsetWest>
       <damageData>
         <enabled>false</enabled>
       </damageData>
@@ -2319,11 +2319,11 @@
     <graphicData>
       <texPath>EntertainingIdeas/Buildings/FramedJigsawLaunchDay</texPath>
       <graphicClass>Graphic_Multi</graphicClass>
-      <drawSize>(1,0.75)</drawSize>
-      <drawOffsetNorth>(0,0,0.39)</drawOffsetNorth>
+      <drawSize>(1,0.36)</drawSize>
+      <drawOffsetNorth>(0,0,0.54)</drawOffsetNorth>
       <drawOffsetSouth>(0,0,-0.26)</drawOffsetSouth>
-      <drawOffsetEast>(0.26,0,0)</drawOffsetEast>
-      <drawOffsetWest>(-0.26,0,0)</drawOffsetWest>
+      <drawOffsetEast>(0.34,0,0)</drawOffsetEast>
+      <drawOffsetWest>(-0.34,0,0)</drawOffsetWest>
       <damageData>
         <enabled>false</enabled>
       </damageData>
@@ -2337,11 +2337,11 @@
     <graphicData>
       <texPath>EntertainingIdeas/Buildings/FramedJigsawBoomalopePicnic</texPath>
       <graphicClass>Graphic_Multi</graphicClass>
-      <drawSize>(1,0.75)</drawSize>
-      <drawOffsetNorth>(0,0,0.39)</drawOffsetNorth>
+      <drawSize>(1,0.36)</drawSize>
+      <drawOffsetNorth>(0,0,0.54)</drawOffsetNorth>
       <drawOffsetSouth>(0,0,-0.26)</drawOffsetSouth>
-      <drawOffsetEast>(0.26,0,0)</drawOffsetEast>
-      <drawOffsetWest>(-0.26,0,0)</drawOffsetWest>
+      <drawOffsetEast>(0.34,0,0)</drawOffsetEast>
+      <drawOffsetWest>(-0.34,0,0)</drawOffsetWest>
       <damageData>
         <enabled>false</enabled>
       </damageData>

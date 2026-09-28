@@ -2014,17 +2014,20 @@ VISTA_WIDTHS = ((1, "VistaPanel1"), (2, "VistaPanel2"), (3, "VistaPanel3"))
 
 
 # Wall pieces - the vista panels and the framed jigsaws - drawn for the wall
-# face they hang on. South is the picture face-on. On a north face the wall
-# itself is between the picture and the camera, so only the top of it shows,
-# over the wall's top edge (drawOffsetNorth puts that edge WALL_PEEK px down
-# the canvas). On an east or west face it would be seen edge-on, so it is
-# tipped out a little at the bottom, the way a hung picture leans: its top
-# against the wall, its foot toward the room - a narrowed strip lying along
-# the wall tile's face, still showing the picture. West is east turned half
-# round rather than mirrored, so nothing on it reads backwards.
-WALL_PEEK = 34
-WALL_EDGE_EAST = 79               # the wall's east face, at drawOffsetEast 0.26
-
+# face they hang on. A wall's front face is seen at the camera's slant, so it
+# shows as a band only about 0.4 of a tile tall across the bottom of the wall
+# tile (the rest is the wall's top). A picture on that face is foreshortened
+# the same way, or it stands out from the wall at a different angle and pokes
+# up over its top: so every wall piece is drawn face-on at full height, then
+# squeezed to WALL_FACE_H (0.36 of a tile) to lie on the face.
+#
+# South: that squeezed picture, on the face. North: the wall is between it and
+# the camera, so only the top of it shows, over the wall's top edge. East and
+# west: tipped out at the foot, the way a hung picture leans, it lies along
+# the wall tile's side as a strip, top toward the wall. West is east turned
+# half round rather than mirrored, so nothing on it reads backwards.
+WALL_FACE_H = 46                  # 0.36 of a tile, at 128 px a tile
+WALL_PEEK_H = 28                  # facing north, how much shows over the wall
 
 
 # ---------------------------------------------------------------------------
@@ -2072,17 +2075,25 @@ def save_table_views(top, name, drop, apron, leg, legs_ns, legs_ew, extra=None):
     print("  %s_{north,east,south,west}.png  (tables, padded %d)" % (name, drop))
 
 
-def save_wall_piece(face, name, strip):
+def wall_face(canvas):
+    """A face-on wall piece squeezed to lie on the wall's foreshortened face."""
+    px, w, h = canvas.pixels(), canvas.w, canvas.h
+    out = Canvas(w, WALL_FACE_H)
+    blit_rect(out, px, w, h, (0, 0, w, h), (0, 0, w, WALL_FACE_H))
+    return out
+
+
+def save_wall_piece(face, name):
     """Write the four facings of a wall piece from its face-on drawing."""
     px, w, h = face.pixels(), face.w, face.h
-    face.save(os.path.join(OUT, "%s_south.png" % name))
-    north = Canvas(w, 96)
-    blit_rect(north, px, w, h, (0, 0, w, h * 0.55), (0, 0, w, WALL_PEEK))
+    wall_face(face).save(os.path.join(OUT, "%s_south.png" % name))
+    north = Canvas(w, WALL_FACE_H)
+    blit_rect(north, px, w, h, (0, 0, w, h * 0.55), (0, 0, w, WALL_PEEK_H))
     north.save(os.path.join(OUT, "%s_north.png" % name))
-    east = Canvas(96, w)
-    blit_quad(east, px, w, h, (0, 0, w, h), (WALL_EDGE_EAST + 3, w), (0, -w), (-strip, 0))
+    east = Canvas(WALL_FACE_H, w)
+    blit_quad(east, px, w, h, (0, 0, w, h), (WALL_FACE_H, w), (0, -w), (-WALL_FACE_H, 0))
     east.save(os.path.join(OUT, "%s_east.png" % name))
-    wp, ww, wh = rotate(east.pixels(), 96, w, 2)
+    wp, ww, wh = rotate(east.pixels(), WALL_FACE_H, w, 2)
     write_png(os.path.join(OUT, "%s_west.png" % name), ww, wh, wp)
     print("  %s_{north,east,south,west}.png" % name)
 
@@ -2101,7 +2112,7 @@ def vista_panel():
         c.rect(12, 12, c.w - 12, 84, (10, 12, 22, 150), 4)  # lights down
         for i in range(min(3, tiles + 1)):
             c.circle(28 + i * 12, 89, 2.2, (54, 58, 70, 255))
-        save_wall_piece(c, name, 56)
+        save_wall_piece(c, name)
         made[name] = c
     return made
 
@@ -2113,7 +2124,7 @@ def vista_panel_frames(total=6):
             for i in range(total):
                 c = Canvas(VISTA_TILE * tiles, VISTA_H)
                 draw_vista_scene(c, phase, i, total)
-                c.save(os.path.join(OUT, "%s%s_%d.png" % (name, phase, i)))
+                wall_face(c).save(os.path.join(OUT, "%s%s_%d.png" % (name, phase, i)))
                 if i == 0 and tiles == 3:
                     made[phase] = c
         print("  %s{Dawn,Day,Dusk,Night}_0..%d.png  (%dx%d)"
@@ -4140,7 +4151,7 @@ def framed_jigsaws():
             y = 15 + 66.0 * k / JIGSAW_ROWS
             c.line(13, y, 115, y, (0, 0, 0, 34), 0.8)
         c.rect(13, 15, 115, 21, (255, 255, 255, 22), 0)      # glass sheen
-        save_wall_piece(c, "FramedJigsaw%s" % name, 46)
+        save_wall_piece(c, "FramedJigsaw%s" % name)
         made["FramedJigsaw%s" % name] = c
     return made
 
