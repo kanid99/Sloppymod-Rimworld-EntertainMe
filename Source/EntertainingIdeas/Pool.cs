@@ -258,6 +258,7 @@ namespace EntertainingIdeas
         private float litres;
         private float dirt;
         private bool handFill = true;
+        private bool usePlumbing = true;
         private CompPowerTrader power;
 
         // Resolved once: a thing's comps are fixed when it is constructed, so
@@ -302,7 +303,7 @@ namespace EntertainingIdeas
 
         public bool Plumbed
         {
-            get { return Pipe != null; }
+            get { return usePlumbing && Pipe != null; }
         }
 
         /// <summary>
@@ -354,6 +355,7 @@ namespace EntertainingIdeas
             Scribe_Values.Look(ref litres, "EI_poolLitres", 0f);
             Scribe_Values.Look(ref dirt, "EI_poolDirt", 0f);
             Scribe_Values.Look(ref handFill, "EI_handFill", true);
+            Scribe_Values.Look(ref usePlumbing, "EI_usePlumbing", true);
         }
 
 #if RW16
@@ -419,8 +421,7 @@ namespace EntertainingIdeas
                     : 0f;
             }
 
-            ThingComp plumbing = Pipe;
-            if (plumbing != null && DubsPlumbing.NetHasWater(plumbing))
+            if (Plumbed && DubsPlumbing.NetHasWater(Pipe))
             {
                 litres = Capacity;              // plumbed in: it tops itself up
             }
@@ -563,9 +564,17 @@ namespace EntertainingIdeas
             {
                 yield return gizmo;
             }
-            if (!Plumbed && parent.Faction == Faction.OfPlayer)
+            if (parent.Faction != Faction.OfPlayer)
             {
-                yield return HandFillToggle.Make(() => handFill, () => handFill = !handFill, "the pool");
+                yield break;
+            }
+            if (Pipe != null)
+            {
+                yield return WaterGizmos.Plumbing(() => usePlumbing, () => usePlumbing = !usePlumbing, "the pool");
+            }
+            if (!Plumbed)
+            {
+                yield return WaterGizmos.HandFill(() => handFill, () => handFill = !handFill, "the pool");
             }
         }
 
@@ -581,6 +590,10 @@ namespace EntertainingIdeas
             if (Plumbed)
             {
                 line += " (plumbed in)";
+            }
+            else if (Pipe != null)
+            {
+                line += " (plumbing shut off)";
             }
             if (litres > 0f)
             {

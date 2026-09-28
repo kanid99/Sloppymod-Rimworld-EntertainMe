@@ -31,23 +31,41 @@ namespace EntertainingIdeas
     }
 
     /// <summary>
-    /// The "fill by hand" switch on a tub or pool that is not plumbed in. Off,
-    /// nobody carries water to it, so a player can stop colonists making long
-    /// trips to a river for something they are not using.
+    /// The two water switches on a tub or pool. "Fill by hand" shows when it
+    /// is off the plumbing: off, nobody carries water to it, so a player can
+    /// stop colonists making long trips to a river for something they are
+    /// not using. "Use plumbing" shows when Dubs Bad Hygiene has piped it:
+    /// off, it stops drawing on the network and is filled like an unplumbed
+    /// one - or not at all.
     /// </summary>
     [StaticConstructorOnStartup]
-    public static class HandFillToggle
+    public static class WaterGizmos
     {
-        private static readonly Texture2D Icon = ContentFinder<Texture2D>.Get("EntertainingIdeas/UI/HandFill");
+        private static readonly Texture2D HandFillIcon = ContentFinder<Texture2D>.Get("EntertainingIdeas/UI/HandFill");
+        private static readonly Texture2D PlumbingIcon = ContentFinder<Texture2D>.Get("EntertainingIdeas/UI/Plumbing");
 
-        public static Command_Toggle Make(Func<bool> isActive, Action toggle, string what)
+        public static Command_Toggle HandFill(Func<bool> isActive, Action toggle, string what)
         {
             return new Command_Toggle
             {
                 defaultLabel = "Fill by hand",
                 defaultDesc = "When on, colonists carry water from the nearest river, lake or marsh to keep "
                               + what + " filled. Turn it off to stop them.",
-                icon = Icon,
+                icon = HandFillIcon,
+                isActive = isActive,
+                toggleAction = toggle
+            };
+        }
+
+        public static Command_Toggle Plumbing(Func<bool> isActive, Action toggle, string what)
+        {
+            return new Command_Toggle
+            {
+                defaultLabel = "Use plumbing",
+                defaultDesc = "When on, " + what + " fills itself from the pipe network. Turn it off to shut "
+                              + "the supply: it stops drawing water, and colonists fill it by hand instead "
+                              + "if that is switched on.",
+                icon = PlumbingIcon,
                 isActive = isActive,
                 toggleAction = toggle
             };
@@ -308,6 +326,7 @@ namespace EntertainingIdeas
     {
         private bool filled;
         private bool handFill = true;
+        private bool usePlumbing = true;
 
         // A thing's comps are fixed when it is constructed, so whether this tub
         // is piped never changes. Worth resolving once: NeedsService is asked
@@ -334,6 +353,7 @@ namespace EntertainingIdeas
             base.PostExposeData();
             Scribe_Values.Look(ref filled, "EI_filled", false);
             Scribe_Values.Look(ref handFill, "EI_handFill", true);
+            Scribe_Values.Look(ref usePlumbing, "EI_usePlumbing", true);
         }
 
         private ThingComp Pipe
@@ -349,18 +369,15 @@ namespace EntertainingIdeas
             }
         }
 
+        /// <summary>Piped in, and the player has not shut the supply off.</summary>
         public bool Plumbed
         {
-            get { return Pipe != null; }
+            get { return usePlumbing && Pipe != null; }
         }
 
         public bool HasWater
         {
-            get
-            {
-                ThingComp plumbing = Pipe;
-                return plumbing != null ? DubsPlumbing.NetHasWater(plumbing) : filled;
-            }
+            get { return Plumbed ? DubsPlumbing.NetHasWater(Pipe) : filled; }
         }
 
         public void Fill()
@@ -404,9 +421,17 @@ namespace EntertainingIdeas
             {
                 yield return gizmo;
             }
-            if (!Plumbed && parent.Faction == Faction.OfPlayer)
+            if (parent.Faction != Faction.OfPlayer)
             {
-                yield return HandFillToggle.Make(() => handFill, () => handFill = !handFill, "the tub");
+                yield break;
+            }
+            if (Pipe != null)
+            {
+                yield return WaterGizmos.Plumbing(() => usePlumbing, () => usePlumbing = !usePlumbing, "the tub");
+            }
+            if (!Plumbed)
+            {
+                yield return WaterGizmos.HandFill(() => handFill, () => handFill = !handFill, "the tub");
             }
         }
 
@@ -416,17 +441,18 @@ namespace EntertainingIdeas
             {
                 return HasWater ? "Plumbed in" : "Plumbed in, but the pipes are dry";
             }
+            string off = Pipe != null ? "Plumbing shut off. " : "";
             if (filled)
             {
-                return "Full";
+                return off + "Full";
             }
             if (!handFill)
             {
-                return "Empty - filling by hand is switched off";
+                return off + "Empty - filling by hand is switched off";
             }
-            return WaterSources.MapHasWater(parent.Map)
+            return off + (WaterSources.MapHasWater(parent.Map)
                 ? "Empty - needs filling before the next soak"
-                : "Empty - and there is no open water on this map to carry from";
+                : "Empty - and there is no open water on this map to carry from");
         }
     }
 

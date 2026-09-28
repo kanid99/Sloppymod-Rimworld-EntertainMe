@@ -228,7 +228,8 @@ A tub holds **one soak**. When it runs dry a colonist carries more out to it
 from the nearest open water — a hauling job that goes to the bank first, and it
 never queues for a tub that is already full or when no water is in reach. Each
 unplumbed tub, and the pool filter, has a **Fill by hand** toggle; switch it off
-and nobody carries water to it. Both tubs start full when built, so the first soak costs nothing.
+and nobody carries water to it. A piped one gets a **Use plumbing** toggle as
+well: off, it stops drawing on the network and is treated as unplumbed. Both tubs start full when built, so the first soak costs nothing.
 
 Plumb a tub in and it fills itself instead. That needs **Dubs Bad Hygiene**: the
 patch below gives both tubs and the pool filter its pipe comp, and `CompWaterBasin` reads the

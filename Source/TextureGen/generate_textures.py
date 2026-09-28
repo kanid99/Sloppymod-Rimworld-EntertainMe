@@ -3565,6 +3565,39 @@ def hand_fill_icon():
     print("  UI/HandFill.png  (64x64)")
 
 
+def plumbing_icon():
+    """The 'use plumbing' gizmo: a run of pipe with a red valve wheel on it."""
+    c = Canvas(64, 64)
+    pipe, pipe_dark, pipe_lit = (150, 156, 164, 255), (104, 110, 118, 255), (200, 206, 212, 255)
+    # Horizontal run with flanged joints, and the valve body in the middle.
+    c.rect(2, 36, 62, 52, DARK, 2)
+    c.rect(3.5, 37.5, 60.5, 50.5, pipe)
+    c.rect(3.5, 37.5, 60.5, 41, pipe_lit)
+    c.rect(3.5, 47, 60.5, 50.5, pipe_dark)
+    for x in (8, 56):
+        c.rect(x - 3.5, 33, x + 3.5, 55, DARK, 1.5)
+        c.rect(x - 2, 34.5, x + 2, 53.5, pipe_dark)
+    c.rect(22, 30, 42, 56, DARK, 3)
+    c.rect(23.5, 31.5, 40.5, 54.5, (132, 108, 64, 255), 2)
+    c.rect(23.5, 31.5, 40.5, 35, (176, 148, 92, 255), 2)
+    # Stem and wheel.
+    c.rect(29.5, 17, 34.5, 32, DARK)
+    c.rect(30.8, 18, 33.2, 31, pipe)
+    c.ellipse(32, 15, 21, 8.5, DARK)
+    c.ellipse(32, 15, 18.5, 6.4, (196, 52, 44, 255))
+    c.ellipse(32, 15, 13, 3.4, DARK)
+    for ang in (0, 60, 120):
+        dx = 13.5 * math.cos(math.radians(ang))
+        dy = 4.2 * math.sin(math.radians(ang))
+        c.line(32 - dx, 15 - dy, 32 + dx, 15 + dy, (160, 36, 32, 255), 2.2)
+    c.ellipse(32, 14, 17, 1.6, (236, 120, 104, 180))
+    c.circle(32, 15, 3, DARK)
+    c.circle(32, 15, 1.8, pipe_lit)
+    os.makedirs(UI, exist_ok=True)
+    c.save(os.path.join(UI, "Plumbing.png"))
+    print("  UI/Plumbing.png  (64x64)")
+
+
 def _pool_filter_view(facing):
     """A filter tank and a pump on a skid. The pump, its fan cover and the
     control box face the way the unit does; the tank stands taller than the
@@ -4018,6 +4051,7 @@ def _build_pool():
     pool_basin_terrain()
     pool_water_terrain()
     hand_fill_icon()
+    plumbing_icon()
     return {"PoolFilter": pool_filter()}
 
 
