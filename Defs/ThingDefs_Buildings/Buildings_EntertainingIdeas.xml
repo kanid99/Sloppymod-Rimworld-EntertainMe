@@ -2196,7 +2196,8 @@
         <!-- An average colonist's sitting is worth about 3000; four at a
              table finish one in an afternoon, one alone takes most of a
              week of evenings. -->
-        <workToFinish>18000</workToFinish>
+        <!-- Several evenings' work for a table of colonists, not one. -->
+        <workToFinish>36000</workToFinish>
         <frameWorkTicks>600</frameWorkTicks>
         <drawSize>(2,2)</drawSize>
         <pictures>
@@ -2251,6 +2252,10 @@
     <thingCategories>
       <li>BuildingsArt</li>
     </thingCategories>
+    <!-- Decoration made of play, not a product: worth nothing to a trader,
+         and nothing to salvage when it comes down. -->
+    <resourcesFractionWhenDeconstructed>0</resourcesFractionWhenDeconstructed>
+    <leaveResourcesWhenKilled>false</leaveResourcesWhenKilled>
     <building>
       <isEdifice>false</isEdifice>
       <canPlaceOverWall>true</canPlaceOverWall>
@@ -2263,7 +2268,7 @@
       <WorkToBuild>250</WorkToBuild>
       <Mass>1.5</Mass>
       <Beauty>8</Beauty>
-      <MarketValue>40</MarketValue>
+      <MarketValue>0</MarketValue>
       <Flammability>1.0</Flammability>
     </statBases>
     <comps>
