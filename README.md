@@ -395,6 +395,12 @@ python3 Source/TextureGen/promo_art.py          # release-post graphics -> promo
 
 `docs/release-post.md` holds the release-post copy that goes with those images.
 
+**Installing from GitHub.** `main` is always a loadable build: the compiled
+assemblies are committed, and `About/About.xml` carries the build number
+(`python3 Tools/stamp_version.py` before each commit; `Tools/validate.py`
+fails when it is stale). Point RimSort, or a plain `git clone`, at the
+repository and pull to update.
+
 The mod's preview image, `About/Preview.png`, is the banner in `Source/Promo/`:
 a page laid out from the shipped textures and rendered to 1280x720 with
 Playwright. Re-render it after changing any art it shows:
