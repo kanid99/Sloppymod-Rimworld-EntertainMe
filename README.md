@@ -232,11 +232,19 @@ and nobody carries water to it. A piped one gets a **Use plumbing** toggle as
 well: off, it stops drawing on the network and is treated as unplumbed. Both tubs start full when built, so the first soak costs nothing.
 
 Plumb a tub in and it fills itself instead. That needs **Dubs Bad Hygiene**: the
-patch below gives both tubs and the pool filter its pipe comp, and `CompWaterBasin` reads the
-attached plumbing network to see whether there is actually water in it — a tub
-on a dry or disconnected network reports as much rather than quietly working.
-DBH is reached entirely by reflection, so this assembly never references it and
-behaves normally without it.
+patch below gives both tubs and the pool filter its pipe comp. The water is
+real: it comes out of the network's water towers through DBH's own
+`PlumbingNet.PullWater`, the call its hot tub uses — 80 L a soak for a tub, and
+up to 100 L per rare tick while a pool fills or tops up evaporation. A building
+on a dry or disconnected network says so rather than quietly working. The pool
+also takes on the dirt of what it draws: DBH's *untreated* water arrives a
+quarter dirty and *contaminated* water foul, for the pump to clear. In DBH's
+lite mode, which does not track water, it is free, as it is for DBH's fixtures.
+
+DBH has no per-building shut-off of its own (a fixture's pipe closes only when
+its power switch is off), so each piped tub and pool filter gets a **Use
+plumbing** toggle. DBH is reached entirely by reflection, so this assembly never
+references it and behaves normally without it.
 
 ## Optional mod compatibility
 

@@ -240,6 +240,11 @@ namespace EntertainingIdeas
         public int fillWorkTicks = 320;
         /// <summary>Evaporation and splash-out, per tile of open water per day.</summary>
         public float litresLostPerTilePerDay = 0.6f;
+        /// <summary>Most a plumbed pool draws from Dubs Bad Hygiene's towers per rare tick.</summary>
+        public float pipeLitresPerRareTick = 100f;
+        /// <summary>How dirty water from the towers is when DBH calls it untreated, and contaminated.</summary>
+        public float untreatedDirt = 0.25f;
+        public float contaminatedDirt = 0.85f;
         /// <summary>How fast standing water goes bad with no pump running, per day (0 clean, 1 foul).</summary>
         public float dirtPerDay = 0.12f;
         /// <summary>How fast a running pump clears it again, per day.</summary>
@@ -421,22 +426,19 @@ namespace EntertainingIdeas
                     : 0f;
             }
 
-            if (Plumbed && DubsPlumbing.NetHasWater(Pipe))
+            // 250 ticks is one rare tick; 60000 is a day.
+            litres -= cells.Count * Props.litresLostPerTilePerDay * (250f / 60000f);
+            if (litres < 0f)
             {
-                litres = Capacity;              // plumbed in: it tops itself up
-            }
-            else
-            {
-                // 250 ticks is one rare tick; 60000 is a day.
-                litres -= cells.Count * Props.litresLostPerTilePerDay * (250f / 60000f);
-                if (litres < 0f)
-                {
-                    litres = 0f;
-                }
+                litres = 0f;
             }
             if (litres > Capacity)
             {
                 litres = Capacity;
+            }
+            if (Plumbed)
+            {
+                TopUpFromPipes();
             }
 
             // Standing water goes bad; a running pump clears it. An empty
@@ -451,6 +453,32 @@ namespace EntertainingIdeas
             }
 
             ApplyWaterLine();
+        }
+
+        /// <summary>
+        /// Draws from the towers like DBH's own hot tub does, a steady run
+        /// rather than all at once, so filling a big pool visibly takes a
+        /// while and visibly empties the towers. Untreated or contaminated
+        /// water brings its dirt with it for the pump to clear.
+        /// </summary>
+        private void TopUpFromPipes()
+        {
+            float wanted = Mathf.Min(Capacity - litres, Props.pipeLitresPerRareTick);
+            if (wanted <= 0.01f)
+            {
+                return;
+            }
+            int contamination;
+            float got = DubsPlumbing.Pull(Pipe, wanted, out contamination);
+            if (got <= 0f)
+            {
+                return;
+            }
+            float incoming = contamination >= DubsPlumbing.Contaminated ? Props.contaminatedDirt
+                             : contamination >= DubsPlumbing.Untreated ? Props.untreatedDirt
+                             : 0f;
+            dirt = (dirt * litres + incoming * got) / (litres + got);
+            litres += got;
         }
 
         /// <summary>
@@ -589,7 +617,7 @@ namespace EntertainingIdeas
                           + Mathf.RoundToInt(litres) + " / " + Mathf.RoundToInt(Capacity) + "L";
             if (Plumbed)
             {
-                line += " (plumbed in)";
+                line += DubsPlumbing.NetHasWater(Pipe) ? " (plumbed in)" : " (plumbed in, but the towers are dry)";
             }
             else if (Pipe != null)
             {

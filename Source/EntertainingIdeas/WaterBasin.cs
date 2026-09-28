@@ -218,13 +218,26 @@ namespace EntertainingIdeas
     /// <summary>
     /// Dubs Bad Hygiene is a soft dependency: it is reached by reflection so
     /// this assembly never references it and works fine without it.
+    ///
+    /// Water on a plumbed building comes out of the network's water towers
+    /// the way DBH's own hot tub takes it - PlumbingNet.PullWater - so a
+    /// pool that fills itself drains the towers doing it, and learns how
+    /// clean the water it got was. In DBH's lite mode, which does not track
+    /// water, it is free, as it is for DBH's own fixtures.
     /// </summary>
     public static class DubsPlumbing
     {
+        /// <summary>DBH's ContaminationLevel, by value: Treated, Untreated, Contaminated.</summary>
+        public const int Treated = 0;
+        public const int Untreated = 1;
+        public const int Contaminated = 2;
+
         private static bool lookedUp;
         private static PropertyInfo pipeNetProperty;
         private static FieldInfo pipeNetField;
         private static PropertyInfo waterStorageProperty;
+        private static MethodInfo pullWaterMethod;
+        private static PropertyInfo liteModeProperty;
 
         /// <summary>The DBH pipe comp on this thing, if that mod is here and it is piped.</summary>
         public static ThingComp PipeOn(ThingWithComps thing)
@@ -245,61 +258,157 @@ namespace EntertainingIdeas
         }
 
         /// <summary>
-        /// Reads DubsBadHygiene.CompPipe.pipeNet and asks its PlumbingNet what
-        /// it is holding. If their internals ever move, this falls back to
-        /// treating a piped building as supplied rather than breaking it.
+        /// Finds CompPipe.pipeNet, PlumbingNet.WaterStorage and
+        /// PlumbingNet.PullWater(float, out ContaminationLevel) once. If
+        /// their internals ever move, the pieces that are missing fall back
+        /// to treating a piped building as supplied rather than breaking it.
         /// </summary>
-        public static bool NetHasWater(ThingComp pipe)
+        private static void LookUp(ThingComp pipe)
+        {
+            if (lookedUp)
+            {
+                return;
+            }
+            lookedUp = true;
+            try
+            {
+                Type pipeType = pipe.GetType();
+                pipeNetProperty = pipeType.GetProperty("pipeNet");
+                if (pipeNetProperty == null)
+                {
+                    pipeNetField = pipeType.GetField("pipeNet");
+                }
+                Type netType = pipeNetProperty != null
+                    ? pipeNetProperty.PropertyType
+                    : (pipeNetField != null ? pipeNetField.FieldType : null);
+                if (netType != null)
+                {
+                    waterStorageProperty = netType.GetProperty("WaterStorage");
+                    foreach (MethodInfo method in netType.GetMethods())
+                    {
+                        ParameterInfo[] ps = method.GetParameters();
+                        if (method.Name == "PullWater" && ps.Length == 2
+                            && ps[0].ParameterType == typeof(float) && ps[1].IsOut)
+                        {
+                            pullWaterMethod = method;
+                            break;
+                        }
+                    }
+                }
+                Type settings = pipeType.Assembly.GetType("DubsBadHygiene.Settings");
+                if (settings != null)
+                {
+                    liteModeProperty = settings.GetProperty("LiteMode", BindingFlags.Public | BindingFlags.Static);
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Warning("[Entertaining Ideas] Could not read Dubs Bad Hygiene's "
+                            + "plumbing; piped buildings will be treated as supplied. " + ex.Message);
+            }
+        }
+
+        private static bool LiteMode
+        {
+            get
+            {
+                try
+                {
+                    return liteModeProperty != null && (bool)liteModeProperty.GetValue(null, null);
+                }
+                catch
+                {
+                    return false;
+                }
+            }
+        }
+
+        private static object NetOf(ThingComp pipe)
+        {
+            return pipeNetProperty != null
+                ? pipeNetProperty.GetValue(pipe, null)
+                : (pipeNetField != null ? pipeNetField.GetValue(pipe) : null);
+        }
+
+        /// <summary>
+        /// Litres in the towers on this pipe's network. Unlimited when DBH is
+        /// in lite mode or its internals could not be read.
+        /// </summary>
+        public static float NetWater(ThingComp pipe)
         {
             if (pipe == null)
             {
-                return false;
+                return 0f;
             }
-            if (!lookedUp)
+            LookUp(pipe);
+            if (waterStorageProperty == null || LiteMode)
             {
-                lookedUp = true;
-                try
-                {
-                    Type pipeType = pipe.GetType();
-                    pipeNetProperty = pipeType.GetProperty("pipeNet");
-                    if (pipeNetProperty == null)
-                    {
-                        pipeNetField = pipeType.GetField("pipeNet");
-                    }
-                    Type netType = pipeNetProperty != null
-                        ? pipeNetProperty.PropertyType
-                        : (pipeNetField != null ? pipeNetField.FieldType : null);
-                    if (netType != null)
-                    {
-                        waterStorageProperty = netType.GetProperty("WaterStorage");
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Log.Warning("[Entertaining Ideas] Could not read Dubs Bad Hygiene's "
-                                + "plumbing; piped buildings will be treated as supplied. " + ex.Message);
-                }
+                return float.MaxValue;
             }
-
-            if (waterStorageProperty == null)
-            {
-                return true;
-            }
-
             try
             {
-                object net = pipeNetProperty != null
-                    ? pipeNetProperty.GetValue(pipe, null)
-                    : (pipeNetField != null ? pipeNetField.GetValue(pipe) : null);
+                object net = NetOf(pipe);
                 if (net == null)
                 {
-                    return false;   // piped, but not attached to anything
+                    return 0f;   // piped, but not attached to anything
                 }
-                return Convert.ToSingle(waterStorageProperty.GetValue(net, null)) > 0f;
+                return Convert.ToSingle(waterStorageProperty.GetValue(net, null));
             }
             catch
             {
-                return true;
+                return float.MaxValue;
+            }
+        }
+
+        public static bool NetHasWater(ThingComp pipe)
+        {
+            return NetWater(pipe) > 0f;
+        }
+
+        /// <summary>
+        /// Takes up to `litres` from the network's towers. Returns what it
+        /// actually got - less when the towers are running low - and the worst
+        /// ContaminationLevel among the towers it drew from.
+        /// </summary>
+        public static float Pull(ThingComp pipe, float litres, out int contamination)
+        {
+            contamination = Treated;
+            if (pipe == null || litres <= 0f)
+            {
+                return 0f;
+            }
+            float available = NetWater(pipe);
+            if (available == float.MaxValue)
+            {
+                return litres;          // lite mode, or DBH unreadable: supplied
+            }
+            float take = Mathf.Min(litres, available);
+            if (take <= 0f)
+            {
+                return 0f;
+            }
+            if (pullWaterMethod == null)
+            {
+                return take;
+            }
+            try
+            {
+                object net = NetOf(pipe);
+                if (net == null)
+                {
+                    return 0f;
+                }
+                object[] args = { take, null };
+                if (!(bool)pullWaterMethod.Invoke(net, args))
+                {
+                    return 0f;
+                }
+                contamination = args[1] == null ? Treated : Convert.ToInt32(args[1]);
+                return take;
+            }
+            catch
+            {
+                return take;
             }
         }
     }
@@ -315,6 +424,8 @@ namespace EntertainingIdeas
         public int fillWorkTicks = 240;
         /// <summary>Start full when built, so the first soak needs no trip.</summary>
         public bool filledOnSpawn = true;
+        /// <summary>What a soak takes from Dubs Bad Hygiene's water towers when plumbed in.</summary>
+        public float litresPerSoak = 80f;
 
         public CompProperties_WaterBasin()
         {
@@ -406,13 +517,19 @@ namespace EntertainingIdeas
             Fill();
         }
 
-        /// <summary>A soak empties a hand-filled tub; a plumbed one refills itself.</summary>
+        /// <summary>
+        /// A soak empties a hand-filled tub. A plumbed one refills itself,
+        /// and the water for that comes out of the network's towers.
+        /// </summary>
         public void Drain()
         {
             if (!Plumbed)
             {
                 filled = false;
+                return;
             }
+            int contamination;
+            DubsPlumbing.Pull(Pipe, Props.litresPerSoak, out contamination);
         }
 
         public override IEnumerable<Gizmo> CompGetGizmosExtra()
