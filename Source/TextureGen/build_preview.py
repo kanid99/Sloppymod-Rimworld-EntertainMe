@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
-"""Rebuilds About/Preview.png from the textures already on disk.
+"""Rebuilds the texture overview, promo/TexturePreview.png, from the textures
+already on disk.
 
+This used to be the mod's About/Preview.png. That is now the banner in
+Source/Promo, so this writes to promo/ (gitignored) instead of over it.
 Much faster than generate_textures.py, which redraws everything from scratch.
 """
 
@@ -60,7 +63,9 @@ def main():
         if key.startswith("Pinball"):
             px, w, h = trim_sides(px, w, h)
         sprites[key] = (px, w, h)
-    preview.build(sprites, os.path.join(ROOT, "About", "Preview.png"))
+    out = os.path.join(ROOT, "promo")
+    os.makedirs(out, exist_ok=True)
+    preview.build(sprites, os.path.join(out, "TexturePreview.png"))
 
 
 if __name__ == "__main__":

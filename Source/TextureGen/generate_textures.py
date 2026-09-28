@@ -4179,7 +4179,7 @@ def main():
     wanted = [a.lower() for a in sys.argv[1:]]
     if wanted and wanted[0] in ("-h", "--help"):
         print("usage: generate_textures.py [%s]" % " | ".join(sorted(BUILDERS)))
-        print("  no arguments redraws everything and rebuilds About/Preview.png")
+        print("  no arguments redraws everything and rebuilds promo/TexturePreview.png")
         return
 
     unknown = [w for w in wanted if w not in BUILDERS]
@@ -4198,11 +4198,13 @@ def main():
         print("Done (partial). Run Source/TextureGen/build_preview.py to refresh the preview.")
         return
 
+    # The texture overview. About/Preview.png is the banner in Source/Promo,
+    # so this goes to promo/ (gitignored) rather than over it.
     import preview
-    about = os.path.join(ROOT, "About")
-    os.makedirs(about, exist_ok=True)
+    out = os.path.join(ROOT, "promo")
+    os.makedirs(out, exist_ok=True)
     preview.build({k: (v.pixels(), v.w, v.h) for k, v in made.items()},
-                  os.path.join(about, "Preview.png"))
+                  os.path.join(out, "TexturePreview.png"))
     print("Done.")
 
 

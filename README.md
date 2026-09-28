@@ -1,4 +1,4 @@
-# Entertaining Ideas
+# SloppyMods Entertaining Ideas
 
 A RimWorld mod that adds **nineteen recreation ideas — twenty-six buildings and
 a paintable swimming pool** — one for roughly each rung of the tech ladder, so a
@@ -378,12 +378,20 @@ minutes, so the generator takes builder names:
 
 ```bash
 python3 Source/TextureGen/generate_textures.py aquarium karaoke   # seconds
-python3 Source/TextureGen/build_preview.py      # refresh About/Preview.png
+python3 Source/TextureGen/build_preview.py      # texture overview -> promo/
 python3 Source/TextureGen/contact_sheet.py      # every texture on one sheet
 python3 Source/TextureGen/promo_art.py          # release-post graphics -> promo/
 ```
 
 `docs/release-post.md` holds the release-post copy that goes with those images.
+
+The mod's preview image, `About/Preview.png`, is the banner in `Source/Promo/`:
+a page laid out from the shipped textures and rendered to 1280x720 with
+Playwright. Re-render it after changing any art it shows:
+
+```bash
+NODE_PATH=$(npm root -g) node Source/Promo/render_preview.js
+```
 
 They are honest placeholder sprites; swap in hand-drawn art any time by
 replacing the PNGs.

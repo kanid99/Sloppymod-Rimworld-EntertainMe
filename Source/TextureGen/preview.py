@@ -1,4 +1,5 @@
-"""Builds About/Preview.png from the same drawings used for the in-game art."""
+"""Builds the texture overview (promo/TexturePreview.png) from the same drawings
+used for the in-game art. The mod's About/Preview.png is Source/Promo's banner."""
 
 import os
 import sys

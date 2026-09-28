@@ -1,0 +1,66 @@
+<!doctype html>
+<!-- The mod's About/Preview.png, as a page. Every picture on it is one of the
+     textures the game loads, so the preview can never show art the mod does
+     not have. Rendered by render_preview.js at 1280x720 (Steam's 16:9). -->
+<html>
+<head>
+<meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root { --gold: #f0c63c; --ink: #f1efe9; --dim: #b9b9b9; --panel: #1d1d1f; --edge: #3b3b3e; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1280px; height: 720px; overflow: hidden; }
+  body {
+    font-family: "Archivo", "Liberation Sans", sans-serif;
+    background: radial-gradient(ellipse 70% 90% at 72% 45%, #343436 0%, #252527 55%, #1b1b1d 100%);
+    position: relative;
+  }
+  .brand { position: absolute; left: 64px; top: 58px; font-weight: 800; font-size: 28px;
+           letter-spacing: 1.5px; color: var(--dim); }
+  .title { position: absolute; left: 60px; top: 104px; line-height: 1.02; font-weight: 900; }
+  .title .a { display: block; font-size: 68px; color: var(--ink); letter-spacing: 0.5px; }
+  .title .b { display: block; font-size: 100px; color: var(--gold); letter-spacing: 1px; }
+  .rule { position: absolute; left: 64px; top: 296px; width: 318px; height: 5px; background: var(--gold); }
+  .sub { position: absolute; left: 64px; top: 322px; font-weight: 700; font-size: 29px; color: var(--ink); }
+  .row { position: absolute; left: 64px; width: 596px; height: 122px; background: var(--panel);
+         border: 2px solid var(--edge); border-radius: 3px; display: flex;
+         justify-content: space-around; align-items: center; padding: 0 10px; }
+  .row.r1 { top: 414px; } .row.r2 { top: 550px; }
+  .icon { position: relative; width: 96px; height: 96px; }
+  .icon img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; }
+  .pins { position: absolute; left: 690px; top: 0; width: 590px; height: 720px; }
+  .pin { position: absolute; height: 470px; filter: drop-shadow(-10px 14px 14px rgba(0,0,0,0.55)); }
+  .pin img { height: 100%; display: block; }
+</style>
+</head>
+<body>
+  <div class="brand">SLOPPYMODS</div>
+  <div class="title"><span class="a">ENTERTAINING</span><span class="b">IDEAS</span></div>
+  <div class="rule"></div>
+  <div class="sub">37 recreation buildings, tribal to archotech</div>
+
+  <div class="row r1">
+    <div class="icon"><img src="T/KnuckleboneMat.png"></div>
+    <div class="icon"><img src="T/StorytellerStump_south.png"></div>
+    <div class="icon"><img src="T/SoakingTub_south.png"><img src="T/SoakingTubWaterSouth_2.png"></div>
+    <div class="icon"><img src="T/SeedPitBoard.png"></div>
+    <div class="icon"><img src="T/ArmillarySphere.png"><img src="T/ArmillarySphereTurn_0.png"></div>
+  </div>
+  <div class="row r2">
+    <div class="icon"><img src="T/CocktailArcade_south.png"><img src="T/CocktailArcadeScreenSouth_4.png"></div>
+    <div class="icon"><img src="T/KaraokeMachine_south.png"><img src="T/KaraokeMachineSingSouth_1.png"></div>
+    <div class="icon"><img src="T/Aquarium_south.png"><img src="T/AquariumLifeSouth_2.png"></div>
+    <div class="icon"><img src="T/GrandOrreryIcon.png"></div>
+    <div class="icon"><img src="T/HologamePod_south.png"></div>
+  </div>
+
+  <!-- Back to front, each one a step right and a step up. The cabinets are
+       cropped to the machine itself: the texture pads them to a square. -->
+  <div class="pins">
+    <div class="pin" style="left: 8px;   top: 176px;"><img data-crop src="T/PinballClassic_south.png"></div>
+    <div class="pin" style="left: 122px; top: 154px;"><img data-crop src="T/PinballBoomalope_south.png"></div>
+    <div class="pin" style="left: 236px; top: 134px;"><img data-crop src="T/PinballMechRampage_south.png"></div>
+    <div class="pin" style="left: 350px; top: 114px;"><img data-crop src="T/PinballArchotech_south.png"></div>
+  </div>
+</body>
+</html>
