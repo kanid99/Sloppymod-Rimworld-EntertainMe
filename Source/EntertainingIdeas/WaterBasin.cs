@@ -20,6 +20,146 @@ namespace EntertainingIdeas
         void Service();
     }
 
+    /// <summary>
+    /// Marks a serviceable whose service is pouring water in. The colonist
+    /// has to fetch it first, from open water somewhere on the map, rather
+    /// than conjuring it at the building.
+    /// </summary>
+    public interface ICarriedWater
+    {
+    }
+
+    /// <summary>
+    /// Where a colonist can draw water by hand: the edge of any natural
+    /// water on the map - river, lake, marsh, sea - but never a pool, which
+    /// cannot very well be filled from itself.
+    /// </summary>
+    public static class WaterSources
+    {
+        public const string NoneReachable = "No reachable open water to carry from.";
+
+        /// <summary>Terrain rarely changes, so the shoreline is worked out now and then, not per ask.</summary>
+        private const int RefreshTicks = 2500;
+        /// <summary>At most this many pathfinding checks per search.</summary>
+        private const int MaxReachChecks = 10;
+        /// <summary>A failed check rules out candidates this close to it: the same pond, most likely.</summary>
+        private const float SameWaterRadius = 12f;
+
+        private static int cachedMap = -1;
+        private static int cachedAt = int.MinValue;
+        private static readonly List<IntVec3> shore = new List<IntVec3>();
+        private static readonly List<IntVec3> failed = new List<IntVec3>();
+        private static readonly HashSet<int> tried = new HashSet<int>();
+
+        public static bool IsSource(TerrainDef terrain)
+        {
+            return terrain != null && terrain.IsWater && !PoolWater.IsWater(terrain);
+        }
+
+        /// <summary>
+        /// Water cells with dry land on at least one side. A colonist fills a
+        /// bucket at the bank, so the middle of a lake is never a candidate
+        /// and the list stays short even on a map that is mostly sea.
+        /// </summary>
+        private static List<IntVec3> ShoreOf(Map map)
+        {
+            int now = Find.TickManager.TicksGame;
+            if (map.uniqueID == cachedMap && now >= cachedAt && now - cachedAt < RefreshTicks)
+            {
+                return shore;
+            }
+            cachedMap = map.uniqueID;
+            cachedAt = now;
+            shore.Clear();
+            TerrainGrid grid = map.terrainGrid;
+            foreach (IntVec3 cell in map.AllCells)
+            {
+                if (!IsSource(grid.TerrainAt(cell)))
+                {
+                    continue;
+                }
+                for (int i = 0; i < 4; i++)
+                {
+                    IntVec3 next = cell + GenAdj.CardinalDirections[i];
+                    if (next.InBounds(map) && !IsSource(grid.TerrainAt(next)))
+                    {
+                        shore.Add(cell);
+                        break;
+                    }
+                }
+            }
+            return shore;
+        }
+
+        public static bool MapHasWater(Map map)
+        {
+            return map != null && ShoreOf(map).Count > 0;
+        }
+
+        /// <summary>
+        /// The bank that makes the shortest round trip - pawn to water, water
+        /// to where it is going - of those the pawn can actually get to.
+        /// </summary>
+        public static bool TryFind(Pawn pawn, IntVec3 destination, out IntVec3 result)
+        {
+            result = IntVec3.Invalid;
+            Map map = pawn.Map;
+            if (map == null)
+            {
+                return false;
+            }
+            List<IntVec3> cells = ShoreOf(map);
+            tried.Clear();
+            failed.Clear();
+            Danger danger = pawn.NormalMaxDanger();
+            for (int attempt = 0; attempt < MaxReachChecks; attempt++)
+            {
+                int best = -1;
+                float bestCost = float.MaxValue;
+                for (int i = 0; i < cells.Count; i++)
+                {
+                    if (tried.Contains(i))
+                    {
+                        continue;
+                    }
+                    IntVec3 c = cells[i];
+                    float cost = c.DistanceTo(pawn.Position) + c.DistanceTo(destination);
+                    if (cost >= bestCost || NearFailure(c))
+                    {
+                        continue;
+                    }
+                    best = i;
+                    bestCost = cost;
+                }
+                if (best < 0)
+                {
+                    break;
+                }
+                tried.Add(best);
+                IntVec3 candidate = cells[best];
+                if (!candidate.IsForbidden(pawn) && pawn.CanReach(candidate, PathEndMode.Touch, danger))
+                {
+                    result = candidate;
+                    return true;
+                }
+                failed.Add(candidate);
+            }
+            return false;
+        }
+
+        private static bool NearFailure(IntVec3 cell)
+        {
+            for (int i = 0; i < failed.Count; i++)
+            {
+                if (cell.InHorDistOf(failed[i], SameWaterRadius))
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+    }
+
     [DefOf]
     public static class EI_JobDefOf
     {
@@ -139,7 +279,7 @@ namespace EntertainingIdeas
         }
     }
 
-    public class CompWaterBasin : ThingComp, IServiceable
+    public class CompWaterBasin : ThingComp, IServiceable, ICarriedWater
     {
         private bool filled;
 
@@ -237,7 +377,13 @@ namespace EntertainingIdeas
             {
                 return HasWater ? "Plumbed in" : "Plumbed in, but the pipes are dry";
             }
-            return filled ? "Full" : "Empty - needs filling before the next soak";
+            if (filled)
+            {
+                return "Full";
+            }
+            return WaterSources.MapHasWater(parent.Map)
+                ? "Empty - needs filling before the next soak"
+                : "Empty - and there is no open water on this map to carry from";
         }
     }
 
@@ -367,7 +513,8 @@ namespace EntertainingIdeas
 
         public override bool HasJobOnThing(Pawn pawn, Thing t, bool forced = false)
         {
-            if (ServiceableOn(t) == null)
+            IServiceable serviceable = ServiceableOn(t);
+            if (serviceable == null)
             {
                 return false;
             }
@@ -375,18 +522,48 @@ namespace EntertainingIdeas
             {
                 return false;
             }
-            return pawn.CanReserve(t, 1, -1, null, forced);
+            if (!pawn.CanReserve(t, 1, -1, null, forced))
+            {
+                return false;
+            }
+            IntVec3 source;
+            if (serviceable is ICarriedWater && !WaterSources.TryFind(pawn, t.Position, out source))
+            {
+                JobFailReason.Is(WaterSources.NoneReachable);
+                return false;
+            }
+            return true;
         }
 
+        /// <summary>
+        /// Water-carrying jobs get the bank to fill from as their second
+        /// target; everything else is just the building.
+        /// </summary>
         public override Job JobOnThing(Pawn pawn, Thing t, bool forced = false)
         {
             IServiceable serviceable = ServiceableOn(t);
-            return serviceable == null ? null : JobMaker.MakeJob(serviceable.ServiceJob, t);
+            if (serviceable == null)
+            {
+                return null;
+            }
+            if (!(serviceable is ICarriedWater))
+            {
+                return JobMaker.MakeJob(serviceable.ServiceJob, t);
+            }
+            IntVec3 source;
+            if (!WaterSources.TryFind(pawn, t.Position, out source))
+            {
+                return null;
+            }
+            return JobMaker.MakeJob(serviceable.ServiceJob, t, source);
         }
     }
 
     public class JobDriver_ServiceBuilding : JobDriver
     {
+        /// <summary>Filling the buckets at the water's edge.</summary>
+        private const int DrawWaterTicks = 120;
+
         private IServiceable Target
         {
             get
@@ -423,6 +600,15 @@ namespace EntertainingIdeas
                 IServiceable target = Target;
                 return target == null || !target.NeedsService;
             });
+
+            // Water first, from the bank the work giver picked.
+            if (job.targetB.IsValid)
+            {
+                yield return Toils_Goto.GotoCell(TargetIndex.B, PathEndMode.Touch);
+                Toil draw = Toils_General.Wait(DrawWaterTicks, TargetIndex.B);
+                draw.FailOn(() => !WaterSources.IsSource(pawn.Map.terrainGrid.TerrainAt(job.targetB.Cell)));
+                yield return draw;
+            }
 
             yield return Toils_Goto.GotoThing(TargetIndex.A, PathEndMode.Touch);
 

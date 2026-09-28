@@ -11,10 +11,212 @@ namespace EntertainingIdeas
     {
         public static TerrainDef EI_PoolBasin;
         public static TerrainDef EI_PoolWater;
+        public static TerrainDef EI_PoolWaterMurky;
+        public static TerrainDef EI_PoolWaterFoul;
 
         static EI_TerrainDefOf()
         {
             DefOfHelper.EnsureInitializedInCtor(typeof(EI_TerrainDefOf));
+        }
+    }
+
+    /// <summary>
+    /// What pool water looks like at a given dirtiness, and the water line
+    /// shared by a pool with a filter and one whose filter is gone.
+    /// </summary>
+    public static class PoolWater
+    {
+        /// <summary>Dirt at which the water turns visibly murky.</summary>
+        public const float MurkyAt = 0.3f;
+        /// <summary>Dirt at which it is foul, and swimming in it can make a pawn ill.</summary>
+        public const float FoulAt = 0.7f;
+
+        public static bool IsWater(TerrainDef terrain)
+        {
+            return terrain != null
+                   && (terrain == EI_TerrainDefOf.EI_PoolWater
+                       || terrain == EI_TerrainDefOf.EI_PoolWaterMurky
+                       || terrain == EI_TerrainDefOf.EI_PoolWaterFoul);
+        }
+
+        public static bool IsPool(TerrainDef terrain)
+        {
+            return terrain == EI_TerrainDefOf.EI_PoolBasin || IsWater(terrain);
+        }
+
+        public static TerrainDef For(float dirt)
+        {
+            if (dirt >= FoulAt)
+            {
+                return EI_TerrainDefOf.EI_PoolWaterFoul;
+            }
+            return dirt >= MurkyAt ? EI_TerrainDefOf.EI_PoolWaterMurky : EI_TerrainDefOf.EI_PoolWater;
+        }
+
+        public static int WetCount(int cellCount, float litres, float litresPerTile)
+        {
+            float capacity = cellCount * litresPerTile;
+            if (capacity <= 0f)
+            {
+                return 0;
+            }
+            return Mathf.Clamp(Mathf.RoundToInt(cellCount * (litres / capacity)), 0, cellCount);
+        }
+
+        /// <summary>
+        /// Wets the first N cells and dries the rest, so the water line moves
+        /// visibly as the pool fills and drains; the wet ones take the colour
+        /// of how dirty the water is.
+        /// </summary>
+        public static void ApplyWaterLine(Map map, List<IntVec3> cells, int wet, float dirt)
+        {
+            if (map == null)
+            {
+                return;
+            }
+            TerrainDef water = For(dirt);
+            for (int i = 0; i < cells.Count; i++)
+            {
+                TerrainDef wanted = i < wet ? water : EI_TerrainDefOf.EI_PoolBasin;
+                if (map.terrainGrid.TerrainAt(cells[i]) != wanted)
+                {
+                    map.terrainGrid.SetTerrain(cells[i], wanted);
+                }
+            }
+        }
+
+        public static string Describe(float dirt)
+        {
+            if (dirt >= FoulAt)
+            {
+                return "foul (" + dirt.ToStringPercent() + " dirty) - swimmers may fall ill";
+            }
+            if (dirt >= MurkyAt)
+            {
+                return "murky (" + dirt.ToStringPercent() + " dirty)";
+            }
+            return dirt > 0.05f ? "clear (" + dirt.ToStringPercent() + " dirty)" : "clear";
+        }
+    }
+
+    /// <summary>
+    /// The water left behind when a pool's filter is torn down, sold or
+    /// destroyed. It stays where it is and goes stale, slowly evaporating,
+    /// until a new filter is built beside it and takes it back over.
+    /// </summary>
+    public class OrphanPool : IExposable
+    {
+        public List<IntVec3> cells = new List<IntVec3>();
+        public float litres;
+        public float dirt;
+        public float litresPerTile = 20f;
+        public float litresLostPerTilePerDay = 0.6f;
+        public float dirtPerDay = 0.12f;
+
+        public int WetTileCount
+        {
+            get { return PoolWater.WetCount(cells.Count, litres, litresPerTile); }
+        }
+
+        public void ExposeData()
+        {
+            Scribe_Collections.Look(ref cells, "cells", LookMode.Value);
+            Scribe_Values.Look(ref litres, "litres", 0f);
+            Scribe_Values.Look(ref dirt, "dirt", 0f);
+            Scribe_Values.Look(ref litresPerTile, "litresPerTile", 20f);
+            Scribe_Values.Look(ref litresLostPerTilePerDay, "litresLostPerTilePerDay", 0.6f);
+            Scribe_Values.Look(ref dirtPerDay, "dirtPerDay", 0.12f);
+            if (cells == null)
+            {
+                cells = new List<IntVec3>();
+            }
+        }
+    }
+
+    /// <summary>
+    /// Keeps the orphaned pools on a map. Found by the game on its own:
+    /// every MapComponent subclass is added to every map, old saves included.
+    /// </summary>
+    public class MapComponent_Pools : MapComponent
+    {
+        private const int Interval = 250;
+        private List<OrphanPool> orphans = new List<OrphanPool>();
+
+        public MapComponent_Pools(Map map) : base(map)
+        {
+        }
+
+        public List<OrphanPool> Orphans
+        {
+            get { return orphans; }
+        }
+
+        public static MapComponent_Pools On(Map map)
+        {
+            return map == null ? null : map.GetComponent<MapComponent_Pools>();
+        }
+
+        public void Add(OrphanPool pool)
+        {
+            orphans.Add(pool);
+        }
+
+        public void Remove(OrphanPool pool)
+        {
+            orphans.Remove(pool);
+        }
+
+        public OrphanPool OrphanAt(IntVec3 cell)
+        {
+            for (int i = 0; i < orphans.Count; i++)
+            {
+                if (orphans[i].cells.Contains(cell))
+                {
+                    return orphans[i];
+                }
+            }
+            return null;
+        }
+
+        public override void ExposeData()
+        {
+            base.ExposeData();
+            Scribe_Collections.Look(ref orphans, "EI_orphanPools", LookMode.Deep);
+            if (orphans == null)
+            {
+                orphans = new List<OrphanPool>();
+            }
+        }
+
+        public override void MapComponentTick()
+        {
+            base.MapComponentTick();
+            if (orphans.Count == 0 || Find.TickManager.TicksGame % Interval != 0)
+            {
+                return;
+            }
+
+            float days = Interval / 60000f;
+            for (int i = orphans.Count - 1; i >= 0; i--)
+            {
+                OrphanPool pool = orphans[i];
+
+                // Forget any tile the player has since floored over.
+                pool.cells.RemoveAll(c => !c.InBounds(map) || !PoolWater.IsPool(map.terrainGrid.TerrainAt(c)));
+                float capacity = pool.cells.Count * pool.litresPerTile;
+                pool.litres = Mathf.Min(pool.litres, capacity)
+                              - pool.cells.Count * pool.litresLostPerTilePerDay * days;
+                pool.dirt = Mathf.Min(1f, pool.dirt + pool.dirtPerDay * days);
+
+                if (pool.litres <= 0f || pool.cells.Count == 0)
+                {
+                    pool.litres = 0f;
+                    PoolWater.ApplyWaterLine(map, pool.cells, 0, 0f);
+                    orphans.RemoveAt(i);
+                    continue;
+                }
+                PoolWater.ApplyWaterLine(map, pool.cells, pool.WetTileCount, pool.dirt);
+            }
         }
     }
 
@@ -38,6 +240,10 @@ namespace EntertainingIdeas
         public int fillWorkTicks = 320;
         /// <summary>Evaporation and splash-out, per tile of open water per day.</summary>
         public float litresLostPerTilePerDay = 0.6f;
+        /// <summary>How fast standing water goes bad with no pump running, per day (0 clean, 1 foul).</summary>
+        public float dirtPerDay = 0.12f;
+        /// <summary>How fast a running pump clears it again, per day.</summary>
+        public float cleanPerDay = 0.6f;
         /// <summary>Recount the pool's shape this often, in ticks.</summary>
         public int recountInterval = 2000;
 
@@ -47,9 +253,10 @@ namespace EntertainingIdeas
         }
     }
 
-    public class CompPoolController : ThingComp, IServiceable
+    public class CompPoolController : ThingComp, IServiceable, ICarriedWater
     {
         private float litres;
+        private float dirt;
         private CompPowerTrader power;
 
         // Resolved once: a thing's comps are fixed when it is constructed, so
@@ -107,28 +314,29 @@ namespace EntertainingIdeas
             get { return cells; }
         }
 
-        /// <summary>Powered pump plus enough water to swim in.</summary>
+        /// <summary>
+        /// Enough water to swim in. The pump does not have to be running:
+        /// with it off the water goes bad, and colonists swim in it anyway
+        /// until it makes somebody ill.
+        /// </summary>
         public bool SwimReady
         {
-            get
-            {
-                return cells.Count > 0
-                       && (power == null || power.PowerOn)
-                       && WetTileCount > 0;
-            }
+            get { return cells.Count > 0 && WetTileCount > 0; }
+        }
+
+        public float Dirt
+        {
+            get { return dirt; }
+        }
+
+        private bool Pumping
+        {
+            get { return power == null || power.PowerOn; }
         }
 
         private int WetTileCount
         {
-            get
-            {
-                float capacity = Capacity;
-                if (capacity <= 0f)
-                {
-                    return 0;
-                }
-                return Mathf.Clamp(Mathf.RoundToInt(cells.Count * (litres / capacity)), 0, cells.Count);
-            }
+            get { return PoolWater.WetCount(cells.Count, litres, Props.litresPerTile); }
         }
 
         public override void PostSpawnSetup(bool respawningAfterLoad)
@@ -143,36 +351,47 @@ namespace EntertainingIdeas
         {
             base.PostExposeData();
             Scribe_Values.Look(ref litres, "EI_poolLitres", 0f);
+            Scribe_Values.Look(ref dirt, "EI_poolDirt", 0f);
         }
 
 #if RW16
         public override void PostDeSpawn(Map map, DestroyMode mode = DestroyMode.Vanish)
         {
             base.PostDeSpawn(map, mode);
-            DrainCompletely(map);
+            LeaveWaterBehind(map);
         }
 #else
         public override void PostDeSpawn(Map map)
         {
             base.PostDeSpawn(map);
-            DrainCompletely(map);
+            LeaveWaterBehind(map);
         }
 #endif
 
-        /// <summary>Take the filter away and the water goes with it.</summary>
-        private void DrainCompletely(Map map)
+        /// <summary>
+        /// Take the filter away and the water stays, with nothing keeping it
+        /// clean. The map looks after it from here, and a new filter built
+        /// beside it takes it back. The comp keeps nothing, so a filter that
+        /// was only uninstalled does not arrive at its new spot still full.
+        /// </summary>
+        private void LeaveWaterBehind(Map map)
         {
-            if (map == null)
+            MapComponent_Pools pools = MapComponent_Pools.On(map);
+            if (pools != null && cells.Count > 0 && litres > 0f)
             {
-                return;
-            }
-            for (int i = 0; i < cells.Count; i++)
-            {
-                if (map.terrainGrid.TerrainAt(cells[i]) == EI_TerrainDefOf.EI_PoolWater)
+                OrphanPool orphan = new OrphanPool
                 {
-                    map.terrainGrid.SetTerrain(cells[i], EI_TerrainDefOf.EI_PoolBasin);
-                }
+                    cells = new List<IntVec3>(cells),
+                    litres = litres,
+                    dirt = dirt,
+                    litresPerTile = Props.litresPerTile,
+                    litresLostPerTilePerDay = Props.litresLostPerTilePerDay,
+                    dirtPerDay = Props.dirtPerDay
+                };
+                pools.Add(orphan);
             }
+            litres = 0f;
+            dirt = 0f;
             cells.Clear();
         }
 
@@ -217,6 +436,17 @@ namespace EntertainingIdeas
                 litres = Capacity;
             }
 
+            // Standing water goes bad; a running pump clears it. An empty
+            // pool has nothing to go bad, so it refills clean.
+            float days = 250f / 60000f;
+            dirt = Pumping
+                ? Mathf.Max(0f, dirt - Props.cleanPerDay * days)
+                : Mathf.Min(1f, dirt + Props.dirtPerDay * days);
+            if (litres <= 0f)
+            {
+                dirt = 0f;
+            }
+
             ApplyWaterLine();
         }
 
@@ -257,34 +487,50 @@ namespace EntertainingIdeas
                     }
                 }
             }
+
+            TakeOverOrphans(map);
+        }
+
+        /// <summary>
+        /// Water left standing by an earlier filter becomes this one's, dirt
+        /// and all - which is how a pool gone foul is rescued: build a filter
+        /// beside it, power it, and wait for the pump to clear it.
+        /// </summary>
+        private void TakeOverOrphans(Map map)
+        {
+            MapComponent_Pools pools = MapComponent_Pools.On(map);
+            if (pools == null || pools.Orphans.Count == 0 || cells.Count == 0)
+            {
+                return;
+            }
+            HashSet<IntVec3> mine = new HashSet<IntVec3>(cells);
+            List<OrphanPool> orphans = pools.Orphans;
+            for (int i = orphans.Count - 1; i >= 0; i--)
+            {
+                OrphanPool orphan = orphans[i];
+                if (!orphan.cells.Exists(c => mine.Contains(c)))
+                {
+                    continue;
+                }
+                float total = litres + orphan.litres;
+                if (total > 0f)
+                {
+                    dirt = (dirt * litres + orphan.dirt * orphan.litres) / total;
+                }
+                litres = Mathf.Min(Capacity, total);
+                pools.Remove(orphan);
+            }
+            ApplyWaterLine();
         }
 
         private static bool IsPoolCell(Map map, IntVec3 cell)
         {
-            TerrainDef terrain = map.terrainGrid.TerrainAt(cell);
-            return terrain == EI_TerrainDefOf.EI_PoolBasin || terrain == EI_TerrainDefOf.EI_PoolWater;
+            return PoolWater.IsPool(map.terrainGrid.TerrainAt(cell));
         }
 
-        /// <summary>
-        /// Wets the first N cells and dries the rest, so the water line moves
-        /// visibly as the pool fills and drains.
-        /// </summary>
         private void ApplyWaterLine()
         {
-            Map map = parent.Map;
-            if (map == null)
-            {
-                return;
-            }
-            int wet = WetTileCount;
-            for (int i = 0; i < cells.Count; i++)
-            {
-                TerrainDef wanted = i < wet ? EI_TerrainDefOf.EI_PoolWater : EI_TerrainDefOf.EI_PoolBasin;
-                if (map.terrainGrid.TerrainAt(cells[i]) != wanted)
-                {
-                    map.terrainGrid.SetTerrain(cells[i], wanted);
-                }
-            }
+            PoolWater.ApplyWaterLine(parent.Map, cells, WetTileCount, dirt);
         }
 
         // --- IServiceable: a pool off the plumbing is filled by the bucket ---
@@ -322,14 +568,22 @@ namespace EntertainingIdeas
             {
                 line += " (plumbed in)";
             }
-            if (power != null && !power.PowerOn)
+            if (litres > 0f)
             {
-                return line + "\nNo power: the water is going green, and nobody will swim in it.";
+                line += "\nWater: " + PoolWater.Describe(dirt);
+            }
+            if (!Pumping)
+            {
+                line += "\nNo power: the pump is off and the water is going stale.";
             }
             int wet = WetTileCount;
             if (wet < cells.Count)
             {
                 line += "\nFilling: " + wet + " of " + cells.Count + " tiles under water.";
+                if (!Plumbed && !WaterSources.MapHasWater(parent.Map))
+                {
+                    line += "\nNo open water on this map to carry from.";
+                }
             }
             return line;
         }
@@ -348,13 +602,16 @@ namespace EntertainingIdeas
     }
 
     /// <summary>
-    /// Sends a pawn to a pool that is filled and running. Unlike vanilla's
-    /// swimming giver this does not care whether the water is outdoors or how
-    /// cold the map is - an indoor heated pool is the entire point of building
-    /// one - but it does refuse a pool whose pump is off.
+    /// Sends a pawn to a pool with water in it. Unlike vanilla's swimming
+    /// giver this does not care whether the water is outdoors or how cold the
+    /// map is - an indoor heated pool is the entire point of building one. It
+    /// does not care how clean the water is either, which is the risk of
+    /// letting the pump stand idle.
     /// </summary>
     public class JoyGiver_Swim : JoyGiver
     {
+        private const float MaxDistance = 60f;
+
         public override Job TryGiveJob(Pawn pawn)
         {
             if (def.thingDefs == null || pawn.Map == null)
@@ -362,6 +619,7 @@ namespace EntertainingIdeas
                 return null;
             }
 
+            IntVec3 cell;
             for (int i = 0; i < def.thingDefs.Count; i++)
             {
                 Thing filter = GenClosest.ClosestThingReachable(
@@ -370,21 +628,32 @@ namespace EntertainingIdeas
                     ThingRequest.ForDef(def.thingDefs[i]),
                     PathEndMode.Touch,
                     TraverseParms.For(pawn),
-                    60f,
+                    MaxDistance,
                     t => Usable(pawn, t));
-                if (filter == null)
+                if (filter != null && TryFindWetCell(pawn, filter, out cell))
                 {
-                    continue;
+                    return JobMaker.MakeJob(def.jobDef, cell, filter);
                 }
+            }
 
-                IntVec3 cell;
-                if (!TryFindWetCell(pawn, filter, out cell))
+            // A pool whose filter is gone still holds water, and will be
+            // swum in until it has gone bad enough to make somebody ill.
+            MapComponent_Pools pools = MapComponent_Pools.On(pawn.Map);
+            if (pools != null)
+            {
+                List<OrphanPool> orphans = pools.Orphans;
+                for (int i = 0; i < orphans.Count; i++)
                 {
-                    continue;
+                    List<IntVec3> cells = orphans[i].cells;
+                    if (cells.Count == 0 || !cells[0].InHorDistOf(pawn.Position, MaxDistance))
+                    {
+                        continue;
+                    }
+                    if (TryFindWetCell(pawn, cells, out cell))
+                    {
+                        return JobMaker.MakeJob(def.jobDef, cell);
+                    }
                 }
-
-                Job job = JobMaker.MakeJob(def.jobDef, cell, filter);
-                return job;
             }
             return null;
         }
@@ -401,25 +670,34 @@ namespace EntertainingIdeas
 
         public static bool TryFindWetCell(Pawn pawn, Thing filter, out IntVec3 result)
         {
+            CompPoolController pool = filter.TryGetComp<CompPoolController>();
+            if (pool == null)
+            {
+                result = IntVec3.Invalid;
+                return false;
+            }
+            return TryFindWetCell(pawn, pool.Cells, out result);
+        }
+
+        /// <summary>
+        /// A random wet, standable, reachable tile of the given pool. The pool
+        /// knows its own tiles, so this looks only at those rather than
+        /// sweeping the area around it.
+        /// </summary>
+        public static bool TryFindWetCell(Pawn pawn, List<IntVec3> cells, out IntVec3 result)
+        {
             result = IntVec3.Invalid;
             Map map = pawn.Map;
-            CompPoolController pool = filter.TryGetComp<CompPoolController>();
-            if (map == null || pool == null)
+            if (map == null || cells == null)
             {
                 return false;
             }
 
-            // The pool knows its own tiles, so ask it. This used to sweep every
-            // cell within twenty-four tiles of the filter - about eighteen
-            // hundred of them - and run a reachability check on each one that
-            // held water. A swim picks a fresh spot six times, so that was six
-            // sweeps per session, per swimmer.
-            List<IntVec3> cells = pool.Cells;
             scratch.Clear();
             for (int i = 0; i < cells.Count; i++)
             {
                 IntVec3 cell = cells[i];
-                if (map.terrainGrid.TerrainAt(cell) != EI_TerrainDefOf.EI_PoolWater)
+                if (!PoolWater.IsWater(map.terrainGrid.TerrainAt(cell)))
                 {
                     continue;       // the shallow end of a half-filled pool
                 }
@@ -462,24 +740,59 @@ namespace EntertainingIdeas
         private static readonly List<IntVec3> scratch = new List<IntVec3>();
     }
 
+    [DefOf]
+    public static class EI_HediffDefOf
+    {
+        public static HediffDef EI_SwimmersSickness;
+
+        static EI_HediffDefOf()
+        {
+            DefOfHelper.EnsureInitializedInCtor(typeof(EI_HediffDefOf));
+        }
+    }
+
     /// <summary>
     /// Swim about: pick a spot, wade to it, splash around for a while, pick
-    /// another. Ends when the pawn has had enough joy or the pump stops.
+    /// another. Ends when the pawn has had enough joy or the water is gone.
+    /// A swim in foul water can leave the swimmer ill.
     /// </summary>
     public class JobDriver_Swim : JobDriver
     {
         private const int TicksPerSpot = 260;
+        /// <summary>Chance a swim in foul water makes the swimmer ill.</summary>
+        private const float SicknessChance = 0.3f;
+
         private int spotsLeft = 6;
+        private bool swamInFoul;
 
         private Thing Filter
         {
             get { return job.GetTarget(TargetIndex.B).Thing; }
         }
 
+        /// <summary>Swimming in a pool whose filter has gone.</summary>
+        private bool Orphaned
+        {
+            get { return !job.targetB.HasThing; }
+        }
+
+        private List<IntVec3> PoolCells()
+        {
+            if (!Orphaned)
+            {
+                CompPoolController pool = Filter == null ? null : Filter.TryGetComp<CompPoolController>();
+                return pool == null ? null : pool.Cells;
+            }
+            MapComponent_Pools pools = MapComponent_Pools.On(pawn.Map);
+            OrphanPool orphan = pools == null ? null : pools.OrphanAt(job.targetA.Cell);
+            return orphan == null ? null : orphan.cells;
+        }
+
         public override void ExposeData()
         {
             base.ExposeData();
             Scribe_Values.Look(ref spotsLeft, "EI_swimSpotsLeft", 6);
+            Scribe_Values.Look(ref swamInFoul, "EI_swamInFoul", false);
         }
 
         public override bool TryMakePreToilReservations(bool errorOnFailed)
@@ -489,19 +802,33 @@ namespace EntertainingIdeas
 
         protected override IEnumerable<Toil> MakeNewToils()
         {
-            this.EndOnDespawnedOrNull(TargetIndex.B);
+            if (!Orphaned)
+            {
+                this.EndOnDespawnedOrNull(TargetIndex.B);
+            }
             AddFailCondition(delegate
             {
+                if (Orphaned)
+                {
+                    return PoolCells() == null
+                           || !PoolWater.IsWater(pawn.Map.terrainGrid.TerrainAt(job.targetA.Cell));
+                }
                 CompPoolController pool = Filter == null ? null : Filter.TryGetComp<CompPoolController>();
                 return pool == null || !pool.SwimReady;
+            });
+            AddFinishAction(delegate
+            {
+                if (swamInFoul)
+                {
+                    MaybeFallIll();
+                }
             });
 
             Toil pickSpot = ToilMaker.MakeToil("EI_PickSwimSpot");
             pickSpot.initAction = delegate
             {
                 IntVec3 cell;
-                if (spotsLeft > 0 && Filter != null
-                    && JoyGiver_Swim.TryFindWetCell(pawn, Filter, out cell))
+                if (spotsLeft > 0 && JoyGiver_Swim.TryFindWetCell(pawn, PoolCells(), out cell))
                 {
                     spotsLeft--;
                     job.SetTarget(TargetIndex.A, cell);
@@ -517,7 +844,14 @@ namespace EntertainingIdeas
             yield return Toils_Goto.GotoCell(TargetIndex.A, PathEndMode.OnCell);
 
             Toil splash = ToilMaker.MakeToil("EI_Splash");
-            splash.initAction = MarkSwimming;
+            splash.initAction = delegate
+            {
+                MarkSwimming();
+                if (pawn.Map.terrainGrid.TerrainAt(pawn.Position) == EI_TerrainDefOf.EI_PoolWaterFoul)
+                {
+                    swamInFoul = true;
+                }
+            };
             splash.defaultCompleteMode = ToilCompleteMode.Delay;
             splash.defaultDuration = TicksPerSpot;
             splash.handlingFacing = true;
@@ -537,6 +871,30 @@ namespace EntertainingIdeas
             yield return splash;
 
             yield return Toils_Jump.JumpIf(pickSpot, () => spotsLeft > 0);
+        }
+
+        /// <summary>
+        /// Once per swim, not once per mouthful: a long session in foul water
+        /// is no worse than a short one, so there is no reason to keep rolling.
+        /// </summary>
+        private void MaybeFallIll()
+        {
+            swamInFoul = false;
+            if (pawn.Dead || pawn.health == null || !pawn.RaceProps.IsFlesh)
+            {
+                return;
+            }
+            HediffDef sickness = EI_HediffDefOf.EI_SwimmersSickness;
+            if (pawn.health.hediffSet.HasHediff(sickness) || !Rand.Chance(SicknessChance))
+            {
+                return;
+            }
+            pawn.health.AddHediff(HediffMaker.MakeHediff(sickness, pawn));
+            if (pawn.Faction == Faction.OfPlayer)
+            {
+                Messages.Message(pawn.LabelShort + " swallowed foul pool water and has fallen ill.",
+                                 pawn, MessageTypeDefOf.NegativeHealthEvent);
+            }
         }
 
         /// <summary>

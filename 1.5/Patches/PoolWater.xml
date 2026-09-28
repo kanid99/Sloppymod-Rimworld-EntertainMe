@@ -3,7 +3,7 @@
   <!-- 1.5 only: its TerrainDef calls this holdSnow (1.6 renamed it
        holdSnowOrSand) and has no waterBodyType at all. -->
   <Operation Class="PatchOperationAdd">
-    <xpath>/Defs/TerrainDef[defName="EI_PoolWater"]</xpath>
+    <xpath>/Defs/TerrainDef[defName="EI_PoolWater" or defName="EI_PoolWaterMurky" or defName="EI_PoolWaterFoul"]</xpath>
     <value>
       <holdSnow>false</holdSnow>
     </value>

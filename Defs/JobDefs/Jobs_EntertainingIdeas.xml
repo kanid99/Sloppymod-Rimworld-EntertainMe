@@ -169,8 +169,8 @@
     <allowOpportunisticPrefix>true</allowOpportunisticPrefix>
   </JobDef>
 
-  <!-- Swimming: our own driver, so an indoor heated pool counts and a pool
-       with the pump off does not. -->
+  <!-- Swimming: our own driver, so an indoor heated pool counts, and a pool
+       left to go foul can make its swimmers ill. -->
   <JobDef>
     <defName>EI_Swim</defName>
     <driverClass>EntertainingIdeas.JobDriver_Swim</driverClass>

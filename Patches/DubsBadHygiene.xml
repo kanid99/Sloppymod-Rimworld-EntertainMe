@@ -47,6 +47,17 @@
           </value>
         </li>
 
+        <!-- And the pool's filtration unit, so a pipe run can top the pool up
+             instead of colonists carrying it in a load at a time. -->
+        <li Class="PatchOperationAdd">
+          <xpath>/Defs/ThingDef[defName="EI_PoolFilter"]/comps</xpath>
+          <value>
+            <li Class="DubsBadHygiene.CompProperties_Pipe">
+              <mode>Sewage</mode>
+            </li>
+          </value>
+        </li>
+
         <!-- Hand the tubs over to DBH's hydrotherapy category rather than
              running a parallel one. Without DBH they are ordinary solitary
              relaxation; with it, a soak counts as the same kind of recreation

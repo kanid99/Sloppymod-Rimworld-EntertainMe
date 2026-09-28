@@ -94,18 +94,26 @@ with what you drew:
 | Water it holds | 20 L per tile |
 | Power it draws | 80W + 5W per tile |
 | Evaporation | 0.6 L per tile per day |
-| Hand-filling | 120 L per hauled load |
+| Hand-filling | 120 L per load, carried from open water |
+| Going stale | 0.12 dirt per day with the pump off (murky at 0.3, foul at 0.7) |
+| Clearing | 0.6 dirt per day with the pump running |
 | Cap | 220 tiles per unit |
 
 The water level drives what you see: the pool fills outward from the filter and
 drains back toward it, a tile at a time, so the water line is always readable.
-Power is what makes it *usable* — cut it and the water stays where it is, but it
-stops circulating and nobody will get in. Pull the filter out entirely and the
-pool drains.
+Power is what keeps it *clean*. Cut it, or lose the filter altogether, and the
+water stays where it is but goes stale: the pool turns murky within a few days
+and foul a few days after that, each stage its own water terrain. Colonists
+still swim in it, and a swim in foul water has a 30% chance of a day of
+swimmer's sickness. A running filter clears it again in a couple of days; water
+whose filter is gone is kept by the map (`MapComponent_Pools`), and a new filter
+built against it takes it over, dirt and all.
 
-Off the plumbing, colonists carry the water in by the load. With Dubs Bad
-Hygiene installed, pipe the unit in and it keeps itself topped up — see
-[water](#water). On 1.6 swimmers get the game's own swimming pose, because the
+Off the plumbing, colonists carry the water in by the load, from the nearest
+bank of a river, lake or marsh — never out of thin air, so a map with no open
+water needs the plumbing. With Dubs Bad Hygiene installed, pipe the unit in and
+it keeps itself topped up — see [water](#water). The basin is pea gravel, and
+the water shows the gravel through it. On 1.6 swimmers get the game's own swimming pose, because the
 job sets the flag 1.6 reads for it; on 1.5 they wade.
 
 The heated tub is the wood-fired one with the firebox swapped for an element: no
@@ -216,12 +224,12 @@ a turn at the microphone builds both.
 
 ## Water
 
-A tub holds **one soak**. When it runs dry a colonist carries more out to it —
-a hauling job, a few seconds' work, and it never queues for a tub that is
-already full. Both tubs start full when built, so the first soak costs nothing.
+A tub holds **one soak**. When it runs dry a colonist carries more out to it
+from the nearest open water — a hauling job that goes to the bank first, and it
+never queues for a tub that is already full or when no water is in reach. Both tubs start full when built, so the first soak costs nothing.
 
 Plumb a tub in and it fills itself instead. That needs **Dubs Bad Hygiene**: the
-patch below gives both tubs its pipe comp, and `CompWaterBasin` reads the
+patch below gives both tubs and the pool filter its pipe comp, and `CompWaterBasin` reads the
 attached plumbing network to see whether there is actually water in it — a tub
 on a dry or disconnected network reports as much rather than quietly working.
 DBH is reached entirely by reflection, so this assembly never references it and

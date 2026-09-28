@@ -10,7 +10,7 @@
   <TerrainDef>
     <defName>EI_PoolBasin</defName>
     <label>pool basin</label>
-    <description>Glazed tile over a waterproof liner, laid in a shallow dish. Dry, it is a hard floor that is slightly unpleasant to walk on barefoot. Connect it to a pool filtration unit and it stops being a floor.\n\nLay as many tiles as you like, in any shape. The filter will take every tile joined to it edge-to-edge.</description>
+    <description>Rounded pea gravel set in resin over a waterproof liner, laid in a shallow dish. Dry, it is a hard floor that is slightly unpleasant to walk on barefoot. Connect it to a pool filtration unit and it stops being a floor.\n\nLay as many tiles as you like, in any shape. The filter will take every tile joined to it edge-to-edge.</description>
     <texturePath>EntertainingIdeas/Terrain/PoolBasin</texturePath>
     <edgeType>Hard</edgeType>
     <renderPrecedence>310</renderPrecedence>
@@ -42,7 +42,7 @@
   <TerrainDef>
     <defName>EI_PoolWater</defName>
     <label>pool water</label>
-    <description>Filtered, circulating, chest-deep water over glazed tile. Colonists will swim in it for recreation as long as the pump is running.</description>
+    <description>Filtered, circulating, chest-deep water over a pebbled floor. Colonists swim in it for recreation. Without a running pump it goes stale: murky first, then foul.</description>
     <texturePath>EntertainingIdeas/Terrain/PoolWater</texturePath>
     <edgeType>Water</edgeType>
     <renderPrecedence>320</renderPrecedence>
@@ -68,6 +68,52 @@
     <!-- No designationCategory: this is not something the player lays. The
          filtration unit puts it down as the pool fills and takes it back up
          again as the pool drains. -->
+  </TerrainDef>
+
+  <!-- The same water gone bad. The pool swaps between these three as its
+       dirt rises with no pump running and falls again once one is. -->
+  <TerrainDef>
+    <defName>EI_PoolWaterMurky</defName>
+    <label>murky pool water</label>
+    <description>Pool water that has stood too long without a pump turning it over. Cloudy, greenish, and starting to smell. Colonists will still swim in it.</description>
+    <texturePath>EntertainingIdeas/Terrain/PoolWaterMurky</texturePath>
+    <edgeType>Water</edgeType>
+    <renderPrecedence>320</renderPrecedence>
+    <pathCost>18</pathCost>
+    <statBases>
+      <Beauty>0</Beauty>
+      <Cleanliness>0</Cleanliness>
+      <WorkToBuild>320</WorkToBuild>
+    </statBases>
+    <takeSplashes>true</takeSplashes>
+    <takeFootprints>false</takeFootprints>
+    <extinguishesFire>true</extinguishesFire>
+    <layerable>true</layerable>
+    <affordances>
+      <li>Light</li>
+    </affordances>
+  </TerrainDef>
+
+  <TerrainDef>
+    <defName>EI_PoolWaterFoul</defName>
+    <label>foul pool water</label>
+    <description>Stagnant, algae-choked water with a scum on top. Colonists will still swim in it, and some of them will fall ill for it. A running filter will clear it in a couple of days.</description>
+    <texturePath>EntertainingIdeas/Terrain/PoolWaterFoul</texturePath>
+    <edgeType>Water</edgeType>
+    <renderPrecedence>320</renderPrecedence>
+    <pathCost>18</pathCost>
+    <statBases>
+      <Beauty>-4</Beauty>
+      <Cleanliness>-0.6</Cleanliness>
+      <WorkToBuild>320</WorkToBuild>
+    </statBases>
+    <takeSplashes>true</takeSplashes>
+    <takeFootprints>false</takeFootprints>
+    <extinguishesFire>true</extinguishesFire>
+    <layerable>true</layerable>
+    <affordances>
+      <li>Light</li>
+    </affordances>
   </TerrainDef>
 
 </Defs>

@@ -3268,50 +3268,266 @@ def armillary_sphere_frames(total=12):
 # 22. Swimming pool: two terrains and the filtration unit that fills them
 # ---------------------------------------------------------------------------
 
-def _tile_grid(c, size, tile, grout, colors, seed=1):
-    """Seamless square-tile pattern. Wraps because the grid divides the size."""
-    n = size // tile
-    state = seed
-    c.rect(0, 0, size, size, grout)
+POOL_TEX = 512
+POOL_PEBBLE = 9          # mean pebble spacing, in pixels
+
+
+def _hash01(*values):
+    """A repeatable 0..1 from integers: the same pebble gets the same colour
+    in every texture, so the gravel lines up under all three waters."""
+    h = 2166136261
+    for v in values:
+        h = ((h ^ (v & 0xFFFFFFFF)) * 16777619) & 0xFFFFFFFF
+    h ^= h >> 13
+    h = (h * 1274126177) & 0xFFFFFFFF
+    h ^= h >> 16
+    return h / 4294967295.0
+
+
+def _torus_points(size, spacing, seed):
+    """One jittered point per grid square, on a torus so the texture tiles."""
+    n = size // spacing
+    pts = {}
     for gy in range(n):
         for gx in range(n):
-            state = (state * 1103515245 + 12345) & 0x7FFFFFFF
-            col = colors[state % len(colors)]
-            x0, y0 = gx * tile, gy * tile
-            c.rect(x0 + 1.5, y0 + 1.5, x0 + tile - 1.5, y0 + tile - 1.5, col, 2)
+            jx = _hash01(gx, gy, seed, 1)
+            jy = _hash01(gx, gy, seed, 2)
+            pts[(gx, gy)] = ((gx + 0.1 + 0.8 * jx) * spacing,
+                             (gy + 0.1 + 0.8 * jy) * spacing)
+    return n, pts
+
+
+def _voronoi_at(n, pts, spacing, x, y):
+    """(nearest key, dx, dy, F1, F2, second key) at a float position on the torus."""
+    gx = int(x // spacing)
+    gy = int(y // spacing)
+    f1 = f2 = 1e9
+    key = key2 = None
+    bdx = bdy = 0.0
+    for oy in (-1, 0, 1):
+        cy = gy + oy
+        wy = cy % n
+        shift_y = (cy - wy) * spacing
+        for ox in (-1, 0, 1):
+            cx = gx + ox
+            wx = cx % n
+            px, py = pts[(wx, wy)]
+            dx = x - (px + (cx - wx) * spacing)
+            dy = y - (py + shift_y)
+            d = dx * dx + dy * dy
+            if d < f1:
+                f2, key2 = f1, key
+                f1, key = d, (wx, wy)
+                bdx, bdy = dx, dy
+            elif d < f2:
+                f2, key2 = d, (wx, wy)
+    return key, bdx, bdy, f1 ** 0.5, f2 ** 0.5, key2
+
+
+def _voronoi(size, spacing, seed, warp=None, warp_amount=0.0):
+    """Per pixel: (nearest point's grid key, its offset dx, dy, F1, F2).
+    Distances wrap, so a pebble cut by the right edge carries on at the left.
+    `warp`, two wrapping noise fields, bends the cell borders."""
+    n, pts = _torus_points(size, spacing, seed)
+    out = [None] * (size * size)
+    for y in range(size):
+        for x in range(size):
+            px, py = x + 0.5, y + 0.5
+            if warp:
+                i = y * size + x
+                px += (warp[0][i] - 0.5) * warp_amount
+                py += (warp[1][i] - 0.5) * warp_amount
+            out[y * size + x] = _voronoi_at(n, pts, spacing, px % size, py % size)[:5]
+    return out
+
+
+def _stone_radii(size, spacing, seed):
+    """Each pebble's radius: well over half the gap to its nearest
+    neighbour, so the stones press together - flattened where they meet -
+    with grit showing only in the pockets between them."""
+    n, pts = _torus_points(size, spacing, seed)
+    radii = {}
+    for (gx, gy), (px, py) in pts.items():
+        best = 1e9
+        for oy in (-1, 0, 1):
+            for ox in (-1, 0, 1):
+                if ox == 0 and oy == 0:
+                    continue
+                cx, cy = gx + ox, gy + oy
+                qx, qy = pts[(cx % n, cy % n)]
+                qx += (cx - cx % n) * spacing
+                qy += (cy - cy % n) * spacing
+                best = min(best, ((qx - px) ** 2 + (qy - py) ** 2) ** 0.5)
+        radii[(gx, gy)] = best * (0.64 + 0.14 * _hash01(gx, gy, 6))
+    return radii
+
+
+def _torus_noise(size, cells, seed):
+    """Smooth value noise that wraps; `cells` lattice squares across."""
+    step = size / float(cells)
+    vals = [[_hash01(i, j, seed, 7) for i in range(cells)] for j in range(cells)]
+    out = [0.0] * (size * size)
+    for y in range(size):
+        fy = y / step
+        j0 = int(fy)
+        ty = fy - j0
+        ty = ty * ty * (3 - 2 * ty)
+        j1 = (j0 + 1) % cells
+        j0 %= cells
+        for x in range(size):
+            fx = x / step
+            i0 = int(fx)
+            tx = fx - i0
+            tx = tx * tx * (3 - 2 * tx)
+            i1 = (i0 + 1) % cells
+            i0 %= cells
+            top = vals[j0][i0] + (vals[j0][i1] - vals[j0][i0]) * tx
+            bot = vals[j1][i0] + (vals[j1][i1] - vals[j1][i0]) * tx
+            out[y * size + x] = top + (bot - top) * ty
+    return out
+
+
+def _fbm(size, seed, octaves=((4, 0.55), (8, 0.3), (16, 0.15))):
+    layers = [(_torus_noise(size, cells, seed + k), w) for k, (cells, w) in enumerate(octaves)]
+    return [sum(layer[i] * w for layer, w in layers) for i in range(size * size)]
+
+
+GRAVEL_PALETTE = [
+    (196, 188, 174), (180, 171, 157), (212, 206, 193), (163, 156, 146),
+    (202, 188, 164), (146, 140, 133), (222, 218, 208), (188, 168, 142),
+    (190, 183, 173), (172, 166, 158),
+]
+GRAVEL_SAND = (132, 124, 110)
+
+
+_gravel_cache = {}
+
+
+def _gravel(size=POOL_TEX):
+    """Rounded pea gravel on a bed of grit, lit from the upper left. Returns
+    a list of (r, g, b) floats. Every pebble is a disc - clipped where it
+    presses against a neighbour - and domed by how far in from its own rim a
+    pixel sits, so the stones read as round rather than as crazy paving."""
+    if size in _gravel_cache:
+        return _gravel_cache[size]
+    cells = _voronoi(size, POOL_PEBBLE, 11)
+    radii = _stone_radii(size, POOL_PEBBLE, 11)
+    out = []
+    for y in range(size):
+        for x in range(size):
+            key, dx, dy, f1, f2 = cells[y * size + x]
+            gx, gy = key
+            radius = radii[key]
+            # Distance in from the stone's rim: its own circle, or the border
+            # with the neighbour it is pressed against, whichever is nearer.
+            inset = min(radius - f1, (f2 - f1) * 0.5)
+            grit = 0.9 + 0.2 * _hash01(x, y, 12)
+            sand = tuple(GRAVEL_SAND[k] * grit for k in range(3))
+            if inset <= 0.0:
+                out.append(sand)
+                continue
+            base = GRAVEL_PALETTE[int(_hash01(gx, gy, 3) * len(GRAVEL_PALETTE))]
+            tone = 0.93 + 0.12 * _hash01(gx, gy, 4)
+            rim = min(1.0, inset / (radius * 0.55))
+            dome = 0.7 + 0.3 * (1 - (1 - rim) ** 2)
+            light = (-dx - dy) / (max(1.0, radius) * 1.414)
+            shade = tone * dome * (1.0 + 0.14 * light)
+            col = [min(255.0, base[k] * shade * (0.98 + 0.04 * _hash01(x, y, 9))) for k in range(3)]
+            if rim > 0.5 and light > 0.45:
+                col = [min(255.0, c + 22 * (light - 0.45)) for c in col]
+            # Soften the first pixel of rim into the grit.
+            if inset < 1.0:
+                col = [sand[k] + (col[k] - sand[k]) * inset for k in range(3)]
+            out.append(tuple(col))
+    _gravel_cache[size] = out
+    return out
+
+
+def _save_pixels(name, size, rgb):
+    buf = bytearray()
+    for r, g, b in rgb:
+        buf += bytes((int(max(0, min(255, r))), int(max(0, min(255, g))),
+                      int(max(0, min(255, b))), 255))
+    os.makedirs(TERRAIN, exist_ok=True)
+    write_png(os.path.join(TERRAIN, "%s.png" % name), size, size, bytes(buf))
+    print("  Terrain/%s.png  (%dx%d)" % (name, size, size))
+
+
+def _caustics(size, seed):
+    """Bright wavering lines where a larger Voronoi's cells meet - the net of
+    light a rippling surface throws on the floor under it. The cells are
+    domain-warped so the lines wander instead of running ruler-straight."""
+    warp = (_torus_noise(size, 5, seed + 1), _torus_noise(size, 5, seed + 2))
+    fine = (_torus_noise(size, 16, seed + 3), _torus_noise(size, 16, seed + 4))
+    both = ([warp[0][i] * 0.8 + fine[0][i] * 0.2 for i in range(size * size)],
+            [warp[1][i] * 0.8 + fine[1][i] * 0.2 for i in range(size * size)])
+    cells = _voronoi(size, 64, seed, both, 60.0)
+    out = []
+    for key, dx, dy, f1, f2 in cells:
+        edge = (f2 - f1) * 0.5
+        out.append(max(0.0, 1.0 - edge / 3.2) ** 2.2)
+    return out
 
 
 def pool_basin_terrain():
-    c = Canvas(256, 256, ss=2)
-    _tile_grid(c, 256, 32, (150, 156, 158, 255),
-               [(214, 220, 222, 255), (206, 213, 216, 255),
-                (219, 226, 228, 255), (200, 208, 212, 255)], seed=7)
-    save_terrain(c, "PoolBasin")
-    return c
+    size = POOL_TEX
+    _save_pixels("PoolBasin", size, _gravel(size))
+
+
+def _pool_water(name, gravel_seen, tint, haze, caustic, murk=None, scum=None, specks=None):
+    """Gravel seen through water: `gravel_seen` of the floor shows through a
+    `tint`ed haze, with optional caustics, cloudiness, algae and floating scum."""
+    size = POOL_TEX
+    gravel = _gravel(size)
+    lights = _caustics(size, 23) if caustic else None
+    cloud = _fbm(size, 31) if murk else None
+    algae = _fbm(size, 57, ((3, 0.55), (6, 0.33), (12, 0.12))) if scum else None
+    out = []
+    for i, (r, g, b) in enumerate(gravel):
+        col = [haze[k] + (gravel_seen * (r, g, b)[k] * tint[k] / 255.0) for k in range(3)]
+        if lights:
+            glow = lights[i] * caustic
+            col = [col[k] + glow * (230, 250, 255)[k] / 255.0 * 70 for k in range(3)]
+        if cloud:
+            c0, c1, amount = murk
+            t = cloud[i]
+            cloud_col = [c0[k] + (c1[k] - c0[k]) * t for k in range(3)]
+            col = [col[k] + (cloud_col[k] - col[k]) * amount for k in range(3)]
+        if algae:
+            lo, hi, colour = scum
+            t = (algae[i] - lo) / (hi - lo)
+            if t > 0:
+                t = min(1.0, t) ** 0.8
+                mottled = 0.85 + 0.3 * _hash01(i, 5)
+                col = [col[k] + (colour[k] * mottled - col[k]) * t * 0.85 for k in range(3)]
+        out.append(col)
+    if specks:
+        colour, count, seed = specks
+        for n in range(count):
+            x = int(_hash01(n, seed, 1) * size)
+            y = int(_hash01(n, seed, 2) * size)
+            rad = 1 + int(_hash01(n, seed, 3) * 2.4)
+            for oy in range(-rad, rad + 1):
+                for ox in range(-rad, rad + 1):
+                    if ox * ox + oy * oy <= rad * rad:
+                        j = ((y + oy) % size) * size + (x + ox) % size
+                        a = 0.55 if ox * ox + oy * oy == rad * rad else 0.8
+                        out[j] = [out[j][k] + (colour[k] - out[j][k]) * a for k in range(3)]
+    _save_pixels(name, size, out)
 
 
 def pool_water_terrain():
-    c = Canvas(256, 256, ss=2)
-    # The same tiling, read through water: darker, bluer, with caustics on top.
-    _tile_grid(c, 256, 32, (28, 84, 108, 255),
-               [(56, 134, 164, 255), (48, 124, 154, 255),
-                (62, 142, 172, 255), (44, 118, 148, 255)], seed=7)
-    c.rect(0, 0, 256, 256, (40, 130, 180, 90))
-    state = 99
-    for _ in range(90):
-        state = (state * 1103515245 + 12345) & 0x7FFFFFFF
-        x = state % 256
-        state = (state * 1103515245 + 12345) & 0x7FFFFFFF
-        y = state % 256
-        state = (state * 1103515245 + 12345) & 0x7FFFFFFF
-        r = 5 + state % 11
-        # Drawn four times so a blob crossing an edge comes back on the other.
-        for ox in (0, 256, -256):
-            for oy in (0, 256, -256):
-                if abs(x + ox - 128) < 128 + r and abs(y + oy - 128) < 128 + r:
-                    c.ring(x + ox, y + oy, r, r - 2.2, (196, 236, 250, 46))
-    save_terrain(c, "PoolWater")
-    return c
+    # Clear: the gravel reads plainly through blue water, under a net of light.
+    _pool_water("PoolWater", 0.62, (150, 225, 245), (22, 74, 104), caustic=0.75)
+    # Murky: cloudy and green, the floor half lost, the light gone flat.
+    _pool_water("PoolWaterMurky", 0.4, (170, 200, 150), (50, 78, 52), caustic=0.18,
+                murk=((64, 92, 58), (96, 112, 64), 0.38),
+                specks=((120, 128, 80), 260, 5))
+    # Foul: the floor gone, algae mats on a dark green soup, scum and bubbles.
+    _pool_water("PoolWaterFoul", 0.1, (150, 170, 110), (36, 50, 26), caustic=0.0,
+                murk=((40, 54, 26), (70, 80, 34), 0.7),
+                scum=(0.46, 0.78, (112, 124, 46)),
+                specks=((150, 150, 104), 520, 8))
 
 
 def _pool_filter_view(facing):

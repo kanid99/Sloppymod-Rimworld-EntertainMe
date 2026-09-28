@@ -209,8 +209,9 @@
     </requiredCapacities>
   </JoyGiverDef>
 
-  <!-- Ours, so a pool with no water or no power is never offered, and so an
-       indoor pool counts even when vanilla would call it too cold to swim. -->
+  <!-- Ours, so a pool with no water is never offered, a pool whose filter is
+       gone still is, and an indoor pool counts even when vanilla would call
+       it too cold to swim. -->
   <JoyGiverDef>
     <defName>EI_Swim</defName>
     <giverClass>EntertainingIdeas.JoyGiver_Swim</giverClass>

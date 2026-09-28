@@ -1877,7 +1877,7 @@
   <ThingDef ParentName="EI_JoyBuildingBase">
     <defName>EI_PoolFilter</defName>
     <label>pool filtration unit</label>
-    <description>A sand filter, a circulation pump and a chlorinator in one housing. Stand it against any edge of a pool basin and it takes charge of every basin tile joined to that one, so a pool is whatever shape you painted rather than whatever shape somebody else decided on.\n\nA bigger pool holds more water and costs more to circulate: both the fill and the power draw scale with the number of tiles. Off the plumbing, colonists carry the water in by hand, a load at a time. With Dubs Bad Hygiene installed, pipe it in and it keeps itself topped up.\n\nCut the power and the water stays, but it stops circulating and nobody will get in it.</description>
+    <description>A sand filter, a circulation pump and a chlorinator in one housing. Stand it against any edge of a pool basin and it takes charge of every basin tile joined to that one, so a pool is whatever shape you painted rather than whatever shape somebody else decided on.\n\nA bigger pool holds more water and costs more to circulate: both the fill and the power draw scale with the number of tiles. Off the plumbing, colonists carry the water in by hand from the nearest river, lake or marsh, a load at a time. With Dubs Bad Hygiene installed, pipe it in and it keeps itself topped up.\n\nCut the power, or lose the unit altogether, and the water stays but goes stale: murky within a few days, then foul, and colonists who swim in foul water can fall ill. A running unit clears it again.</description>
     <graphicData>
       <texPath>EntertainingIdeas/Buildings/PoolFilter</texPath>
       <graphicClass>Graphic_Multi</graphicClass>
