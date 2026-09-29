@@ -1757,6 +1757,11 @@ def cocktail_climb_title_frames(total=8):
 # chair is drawn on top of it, so only the armrests and the air around the
 # chair are actually visible while it is running.
 # ---------------------------------------------------------------------------
+# The chair's outline, in texture pixels. The chair is drawn 1.3 tiles wide
+# from a 128px canvas; 3px matches vanilla furniture's line on screen.
+MC_OUTLINE = 3.0
+
+
 def massage_chair():
     """Shaped like vanilla's armchair: soft rounded upholstery seen from above,
     a tall back, padded arms, and a light neutral palette so the stuff colour
@@ -1785,7 +1790,7 @@ def massage_chair():
     foot = (34, 104, 94, 122, 10)
     pieces = (back, arm_l, arm_r, seat, foot)
 
-    WEIGHT = 5.0                                               # silhouette weight
+    WEIGHT = MC_OUTLINE                                        # silhouette weight
     for x0, y0, x1, y1, r in pieces:                           # pass 1: outline
         c.rect(x0 - WEIGHT, y0 - WEIGHT, x1 + WEIGHT, y1 + WEIGHT, DARK, r + WEIGHT)
     for x0, y0, x1, y1, r in pieces:                           # pass 2: fill
@@ -1871,7 +1876,7 @@ def massage_chair_east():
     arm = _pill((36, 66), (90, 66), 13, dk)
     leg = _pill((106, 76), (116, 102), 11, dk)
     base = [("rect", 38, 90, 94, 118, 10, dk)]
-    silhouette(c, back + head + seat + arm + leg + base, 5.0)
+    silhouette(c, back + head + seat + arm + leg + base, MC_OUTLINE)
     c.rect(40, 94, 92, 116, darker(dk, 0.86), 8)                         # base
     for t, r in ((0.08, 13), (0.5, 13), (0.92, 12)):                      # backrest cushions, stacked
         px_, py_ = _mc_side_point(t, 0.5)
@@ -1908,7 +1913,7 @@ def massage_chair_north():
     arm_l = ("rect", 6, 56, 32, 108, 12, MC_PALE_DK)
     arm_r = ("rect", 96, 56, 122, 108, 12, MC_PALE_DK)
     base = ("rect", 30, 92, 98, 118, 8, MC_PALE_DK)
-    silhouette(c, [back, arm_l, arm_r, base], 5.0)
+    silhouette(c, [back, arm_l, arm_r, base], MC_OUTLINE)
     for ax in (6, 96):
         c.rect(ax + 3, 58, ax + 23, 104, MC_PALE, 10)
         c.ellipse(ax + 13, 66, 8, 7, MC_PALE_LT)
