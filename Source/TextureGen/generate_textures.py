@@ -22,6 +22,7 @@ ROOT = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), 
 OUT = os.path.join(ROOT, "Textures", "EntertainingIdeas", "Buildings")
 TERRAIN = os.path.join(ROOT, "Textures", "EntertainingIdeas", "Terrain")
 UI = os.path.join(ROOT, "Textures", "EntertainingIdeas", "UI")
+TERRAIN_FX = os.path.join(ROOT, "Textures", "EntertainingIdeas", "Terrain", "PoolEdge")
 
 DARK = (26, 22, 20, 255)          # shared outline colour
 
@@ -3781,6 +3782,103 @@ def plumbing_icon():
     print("  UI/Plumbing.png  (64x64)")
 
 
+# The pool's rim, drawn over its terrain by SectionLayer_PoolEdges: coping on
+# every side that meets something that is not pool, the far (north) wall seen
+# under its coping because the pool is sunk, and the fittings - drains,
+# skimmers, return jets, a ladder. Strips are drawn with their outer edge at
+# the top of the texture; the layer turns them to face each side.
+PE_STONE = (214, 208, 196, 255)
+PE_STONE_LT = (234, 230, 222, 255)
+PE_STONE_DK = (168, 160, 148, 255)
+PE_HAIR = (60, 56, 50, 255)
+PE_LIP = (90, 86, 80, 255)
+PE_TILE = (178, 206, 218, 255)
+PE_TILE_DK = (132, 164, 180, 255)
+PE_STEEL = (196, 202, 210, 255)
+PE_STEEL_DK = (112, 118, 128, 255)
+
+
+def _pe_save(c, name):
+    c.save(os.path.join(TERRAIN_FX, "%s.png" % name))
+
+
+def pool_edge_textures():
+    os.makedirs(TERRAIN_FX, exist_ok=True)
+    # Coping: 1 tile long, outer hairline at the top, the water-side lip below.
+    c = Canvas(128, 32)
+    c.rect(0, 0, 128, 32, PE_STONE)
+    for bx in range(0, 128, 64):
+        tone = 0.96 + 0.08 * _hash01(bx, 3)
+        c.rect(bx, 4, bx + 64, 27, tuple(int(v * tone) for v in PE_STONE[:3]) + (255,))
+        c.line(bx, 3, bx, 28, PE_STONE_DK, 1.4)
+    c.rect(0, 4, 128, 8, PE_STONE_LT)
+    c.rect(0, 0, 128, 3.5, PE_HAIR)
+    c.rect(0, 27, 128, 32, PE_LIP)
+    _pe_save(c, "PoolCoping")
+    # Corner caps, 32 square: outer (hairline on two outside edges) and inner.
+    c = Canvas(32, 32)
+    c.rect(0, 0, 32, 32, PE_STONE)
+    c.rect(3, 3, 32, 8, PE_STONE_LT)
+    c.rect(0, 0, 32, 3.5, PE_HAIR)
+    c.rect(0, 0, 3.5, 32, PE_HAIR)
+    _pe_save(c, "PoolCopingCornerOuter")
+    c = Canvas(32, 32)
+    c.rect(0, 0, 32, 32, PE_STONE)
+    c.rect(0, 0, 32, 5, PE_STONE_LT)
+    c.rect(0, 27, 32, 32, PE_LIP)
+    c.rect(27, 0, 32, 32, PE_LIP)
+    _pe_save(c, "PoolCopingCornerInner")
+    # The far wall under the north coping: tiles, and now and then a fitting.
+    for name in ("PoolWallFace", "PoolWallFaceSkimmer", "PoolWallFaceJet"):
+        c = Canvas(128, 40)
+        c.rect(0, 0, 128, 40, PE_TILE_DK)
+        for x in range(0, 128, 32):
+            c.line(x, 0, x, 40, PE_TILE, 1.2)
+        c.line(0, 20, 128, 20, PE_TILE, 1.2)
+        c.rect(0, 0, 128, 5, (70, 90, 100, 180))                        # shadow under the coping
+        if name.endswith("Skimmer"):
+            c.rect(38, 6, 90, 26, (44, 48, 56, 255), 2)
+            c.rect(40, 6, 88, 11, PE_STEEL_DK, 1)
+        elif name.endswith("Jet"):
+            c.circle(64, 20, 6, PE_STEEL_DK)
+            c.circle(64, 20, 4.4, PE_STEEL)
+            c.circle(64, 20, 1.8, (40, 44, 50, 255))
+        _pe_save(c, name)
+    # Side walls, glimpsed along the east and west edges.
+    c = Canvas(16, 128)
+    c.rect(0, 0, 16, 128, PE_TILE_DK[:3] + (200,))
+    for y in range(0, 128, 32):
+        c.line(0, y, 16, y, PE_TILE[:3] + (200,), 1)
+    c.rect(0, 0, 4, 128, (70, 90, 100, 150))
+    _pe_save(c, "PoolWallSide")
+    # A floor drain, and the same seen through clear water.
+    for name, wet in (("PoolDrain", False), ("PoolDrainWet", True)):
+        c = Canvas(64, 52)
+        a = 150 if wet else 255
+        def tint(col):
+            if not wet:
+                return col
+            return tuple(int(col[k] * 0.62 + (60, 130, 170)[k] * 0.38) for k in range(3)) + (a,)
+        c.ellipse(32, 26, 28, 22, tint(DARK))
+        c.ellipse(32, 26, 25, 19.5, tint(PE_STEEL))
+        for k in range(-3, 4):
+            x = 32 + k * 6
+            half = 19 * math.sqrt(max(0.0, 1 - (k * 6 / 25.0) ** 2))
+            c.line(x, 26 - half + 2, x, 26 + half - 2, tint(PE_STEEL_DK), 2.2)
+        _pe_save(c, name)
+    # The ladder: rails over the coping from the deck (bottom) into the pool.
+    c = Canvas(64, 96)
+    for x in (18, 46):
+        c.line(x, 94, x, 10, PE_STEEL_DK, 7)
+        c.line(x, 94, x, 10, PE_STEEL, 4.2)
+        c.line(x - 1, 90, x - 1, 14, (236, 240, 246, 255), 1.2)
+    for y in (22, 40, 58):
+        c.line(18, y, 46, y, PE_STEEL_DK, 5)
+        c.line(18, y, 46, y, PE_STEEL, 3)
+    _pe_save(c, "PoolLadder")
+    print("  Terrain/PoolEdge/*  (coping, corners, walls, drains, ladder)")
+
+
 def _pool_filter_view(facing):
     """A filter tank and a pump on a skid. The pump, its fan cover and the
     control box face the way the unit does; the tank stands taller than the
@@ -4348,6 +4446,7 @@ def _build_pool():
     pool_water_terrain()
     hand_fill_icon()
     plumbing_icon()
+    pool_edge_textures()
     return {"PoolFilter": pool_filter()}
 
 

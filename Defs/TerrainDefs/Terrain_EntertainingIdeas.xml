@@ -12,8 +12,11 @@
     <label>pool basin</label>
     <description>Rounded pea gravel set in resin over a waterproof liner, laid in a shallow dish. Dry, it is a hard floor that is slightly unpleasant to walk on barefoot. Connect it to a pool filtration unit and it stops being a floor.\n\nLay as many tiles as you like, in any shape. The filter will take every tile joined to it edge-to-edge.</description>
     <texturePath>EntertainingIdeas/Terrain/PoolBasin</texturePath>
+    <!-- Above every natural ground (sand is 350), so soil does not fade over
+         the pool's edge; SectionLayer_PoolEdges draws the coping over the
+         hard edge this leaves. -->
     <edgeType>Hard</edgeType>
-    <renderPrecedence>310</renderPrecedence>
+    <renderPrecedence>360</renderPrecedence>
     <pathCost>2</pathCost>
     <statBases>
       <Beauty>1</Beauty>
@@ -44,8 +47,8 @@
     <label>pool water</label>
     <description>Filtered, circulating, chest-deep water over a pebbled floor. Colonists swim in it for recreation. Without a running pump it goes stale: murky first, then foul.</description>
     <texturePath>EntertainingIdeas/Terrain/PoolWater</texturePath>
-    <edgeType>Water</edgeType>
-    <renderPrecedence>320</renderPrecedence>
+    <edgeType>Hard</edgeType>
+    <renderPrecedence>362</renderPrecedence>
     <!-- Wading is slower than walking, but this is a pool, not a river: it
          must not be so expensive that pawns path all the way around it. -->
     <pathCost>18</pathCost>
@@ -77,8 +80,8 @@
     <label>murky pool water</label>
     <description>Pool water that has stood too long without a pump turning it over. Cloudy, greenish, and starting to smell. Colonists will still swim in it.</description>
     <texturePath>EntertainingIdeas/Terrain/PoolWaterMurky</texturePath>
-    <edgeType>Water</edgeType>
-    <renderPrecedence>320</renderPrecedence>
+    <edgeType>Hard</edgeType>
+    <renderPrecedence>362</renderPrecedence>
     <pathCost>18</pathCost>
     <statBases>
       <Beauty>0</Beauty>
@@ -99,8 +102,8 @@
     <label>foul pool water</label>
     <description>Stagnant, algae-choked water with a scum on top. Colonists will still swim in it, and some of them will fall ill for it. A running filter will clear it in a couple of days.</description>
     <texturePath>EntertainingIdeas/Terrain/PoolWaterFoul</texturePath>
-    <edgeType>Water</edgeType>
-    <renderPrecedence>320</renderPrecedence>
+    <edgeType>Hard</edgeType>
+    <renderPrecedence>362</renderPrecedence>
     <pathCost>18</pathCost>
     <statBases>
       <Beauty>-4</Beauty>
