@@ -32,6 +32,10 @@ loads next**.
   shows changes. Nothing else writes that file.
 - A zip for the Steam Workshop or manual testing still comes from
   `bash Tools/package.sh` when asked.
+- Every push to `main` also becomes a GitHub Release, `v<modVersion>`, with
+  that zip attached (`.github/workflows/release.yml`). RimSort's GitHub Mods
+  panel reads versions from releases and installs the release zip, so the
+  stamp must be right before pushing - the workflow checks it.
 
 ## Standing preferences
 

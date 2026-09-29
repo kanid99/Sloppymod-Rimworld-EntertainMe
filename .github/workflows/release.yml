@@ -1,0 +1,63 @@
+# Publishes a GitHub Release for every build pushed to main.
+#
+# RimSort's GitHub Mods panel tracks mods by release: "Latest Version" is the
+# newest release's tag, and updating installs that release's one .zip asset.
+# Without releases it can only show HEAD. So each push to main - each one is a
+# build, stamped by Tools/stamp_version.py - becomes release v<modVersion>,
+# with the zip Tools/package.sh makes (the same one handed out for testing).
+name: Release
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - "docs/**"
+      - "Workshop/**"
+      - "**.md"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0          # package.sh numbers builds by commit count
+
+      - name: Read the build number
+        id: version
+        run: |
+          version=$(sed -n 's:.*<modVersion>\([^<(]*\).*</modVersion>.*:\1:p' About/About.xml | head -1 | tr -d ' ')
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "Build $version"
+
+      - name: Check the stamp matches the commit
+        run: python3 Tools/stamp_version.py --check
+
+      - name: Skip if already released
+        id: exists
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh release view "v${{ steps.version.outputs.version }}" >/dev/null 2>&1; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Package
+        if: steps.exists.outputs.skip != 'true'
+        run: bash Tools/package.sh "$RUNNER_TEMP/$(python3 Tools/modtool.py folder).zip"
+
+      - name: Publish the release
+        if: steps.exists.outputs.skip != 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          version="${{ steps.version.outputs.version }}"
+          name="$(python3 Tools/modtool.py name)"
+          git log -1 --format=%B | sed '/^Co-Authored-By:/d;/^Claude-Session:/d' > "$RUNNER_TEMP/notes.md"
+          gh release create "v$version" "$RUNNER_TEMP/$(python3 Tools/modtool.py folder).zip" \
+            --title "$name $version" \
+            --notes-file "$RUNNER_TEMP/notes.md" \
+            --target "$GITHUB_SHA"
