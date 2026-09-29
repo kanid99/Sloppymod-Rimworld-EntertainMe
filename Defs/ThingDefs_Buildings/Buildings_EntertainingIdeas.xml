@@ -37,7 +37,9 @@
         <rect>(0.08,0.08,0.84,0.84)</rect>
       </damageData>
     </graphicData>
-    <rotatable>false</rotatable>
+    <!-- It lies flat, so turning it simply turns the drawing. -->
+    <rotatable>true</rotatable>
+    <defaultPlacingRot>North</defaultPlacingRot>
     <fillPercent>0.15</fillPercent>
     <pathCost>14</pathCost>
     <statBases>
@@ -1446,7 +1448,8 @@
         <frameCount>6</frameCount>
         <ticksPerFrame>13</ticksPerFrame>
         <drawSize>(1,7)</drawSize>
-        <rotateWithBuilding>true</rotateWithBuilding>
+        <!-- Whole pictures of the lane per facing: side-on from east and west. -->
+        <perFacing>true</perFacing>
         <playJobs>
           <li>EI_Play_Skittles</li>
         </playJobs>
@@ -1509,7 +1512,8 @@
         <frameCount>6</frameCount>
         <ticksPerFrame>13</ticksPerFrame>
         <drawSize>(1,7)</drawSize>
-        <rotateWithBuilding>true</rotateWithBuilding>
+        <!-- Whole pictures of the lane per facing: side-on from east and west. -->
+        <perFacing>true</perFacing>
         <playJobs>
           <li>EI_Play_Skittles</li>
         </playJobs>
@@ -1729,15 +1733,20 @@
     <description>A nest of graduated brass rings on a tripod, with a small gilded world hanging at the centre of them. The rings are the horizon, the equator and the sun's yearly path, and turning them against each other tells you where in the sky to expect things and roughly what day it is.\n\nNo colony needs one. Colonists who stop to work out what it is saying come away calmer than they went in, which is reason enough.</description>
     <graphicData>
       <texPath>EntertainingIdeas/Buildings/ArmillarySphere</texPath>
-      <graphicClass>Graphic_Single</graphicClass>
-      <drawSize>(1.2,1.2)</drawSize>
+      <graphicClass>Graphic_Multi</graphicClass>
+      <drawSize>(1.5,1.5)</drawSize>
       <shadowData>
         <volume>(0.6,0.6,0.6)</volume>
       </shadowData>
       <damageData>
-        <rect>(0.1,0.1,0.8,0.8)</rect>
+        <rect>(0.25,0.2,0.5,0.5)</rect>
       </damageData>
     </graphicData>
+    <!-- The stand is the texture; the rings are the overlay, which always
+         runs, and they lean their axis toward the way the sphere faces. -->
+    <uiIconPath>EntertainingIdeas/Buildings/ArmillarySphereIcon</uiIconPath>
+    <rotatable>true</rotatable>
+    <defaultPlacingRot>South</defaultPlacingRot>
     <fillPercent>0.3</fillPercent>
     <pathCost>42</pathCost>
     <constructionSkillPrerequisite>6</constructionSkillPrerequisite>
@@ -1759,7 +1768,8 @@
         <framePath>EntertainingIdeas/Buildings/ArmillarySphereTurn</framePath>
         <frameCount>12</frameCount>
         <ticksPerFrame>16</ticksPerFrame>
-        <drawSize>(1.2,1.2)</drawSize>
+        <drawSize>(1.5,1.5)</drawSize>
+        <perFacing>true</perFacing>
         <requireUser>false</requireUser>
       </li>
     </comps>
@@ -1771,16 +1781,21 @@
     <description>A hardwood case with a geared brass model of the local system set into it, three worlds on jointed arms around a lamp-lit sun. Wind the crank and the whole thing steps forward a day at a time, the inner world hurrying, the outer one barely moving.\n\nColonists argue about whether it is accurate. It is not, particularly, but it is hypnotic.</description>
     <graphicData>
       <texPath>EntertainingIdeas/Buildings/TabletopOrrery</texPath>
-      <graphicClass>Graphic_Single</graphicClass>
+      <graphicClass>Graphic_Multi</graphicClass>
       <!-- The case's front and feet below the top, padded as much above. -->
-      <drawSize>(1.2,1.86)</drawSize>
+      <drawSize>(1.86,1.86)</drawSize>
       <shadowData>
         <volume>(0.8,0.35,0.8)</volume>
       </shadowData>
       <damageData>
-        <rect>(0.08,0.41,0.84,0.84)</rect>
+        <rect>(0.25,0.3,0.5,0.52)</rect>
       </damageData>
     </graphicData>
+    <!-- The planets are the overlay, which always runs; the case alone is the
+         texture, and the menu gets the whole thing. -->
+    <uiIconPath>EntertainingIdeas/Buildings/TabletopOrreryIcon</uiIconPath>
+    <rotatable>true</rotatable>
+    <defaultPlacingRot>South</defaultPlacingRot>
     <fillPercent>0.4</fillPercent>
     <pathCost>50</pathCost>
     <constructionSkillPrerequisite>8</constructionSkillPrerequisite>
@@ -1952,15 +1967,16 @@
     <graphicData>
       <texPath>EntertainingIdeas/Buildings/Hammock</texPath>
       <graphicClass>Graphic_Multi</graphicClass>
-      <drawSize>(1,2)</drawSize>
+      <!-- 0.3 of a tile past each end, so the cords reach a column's face. -->
+      <drawSize>(1,2.6)</drawSize>
       <shadowData>
         <volume>(0.6,0.25,1.5)</volume>
       </shadowData>
       <damageData>
-        <rectN>(0.15,0.05,0.7,0.9)</rectN>
-        <rectS>(0.15,0.05,0.7,0.9)</rectS>
-        <rectE>(0.05,0.15,0.9,0.7)</rectE>
-        <rectW>(0.05,0.15,0.9,0.7)</rectW>
+        <rectN>(0.15,0.25,0.7,0.5)</rectN>
+        <rectS>(0.15,0.25,0.7,0.5)</rectS>
+        <rectE>(0.25,0.15,0.5,0.7)</rectE>
+        <rectW>(0.25,0.15,0.5,0.7)</rectW>
       </damageData>
     </graphicData>
     <size>(1,2)</size>
@@ -2164,6 +2180,8 @@
     <graphicData>
       <texPath>EntertainingIdeas/Buildings/JigsawTable</texPath>
       <graphicClass>Graphic_Single</graphicClass>
+      <!-- The table stays upright; only what is on it turns. -->
+      <drawRotated>false</drawRotated>
       <!-- The top on the footprint, the front edge and legs hanging below
            it, padded as much above so the top stays centred. -->
       <drawSize>(2,2.78)</drawSize>
@@ -2172,7 +2190,8 @@
       </damageData>
     </graphicData>
     <size>(2,2)</size>
-    <rotatable>false</rotatable>
+    <rotatable>true</rotatable>
+    <defaultPlacingRot>South</defaultPlacingRot>
     <fillPercent>0.4</fillPercent>
     <pathCost>42</pathCost>
     <castEdgeShadows>true</castEdgeShadows>
@@ -2453,6 +2472,8 @@
            board is an overlay, so it keeps its own colours. -->
       <texPath>EntertainingIdeas/Buildings/JigsawTable</texPath>
       <graphicClass>Graphic_Single</graphicClass>
+      <!-- The table stays upright; only what is on it turns. -->
+      <drawRotated>false</drawRotated>
       <!-- The top on the footprint, the front edge and legs hanging below
            it, padded as much above so the top stays centred. -->
       <drawSize>(2,2.78)</drawSize>
@@ -2461,7 +2482,8 @@
       </damageData>
     </graphicData>
     <size>(2,2)</size>
-    <rotatable>false</rotatable>
+    <rotatable>true</rotatable>
+    <defaultPlacingRot>South</defaultPlacingRot>
     <fillPercent>0.4</fillPercent>
     <pathCost>42</pathCost>
     <castEdgeShadows>true</castEdgeShadows>

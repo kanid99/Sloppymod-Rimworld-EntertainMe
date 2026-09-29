@@ -1833,48 +1833,70 @@ MC_PALE_DK = (178, 172, 168, 255)
 MC_SEAM = (168, 162, 158, 200)
 MC_SEAM_SOFT = (186, 180, 176, 190)
 MC_PAD = (62, 60, 64, 255)
-# The side view's backrest face, as its four corners: top back, top front,
-# bottom front, bottom back. The rollers in the frames run up this.
-MC_SIDE_BACK = ((9, 23), (32, 13), (52, 72), (31, 88))
+# The side view's backrest: a padded cushion leaning back, along this axis,
+# this thick either side of it. The rollers in the frames run up it.
+MC_SIDE_AXIS = ((22.0, 26.0), (40.0, 80.0))
+MC_SIDE_HALF = 13.0
 
 
 def _mc_side_point(t, edge):
-    """A point on the side view's backrest face: t from top (0) to bottom (1),
-    edge 0 the back edge and 1 the front."""
-    tb, tf, bf, bb = MC_SIDE_BACK
-    a = (tb[0] + (bb[0] - tb[0]) * t, tb[1] + (bb[1] - tb[1]) * t)
-    b = (tf[0] + (bf[0] - tf[0]) * t, tf[1] + (bf[1] - tf[1]) * t)
-    return (a[0] + (b[0] - a[0]) * edge, a[1] + (b[1] - a[1]) * edge)
+    """A point on the side view's backrest: t from top (0) to bottom (1),
+    edge 0 its back and 1 its front."""
+    (ax, ay), (bx, by) = MC_SIDE_AXIS
+    dx, dy = bx - ax, by - ay
+    length = math.hypot(dx, dy)
+    nx, ny = -dy / length, dx / length              # toward the back (left)
+    off = (0.5 - edge) * 2 * MC_SIDE_HALF
+    return (ax + dx * t + nx * off, ay + dy * t + ny * off)
+
+
+def _pill(p0, p1, r, col):
+    """A capsule between two points, as silhouette pieces."""
+    (x0, y0), (x1, y1) = p0, p1
+    length = math.hypot(x1 - x0, y1 - y0) or 1.0
+    nx, ny = -(y1 - y0) / length * r, (x1 - x0) / length * r
+    return [("circle", x0, y0, r, col), ("circle", x1, y1, r, col),
+            ("poly", [(x0 + nx, y0 + ny), (x1 + nx, y1 + ny), (x1 - nx, y1 - ny), (x0 - nx, y0 - ny)], col)]
 
 
 def massage_chair_east():
-    """Side-on recliner, facing right: a thick backrest raked back on the left
-    with its roller seams on the face, the seat, a padded leg rest angled down
-    in front, and the near arm across the seat with the control pad on its end."""
+    """Side-on, facing right, built from rounded cushions like the other
+    views: a thick padded backrest leaning back, a puffy seat, a round arm
+    bolster over it, a stuffed leg rest, and the control pad on the arm's end."""
     c = Canvas(128, 128)
-    back = [(4, 22), (34, 8), (56, 74), (30, 94)]
-    seat = ("rect", 26, 58, 104, 94, 14, MC_PALE_DK)
-    legrest = [(94, 62), (116, 66), (126, 108), (104, 112)]
-    base = ("rect", 30, 90, 100, 118, 8, MC_PALE_DK)
-    arm = ("rect", 26, 50, 98, 88, 14, MC_PALE_DK)
-    silhouette(c, [("poly", back, MC_PALE_DK), seat, ("poly", legrest, MC_PALE_DK), base, arm], 5.0)
-    c.poly(list(MC_SIDE_BACK), MC_PALE)                        # backrest face, lit
-    c.ellipse(19, 20, 14, 9, MC_PALE_LT)                       # headrest
-    for k in range(1, 8):
-        a = _mc_side_point(k / 8.0, 0.0)
-        b = _mc_side_point(k / 8.0, 1.0)
-        c.line(a[0] + 3, a[1], b[0] - 3, b[1] + 1, MC_SEAM, 1.5)
-    c.rect(40, 52, 102, 62, MC_PALE, 6)                        # seat top, above the arm
-    c.poly([(97, 65), (113, 69), (121, 104), (106, 108)], MC_PALE)   # leg rest
-    c.line(101, 78, 117, 82, MC_SEAM_SOFT, 1.3)
-    c.line(103, 92, 119, 96, MC_SEAM_SOFT, 1.3)
-    c.rect(34, 92, 96, 116, darker(MC_PALE_DK, 0.85), 6)       # base
-    c.rect(28, 52, 96, 64, MC_PALE_LT, 10)                     # near arm: lit top
-    c.rect(28, 64, 96, 86, MC_PALE, 10)                        #           and side
-    c.line(34, 75, 90, 75, MC_SEAM_SOFT, 1.4)
-    c.rect(82, 60, 96, 86, MC_PAD, 4)                          # control pad on its end
+    dk, pale, lt = MC_PALE_DK, MC_PALE, MC_PALE_LT
+    back = _pill(MC_SIDE_AXIS[0], MC_SIDE_AXIS[1], MC_SIDE_HALF + 4, dk)
+    head = [("ellipse", 20, 20, 17, 13, dk)]
+    seat = [("rect", 30, 58, 106, 94, 18, dk)]
+    arm = _pill((36, 66), (90, 66), 13, dk)
+    leg = _pill((106, 76), (116, 102), 11, dk)
+    base = [("rect", 38, 90, 94, 118, 10, dk)]
+    silhouette(c, back + head + seat + arm + leg + base, 5.0)
+    c.rect(40, 94, 92, 116, darker(dk, 0.86), 8)                         # base
+    for t, r in ((0.08, 13), (0.5, 13), (0.92, 12)):                      # backrest cushions, stacked
+        px_, py_ = _mc_side_point(t, 0.5)
+        c.circle(px_, py_, r, pale)
+        c.ellipse(px_ - 3, py_ - 4, r * 0.6, r * 0.45, lt)
+    c.ellipse(20, 18, 13, 9, pale)                                        # headrest pillow
+    c.ellipse(18, 15, 8, 5, lt)
+    for t in (0.29, 0.71):                                                # seams between cushions
+        a = _mc_side_point(t, 0.1)
+        b = _mc_side_point(t, 0.9)
+        c.line(a[0], a[1], b[0], b[1], MC_SEAM, 1.5)
+    c.ellipse(72, 60, 34, 7, pale)                                        # seat, puffing above the arm
+    c.ellipse(70, 58, 26, 4, lt)
+    c.circle(106, 76, 9, pale)                                            # leg rest
+    c.circle(116, 102, 9, pale)
+    c.poly([(98, 78), (114, 72), (124, 100), (108, 106)], pale)
+    c.ellipse(108, 84, 5, 7, lt)
+    c.circle(36, 66, 11, pale)                                            # arm bolster
+    c.circle(90, 66, 11, pale)
+    c.rect(36, 55, 90, 77, pale, 0)
+    c.ellipse(62, 60, 26, 4, lt)
+    c.line(40, 72, 86, 72, MC_SEAM_SOFT, 1.4)
+    c.rect(82, 58, 96, 80, MC_PAD, 5)                                     # control pad on the end
     for i in range(3):
-        c.circle(89, 66 + i * 7, 2.4, (238, 232, 216, 255))
+        c.circle(89, 63 + i * 6.5, 2.3, (238, 232, 216, 255))
     return c
 
 
@@ -1944,7 +1966,7 @@ def massage_chair_frames(total=8):
             b = _mc_side_point(0.1 + 0.8 * t, 0.88)
             east.line(a[0], a[1], b[0], b[1], (255, 214, 150, max(0, min(220, glow))), 5)
         _mc_arcs(east, phase, [(60, 50)], 20, 160)      # up off the top of the arm
-        east.circle(89, 80, 2.8, lamp_col)
+        east.circle(89, 76, 2.6, lamp_col)
 
         views = {"South": south, "North": north, "East": east, "West": mirrored(east)}
         for facing, view in views.items():
@@ -2188,8 +2210,15 @@ def save_wall_piece(face, name):
     """Write the four facings of a wall piece from its face-on drawing."""
     px, w, h = face.pixels(), face.w, face.h
     wall_face(face).save(os.path.join(OUT, "%s_south.png" % name))
+    # Facing north the picture is on the far side of the wall: all that shows
+    # is the top edge of its frame, just over the wall's top, in the frame's
+    # own colour (sampled from the face's top border).
     north = Canvas(w, WALL_FACE_H)
-    blit_rect(north, px, w, h, (0, 0, w, h * 0.55), (0, 0, w, WALL_PEEK_H))
+    i = (4 * w + w // 2) * 4
+    frame = (px[i], px[i + 1], px[i + 2], 255)
+    north.rect(1, WALL_PEEK_H - 12, w - 1, WALL_PEEK_H + 1, DARK, 3)
+    north.rect(3, WALL_PEEK_H - 10, w - 3, WALL_PEEK_H - 1, frame, 2)
+    north.rect(3, WALL_PEEK_H - 10, w - 3, WALL_PEEK_H - 7, lighter(frame, 0.3), 2)
     north.save(os.path.join(OUT, "%s_north.png" % name))
     east = Canvas(WALL_FACE_H, w)
     blit_quad(east, px, w, h, (0, 0, w, h), (WALL_FACE_H, w), (0, -w), (-WALL_FACE_H, 0))
@@ -2684,24 +2713,34 @@ def aquarium_view(facing):
     c = Canvas(256, 256)
     if facing in ("south", "north"):
         c.ellipse(128, 252, 124, 5, (0, 0, 0, 55))
-        silhouette(c, [("rect", 10, 30, 246, 250, 4, darker(AQ_WOOD, 0.9))], 4.0)
+        silhouette(c, [("rect", 10, 8, 246, 250, 4, darker(AQ_WOOD, 0.9))], 4.0)
         c.rect(10, 170, 246, 250, AQ_WOOD, 4)                            # the stand
         for dx in (64, 128, 192):
             c.line(dx, 176, dx, 244, darker(AQ_WOOD, 0.6), 1.5)
         for kx in (60, 68, 188, 196):
             c.circle(kx, 210, 2.2, (190, 160, 90, 255))
         c.rect(10, 164, 246, 172, darker(AQ_WOOD, 0.7), 2)
-        c.rect(14, 30, 242, 44, (54, 58, 66, 255), 3)                    # hood, its top catching light
+        c.rect(14, 30, 242, 44, (54, 58, 66, 255), 3)                    # hood front
         c.rect(14, 30, 242, 35, (96, 102, 112, 255), 2)
+        # The hood's top, running back from its front edge at the slant, as
+        # the east and west views show it: the feeding hatch and the light.
+        c.rect(12, 8, 244, 34, DARK, 4)
+        c.rect(15, 11, 241, 31, (70, 74, 84, 255), 3)
+        c.rect(15, 11, 241, 15, (104, 110, 120, 255), 2)
+        c.rect(40, 16, 120, 27, (54, 58, 66, 255), 2)
+        c.line(44, 21, 116, 21, (90, 96, 104, 255), 1.2)
+        c.rect(140, 17, 220, 26, (46, 50, 58, 255), 2)
+        for vx in range(146, 216, 7):
+            c.line(vx, 18, vx, 25, (240, 246, 220, 140), 1.2)
         x0, y0, x1, y1 = AQ_GLASS
         c.rect(x0 - 2, y0 - 2, x1 + 2, y1 + 2, (30, 40, 44, 255), 1)
         _aq_water(c, x0, y0, x1, y1, 1.0 if facing == "south" else 0.7)
         c.rect(x0, y0, x1, y0 + 10, (255, 255, 255, 26), 0)             # waterline sheen
         c.line(x0 + 2, y0 + 4, x1 - 2, y0 + 4, (200, 235, 245, 120), 1.2)
         c.frame(x0 - 2, y0 - 2, x1 + 2, y1 + 2, AQ_FRAME, 3, 1)
-        if facing == "north":
-            c.rect(190, 26, 230, 70, DARK, 3)                            # the filter, on the back
-            c.rect(193, 29, 227, 67, (60, 64, 70, 255), 2)
+        if facing == "north":                                            # the filter, on the hood at the back
+            c.rect(186, 12, 226, 30, DARK, 3)
+            c.rect(189, 15, 223, 27, (60, 64, 70, 255), 2)
         c.poly([(24, 52), (40, 52), (70, 158), (54, 158)], (255, 255, 255, 20))   # a glint
         return c
 
@@ -2860,34 +2899,128 @@ def draw_skittles(c, frame=None, total=6, modern=False):
         c.line(bx, by + 18, bx, min(860, by + 72), (255, 255, 255, 50), 10)
 
 
-def skittles_lane():
-    c = Canvas(128, 896)
-    draw_skittles(c, None)
-    save_rotations(c, "SkittlesLane")
+PIN_W, PIN_H = 11, 34
+
+
+def lane_pin(c, x, y, tilt=0.0, scale=1.0):
+    """A pin standing on (x, y), or tipped over by tilt radians."""
+    h, w = PIN_H * scale, PIN_W * scale
+    prof = [(0, 0.34), (0.1, 0.5), (0.3, 0.46), (0.52, 0.26), (0.62, 0.2), (0.72, 0.26),
+            (0.86, 0.3), (0.97, 0.22), (1.0, 0.0)]
+    side = [(w * r, -h * t) for t, r in prof]
+    pts = side + [(-px, py) for px, py in reversed(side)]
+    ct, st = math.cos(tilt), math.sin(tilt)
+    placed = [(x + px * ct - py * st, y + px * st + py * ct) for px, py in pts]
+    c.poly([(px + (1.6 if px > x else -1.6), py) for px, py in placed], DARK)
+    c.poly(placed, (240, 236, 226, 255))
+    for t0, t1 in ((0.66, 0.7), (0.75, 0.79)):                       # neck stripes
+        band = [(-w * 0.24, -h * t0), (w * 0.24, -h * t0), (w * 0.26, -h * t1), (-w * 0.26, -h * t1)]
+        c.poly([(x + px * ct - py * st, y + px * st + py * ct) for px, py in band], (196, 62, 54, 255))
+
+
+def lane_side(modern, phase=None):
+    """East: the pins at the west end, the bowler's end to the east. The lane
+    is a raised box - its top seen at the mod's slant, its near side below -
+    with the pins standing up on the deck. phase None is the lane at rest;
+    a number rolls the ball down it and, past 0.72, scatters the pins."""
+    pal = LANE_MODERN if modern else LANE_RUSTIC
+    c = Canvas(896, 128)
+    top0, top1, face1 = 30, 96, 118
+    c.ellipse(448, 122, 440, 6, (0, 0, 0, 50))
+    silhouette(c, [("rect", 8, top0, 888, face1, 6, pal["frame"])], 4.0)
+    c.rect(8, top1, 888, face1, darker(pal["frame"], 0.78), 4)       # near side, in shade
+    for x in range(40, 888, 110):
+        c.line(x, top1 + 3, x, face1 - 3, darker(pal["frame"], 0.6), 1.2)
+    c.rect(12, top0 + 3, 884, top0 + 12, pal["gutter"], 2)           # far gutter
+    c.rect(12, top1 - 11, 884, top1 - 2, pal["gutter"], 2)           # near gutter
+    c.rect(18, top0 + 12, 880, top1 - 11, pal["lane"], 3)            # the boards
+    for y in range(top0 + 18, top1 - 12, 6):
+        c.line(20, y, 878, y, pal["plank"], 1.2)
+    c.rect(18, top0 + 12, 190, top1 - 11, pal["deck"], 3)            # pin deck
+    c.line(190, top0 + 12, 190, top1 - 11, (120, 88, 54, 190), 2)
+    c.line(812, top0 + 12, 812, top1 - 11, pal["foul"], 3)           # foul line
+    if modern:
+        for k, ax in enumerate((700, 710, 720)):                       # aiming arrows
+            c.poly([(ax, top0 + 28 + k * 9), (ax + 10, top0 + 24 + k * 9), (ax + 10, top0 + 32 + k * 9)],
+                   (188, 146, 92, 200))
+        c.rect(200, top1 - 4, 800, top1 + 4, (58, 64, 84, 255), 3)   # ball return, on the near rail
+
+    rows = PIN_ROWS_TENPIN if modern else PIN_ROWS
+    lane_mid = (top0 + 12 + top1 - 11) / 2.0
+    pins = []
+    for row, xs in enumerate(rows):
+        for k, across in enumerate(xs):
+            py = lane_mid + (across - 64) * 0.78                     # across the lane: depth
+            pins.append((py, 46 + row * 27 + (across - 64) * 0.12, row, k))
+    pins.sort()
+    scattered = phase is not None and phase > 0.72
+    for py, px, row, k in pins:
+        if scattered:
+            sh = (phase - 0.72) / 0.28
+            ang = row * 1.7 + k * 2.3
+            lane_pin(c, px - 18 * sh + math.cos(ang) * 10 * sh, py + math.sin(ang) * 8 * sh,
+                     tilt=(-1.2 if (row + k) % 2 else 1.1) * sh)
+        else:
+            lane_pin(c, px, py, scale=0.84 + 0.16 * (py - (lane_mid - 22)) / 44.0)
+    if modern:                                                         # pinsetter, over the deck
+        silhouette(c, [("rect", 10, 0, 34, top1 - 2, 4, (24, 26, 36, 255))], 3.0)
+        c.rect(12, 2, 32, 10, (60, 64, 80, 255), 3)
+        for k in range(4):
+            c.circle(22, 20 + k * 14, 3, (120, 200, 210, 220))
+    bx = 846 if phase is None else 846 - min(1.0, phase / 0.72) * 640
+    by = lane_mid - 2
+    c.circle(bx, by, 12, DARK)
+    c.circle(bx, by, 10, pal["ball"])
+    c.circle(bx - 3, by - 3, 3.2, pal["ball_hi"])
     return c
+
+
+def _lane(name, modern):
+    """South is the top-down drawing (pins at the far end), north the same
+    turned round; east and west are the lane side-on (lane_side)."""
+    c = Canvas(128, 896)
+    draw_skittles(c, None, modern=modern)
+    px, w, h = c.pixels(), c.w, c.h
+    write_png(os.path.join(OUT, "%s_south.png" % name), w, h, px)
+    rp, rw, rh = rotate(px, w, h, 2)
+    write_png(os.path.join(OUT, "%s_north.png" % name), rw, rh, rp)
+    east = lane_side(modern)
+    east.save(os.path.join(OUT, "%s_east.png" % name))
+    mirrored(east).save(os.path.join(OUT, "%s_west.png" % name))
+    print("  %s_{north,east,south,west}.png" % name)
+    return c
+
+
+def _lane_frames(name, modern, total=6):
+    """One strip per facing (perFacing): the frames are whole pictures of the
+    lane, ball and pins, drawn over the lane while a game is on."""
+    for i in range(total):
+        c = Canvas(128, 896)
+        draw_skittles(c, i, total, modern=modern)
+        px, w, h = c.pixels(), c.w, c.h
+        write_png(os.path.join(OUT, "%sSouth_%d.png" % (name, i)), w, h, px)
+        rp, rw, rh = rotate(px, w, h, 2)
+        write_png(os.path.join(OUT, "%sNorth_%d.png" % (name, i)), rw, rh, rp)
+        east = lane_side(modern, float(i) / (total - 1))
+        east.save(os.path.join(OUT, "%sEast_%d.png" % (name, i)))
+        mirrored(east).save(os.path.join(OUT, "%sWest_%d.png" % (name, i)))
+    print("  %s{North,East,South,West}_0..%d.png" % (name, total - 1))
+
+
+def skittles_lane():
+    return _lane("SkittlesLane", False)
 
 
 def skittles_frames(total=6):
-    for i in range(total):
-        c = Canvas(128, 896)
-        draw_skittles(c, i, total)
-        c.save(os.path.join(OUT, "SkittlesLaneRoll_%d.png" % i))
-    print("  SkittlesLaneRoll_0..%d.png  (128x896)" % (total - 1))
+    _lane_frames("SkittlesLaneRoll", False, total)
 
 
 def bowling_lane():
-    c = Canvas(128, 896)
-    draw_skittles(c, None, modern=True)
-    save_rotations(c, "BowlingLane")
-    return c
+    return _lane("BowlingLane", True)
 
 
 def bowling_frames(total=6):
-    for i in range(total):
-        c = Canvas(128, 896)
-        draw_skittles(c, i, total, modern=True)
-        c.save(os.path.join(OUT, "BowlingLaneRoll_%d.png" % i))
-    print("  BowlingLaneRoll_0..%d.png  (128x896)" % (total - 1))
+    _lane_frames("BowlingLaneRoll", True, total)
 
 
 # ---------------------------------------------------------------------------
@@ -3185,8 +3318,10 @@ GRAND_ORBITS = [
 ]
 
 
-def tabletop_orrery_body(c, phase=None):
-    """phase None draws the static cabinet; a number draws only the planets."""
+def tabletop_orrery_body(c, phase=None, crank="e"):
+    """phase None draws the static top plate, its hand crank on the side
+    given ('e', 'w', 'n', or 's' for none - toward us it is drawn on the
+    case instead); a number draws only the planets."""
     cx = cy = 80
     if phase is None:
         c.rect(18, 18, 142, 142, DARK, 10)
@@ -3203,10 +3338,21 @@ def tabletop_orrery_body(c, phase=None):
         c.circle(cx, cy, 11, (232, 170, 52, 255))
         c.circle(cx, cy, 8, (252, 220, 120, 255))
         c.circle(cx, cy, 4, (255, 248, 216, 255))
-        c.rect(136, 74, 152, 86, DARK, 4)                 # hand crank
-        c.rect(138, 76, 150, 84, BRASS, 3)
-        c.circle(152, 80, 6, DARK)
-        c.circle(152, 80, 4.4, BRASS_HI)
+        if crank == "e":
+            c.rect(136, 74, 152, 86, DARK, 4)
+            c.rect(138, 76, 150, 84, BRASS, 3)
+            c.circle(152, 80, 6, DARK)
+            c.circle(152, 80, 4.4, BRASS_HI)
+        elif crank == "w":
+            c.rect(8, 74, 24, 86, DARK, 4)
+            c.rect(10, 76, 22, 84, BRASS, 3)
+            c.circle(8, 80, 6, DARK)
+            c.circle(8, 80, 4.4, BRASS_HI)
+        elif crank == "n":
+            c.rect(74, 6, 86, 22, DARK, 4)
+            c.rect(76, 8, 84, 20, BRASS, 3)
+            c.circle(80, 7, 6, DARK)
+            c.circle(80, 7, 4.4, BRASS_HI)
         return
 
     for k, (orbit, pr, col, rim, laps) in enumerate(TABLETOP_ORBITS):
@@ -3214,21 +3360,18 @@ def tabletop_orrery_body(c, phase=None):
         orbiting_planet(c, cx + math.cos(a) * orbit, cy + math.sin(a) * orbit, pr, col, rim)
 
 
-def tabletop_orrery():
-    c = Canvas(160, 160)
-    tabletop_orrery_body(c, None)
-    tabletop_orrery_body(c, 0.0)      # a still frame for the build menu
-    save_single(orrery_case(c), "TabletopOrrery")
-    return c
-
-
 ORRERY_DROP = 44
+# Which side of the top the crank is on, per facing: the crank is on the
+# case's right as you face its drawer.
+ORRERY_CRANK = {"south": "e", "north": "w", "east": "s", "west": "n"}
 
 
-def orrery_case(top):
-    """The tabletop orrery's wooden case under its top: the front with a
-    drawer, and brass feet. Padded ORRERY_DROP above as well, so the top and
-    its turning gears stay centred (drawSize 1.2 x 1.86)."""
+def orrery_case(facing, planets=False):
+    """The tabletop orrery for one facing: the wooden case with the drawer on
+    the side it faces (north shows the back, with a maker's plate; east and
+    west show a side, the drawer edge on at the facing end), brass feet, and
+    the top plate. Padded ORRERY_DROP above as well, so the top - and the
+    turning planets drawn over it - stay centred (drawSize 1.2 x 1.86)."""
     d = ORRERY_DROP
     c = Canvas(160, 160 + 2 * d)
     wood = (104, 70, 44, 255)
@@ -3237,12 +3380,52 @@ def orrery_case(top):
         c.rect(fx - 7, d + 180, fx + 7, 160 + 2 * d - 2, DARK, 3)
         c.rect(fx - 5, d + 181, fx + 5, 160 + 2 * d - 4, (190, 150, 70, 255), 2)
     c.rect(16, d + 130, 144, d + 186, DARK, 6)
-    c.rect(19, d + 133, 141, d + 183, darker(wood, 0.8), 5)     # the case's front
-    c.rect(52, d + 156, 108, d + 176, darker(wood, 0.55), 3)    # drawer
-    c.circle(80, d + 166, 3, (214, 176, 92, 255))
+    c.rect(19, d + 133, 141, d + 183, darker(wood, 0.8), 5)     # the case's near side
     c.line(20, d + 180, 140, d + 180, darker(wood, 0.6), 1.4)
+    if facing == "south":
+        c.rect(52, d + 156, 108, d + 176, darker(wood, 0.55), 3)    # drawer
+        c.circle(80, d + 166, 3, (214, 176, 92, 255))
+    elif facing == "north":
+        c.rect(58, d + 152, 102, d + 164, BRASS_DK, 2)              # maker's plate
+        c.rect(60, d + 154, 100, d + 162, BRASS, 2)
+    else:
+        ex = 138 if facing == "east" else 22                        # drawer front, edge on
+        c.rect(ex - 3, d + 156, ex + 3, d + 176, darker(wood, 0.5), 1)
+        c.circle(ex + (3 if facing == "east" else -3), d + 166, 2.4, (214, 176, 92, 255))
+        for yy in (d + 146, d + 170):
+            c.line(24, yy, 136, yy, darker(wood, 0.66), 1.2)
+    top = Canvas(160, 160)
+    tabletop_orrery_body(top, None, ORRERY_CRANK[facing])
+    if planets:
+        tabletop_orrery_body(top, 0.0)
     lay_over(c, top.pixels(), 160, 160, 0, d)
+    if facing == "east":                                        # the crank, toward us
+        c.rect(74, d + 136, 86, d + 150, DARK, 4)
+        c.rect(76, d + 138, 84, d + 148, BRASS, 3)
+        c.circle(80, d + 152, 6, DARK)
+        c.circle(80, d + 152, 4.4, BRASS_HI)
     return c
+
+
+def _orrery_square(c):
+    side = c.h
+    sq = Canvas(side, side)
+    lay_over(sq, c.pixels(), c.w, c.h, (side - c.w) // 2, 0)
+    return sq
+
+
+def tabletop_orrery():
+    """Four facings of the case with no planets: they are the overlay, which
+    always runs, so planets in the base would show through as a frozen
+    second set. The build menu gets them, as its icon."""
+    # Padded to a square: Graphic_Multi turns the draw size round for east
+    # and west, which would squash a tall canvas.
+    for facing in ("north", "east", "south", "west"):
+        _orrery_square(orrery_case(facing)).save(os.path.join(OUT, "TabletopOrrery_%s.png" % facing))
+    icon = _orrery_square(orrery_case("south", planets=True))
+    save_single(icon, "TabletopOrreryIcon")
+    print("  TabletopOrrery_{north,east,south,west}.png")
+    return icon
 
 
 def tabletop_orrery_frames(total=12):
@@ -3394,59 +3577,135 @@ def grand_orrery_frames(total=16):
     print("  GrandOrreryTurn_0..%d.png  (320x320)" % (total - 1))
 
 
-def armillary_body(c, phase=None):
-    """The rings themselves turn, so the sphere reads as slowly precessing."""
-    cx = cy = 80
-    if phase is None:
-        for a in (90, 210, 330):                          # tripod legs
-            ax = math.radians(a)
-            x, y = cx + math.cos(ax) * 56, cy + math.sin(ax) * 56
-            c.line(cx, cy, x, y, DARK, 9)
-            c.line(cx, cy, x, y, ORR_WOOD, 6)
-            c.circle(x, y, 8, DARK)
-            c.circle(x, y, 6, BRASS_DK)
-            c.circle(x, y, 3.6, BRASS)
-        c.ring(cx, cy, 60, 54, DARK)                      # fixed horizon ring
-        c.ring(cx, cy, 59, 55, BRASS)
-        for i in range(36):
-            a = math.radians(i * 10)
-            c.line(cx + math.cos(a) * 55, cy + math.sin(a) * 55,
-                   cx + math.cos(a) * 59, cy + math.sin(a) * 59, BRASS_DK, 1.4)
-        return
+# The armillary sphere is drawn in 3D and projected at the same slant as the
+# mod's other round tops: x east, y north, z up, seen from above the south.
+ARM_EL = math.asin(ROUND_SLANT)
+ARM_FACING = {"south": (0, -1), "north": (0, 1), "east": (1, 0), "west": (-1, 0)}
+ARM_C = (100, 78)            # on a square 200 canvas: Graphic_Multi turns the draw size round for east/west
+ARM_S = 46.0
 
-    # Seen from above, a ring turning about the vertical axis reads as an
-    # ellipse whose width breathes between edge-on and full circle.
-    t = 2 * math.pi * phase
-    for k, (base, col) in enumerate(((46, BRASS_HI), (36, BRASS), (44, (226, 186, 104, 255)))):
-        w = abs(math.cos(t + k * math.pi / 3.0))
-        rx = max(4.0, base * (0.12 + 0.88 * w))
-        ell_ring(c, cx, cy, rx, base, 4.4, DARK)
-        ell_ring(c, cx, cy, rx, base, 2.8, col)
-    ell_ring(c, cx, cy, 46, 46, 5.2, DARK)                # equatorial, fixed
-    ell_ring(c, cx, cy, 46, 46, 3.4, BRASS_HI)
-    c.line(cx, cy - 52, cx, cy + 52, DARK, 5)             # polar axis
-    c.line(cx, cy - 52, cx, cy + 52, BRASS_DK, 3)
-    c.circle(cx, cy, 13, DARK)                            # the world, gilded
-    c.circle(cx, cy, 11, (92, 132, 174, 255))
-    c.poly([(cx - 7, cy - 2), (cx - 1, cy - 7), (cx + 5, cy - 1), (cx - 2, cy + 5)],
-           (108, 152, 96, 255))
-    c.circle(cx - 3.5, cy - 4, 3.2, (255, 255, 255, 90))
+
+def _v_norm(v):
+    length = math.sqrt(sum(a * a for a in v))
+    return tuple(a / length for a in v)
+
+
+def _v_cross(a, b):
+    return (a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0])
+
+
+def _v_turn(v, axis, ang):
+    """v turned by ang about the unit axis (Rodrigues)."""
+    c, s_ = math.cos(ang), math.sin(ang)
+    kv = _v_cross(axis, v)
+    kd = sum(a * b for a, b in zip(axis, v))
+    return tuple(v[i] * c + kv[i] * s_ + axis[i] * kd * (1 - c) for i in range(3))
+
+
+def _v_basis(n):
+    n = _v_norm(n)
+    t = (0, 0, 1) if abs(n[2]) < 0.9 else (1, 0, 0)
+    e1 = _v_norm(_v_cross(n, t))
+    return e1, _v_cross(n, e1)
+
+
+def _arm_proj(p):
+    x, y, z = p
+    cx, cy = ARM_C
+    return (cx + x * ARM_S, cy - (y * math.sin(ARM_EL) + z * math.cos(ARM_EL)) * ARM_S,
+            -y * math.cos(ARM_EL) + z * math.sin(ARM_EL))
+
+
+def _arm_ring(e1, e2, r, n=96):
+    return [tuple(r * (math.cos(t) * e1[i] + math.sin(t) * e2[i]) for i in range(3))
+            for t in (2 * math.pi * k / n for k in range(n + 1))]
+
+
+def armillary_stand(c):
+    """Tripod, turned column and cradle: the part that does not move."""
+    cx, cy = ARM_C
+    c.ellipse(cx, 186, 50, 8, (0, 0, 0, 50))
+    for ang in (270, 30, 150):                        # one leg toward us, two behind
+        a = math.radians(ang)
+        fx, fy, _ = _arm_proj((math.cos(a) * 1.05, math.sin(a) * 1.05, -1.72))
+        c.line(cx, 160, fx, fy, DARK, 8)
+        c.line(cx, 160, fx, fy, ORR_WOOD, 5)
+        c.circle(fx, fy, 6, DARK)
+        c.circle(fx, fy, 4.4, BRASS)
+    c.rect(cx - 6, 112, cx + 6, 162, DARK, 4)
+    c.rect(cx - 4, 114, cx + 4, 160, ORR_WOOD, 3)
+    c.ellipse(cx, 160, 12, 5, DARK)
+    c.ellipse(cx, 160, 10, 3.6, BRASS_DK)
+
+
+def armillary_rings(c, facing, phase):
+    """The horizon and meridian rings, and inside them the sphere proper -
+    equator, colures and the ecliptic band - turning about a polar axis that
+    leans toward the way the sphere faces. Drawn back to front, the far
+    halves darker, the little globe between."""
+    cx, cy = ARM_C
+    fx, fy = ARM_FACING[facing]
+    lat = math.radians(40)
+    axis = _v_norm((fx * math.cos(lat), fy * math.cos(lat), math.sin(lat)))
+    a1, a2 = _v_basis(axis)
+    spin = 2 * math.pi * phase
+    a1, a2 = _v_turn(a1, axis, spin), _v_turn(a2, axis, spin)
+    h1, h2 = (1, 0, 0), (0, 1, 0)
+    m1 = axis
+    m2 = (0, 0, 1) if abs(axis[2]) < 0.99 else (0, 1, 0)
+    m2 = _v_norm(_v_cross(_v_cross(m1, m2), m1))
+    ecl = _v_turn(axis, a1, math.radians(23.5))
+    e1, e2 = _v_basis(ecl)
+    rings = [(_arm_ring(h1, h2, 1.3), 5.2, BRASS),                       # horizon
+             (_arm_ring(m1, m2, 1.18), 4.2, BRASS_DK),                   # meridian
+             (_arm_ring(a1, a2, 1.0), 3.6, BRASS_HI),                    # equator
+             (_arm_ring(a2, axis, 1.0), 2.8, (226, 186, 104, 255)),     # colures
+             (_arm_ring(a1, axis, 1.0), 2.8, (226, 186, 104, 255)),
+             (_arm_ring(e1, e2, 1.0), 4.6, (206, 150, 96, 255))]         # ecliptic band
+    segs = []
+    for pts, w, col in rings:
+        for p, q in zip(pts, pts[1:]):
+            sp, sq = _arm_proj(p), _arm_proj(q)
+            segs.append(((sp[2] + sq[2]) / 2, sp, sq, w, col))
+    pa, pb = _arm_proj(tuple(1.22 * v for v in axis)), _arm_proj(tuple(-1.22 * v for v in axis))
+    segs.append(((pa[2] + pb[2]) / 2 - 0.01, pa, pb, 3.0, BRASS_DK))
+    segs.sort(key=lambda t: t[0])
+    globe = False
+    for depth, sp, sq, w, col in segs:
+        if not globe and depth > 0:
+            c.circle(cx, cy, 13, DARK)
+            c.circle(cx, cy, 11, (92, 132, 174, 255))
+            c.poly([(cx - 7, cy - 2), (cx - 1, cy - 7), (cx + 5, cy - 1), (cx - 2, cy + 5)],
+                   (108, 152, 96, 255))
+            c.circle(cx - 3.5, cy - 4, 3.2, (255, 255, 255, 90))
+            globe = True
+        shade = col if depth > 0 else darker(col, 0.7)
+        c.line(sp[0], sp[1], sq[0], sq[1], DARK, w + 2.2)
+        c.line(sp[0], sp[1], sq[0], sq[1], shade, w)
 
 
 def armillary_sphere():
-    c = Canvas(160, 160)
-    armillary_body(c, None)
-    armillary_body(c, 0.0)
-    save_single(c, "ArmillarySphere")
-    return c
+    """The stand per facing (the rings are the always-running overlay, so
+    they are not in the base), and the whole thing as the build menu icon."""
+    for facing in ("north", "east", "south", "west"):
+        c = Canvas(200, 200)
+        armillary_stand(c)
+        c.save(os.path.join(OUT, "ArmillarySphere_%s.png" % facing))
+    icon = Canvas(200, 200)
+    armillary_stand(icon)
+    armillary_rings(icon, "south", 0.0)
+    save_single(icon, "ArmillarySphereIcon")
+    print("  ArmillarySphere_{north,east,south,west}.png")
+    return icon
 
 
 def armillary_sphere_frames(total=12):
     for i in range(total):
-        c = Canvas(160, 160)
-        armillary_body(c, float(i) / total)
-        c.save(os.path.join(OUT, "ArmillarySphereTurn_%d.png" % i))
-    print("  ArmillarySphereTurn_0..%d.png  (160x160)" % (total - 1))
+        for facing in ("north", "east", "south", "west"):
+            c = Canvas(200, 200)
+            armillary_rings(c, facing, float(i) / total)
+            c.save(os.path.join(OUT, "ArmillarySphereTurn%s_%d.png" % (facing.capitalize(), i)))
+    print("  ArmillarySphereTurn{North,East,South,West}_0..%d.png  (200x200)" % (total - 1))
 
 
 # ---------------------------------------------------------------------------
@@ -3998,6 +4257,9 @@ def pool_filter():
 # 23. Hammock  (1x2, stuffable, a pawn lies in it)
 # ---------------------------------------------------------------------------
 
+HAMMOCK_PAD = 48                  # 0.3 of a tile, at 160 px a tile
+
+
 def hammock():
     """Near-neutral, because the stuff colour tints the whole sprite.
 
@@ -4005,7 +4267,10 @@ def hammock():
     a wall or a column - so the cords gather to a point right at the edge of
     the sprite, where that support is. The bold line goes round the sheet and
     nothing inside it; the weave, the sag and the cushion are tints."""
-    c = Canvas(160, 320)
+    # Drawn 0.3 of a tile past each end (HAMMOCK_PAD), so the cords reach a
+    # column's face rather than stopping at the hammock's own two tiles.
+    pad = HAMMOCK_PAD
+    c = Canvas(160, 320 + 2 * pad)
     mid = 80
     WEIGHT = 4.5
     body = (208, 200, 188, 255)
@@ -4014,7 +4279,7 @@ def hammock():
     cord = (104, 94, 82, 255)
     cord_lt = (140, 128, 114, 255)
 
-    head, foot = 84, 236          # where the sheet begins and ends
+    head, foot = 84 + pad, 236 + pad          # where the sheet begins and ends
 
     def sag(y):
         """Half-width of the sheet at height y: gathered at the ends, slack in
@@ -4024,7 +4289,7 @@ def hammock():
 
     # Cords running off to the supports at either end, drawn first so the
     # sheet sits on top of them.
-    for end_y, toward in ((head, 4), (foot, 316)):
+    for end_y, toward in ((head, 4), (foot, 316 + 2 * pad)):
         for k in range(-3, 4):
             spread = k * 9
             c.line(mid + spread, end_y, mid + k * 1.5, toward, cord, 2.8)
@@ -4051,8 +4316,8 @@ def hammock():
         for y in range(head + 2, foot - 1, 2):
             c.circle(mid + sx * (sag(y) - 2), y, 2.2, selvedge)
 
-    c.rect(mid - 21, 146, mid + 21, 174, (226, 220, 210, 255), 9)   # cushion
-    c.line(mid - 15, 160, mid + 15, 160, weave, 1.6)
+    c.rect(mid - 21, 146 + pad, mid + 21, 174 + pad, (226, 220, 210, 255), 9)   # cushion
+    c.line(mid - 15, 160 + pad, mid + 15, 160 + pad, weave, 1.6)
 
     # North and south are this drawing; east and west are a view of their own.
     px, w, h = c.pixels(), c.w, c.h
@@ -4071,15 +4336,17 @@ def hammock_side():
     sheet is a wide lens - the north/south shape, foreshortened - that also
     sags a little, so its middle hangs lower than its ends and the belly
     shows under the near rim. The cords rise to rings at either edge, where
-    the supports are. Graphic_Multi turns the draw size round, so 320 x 160."""
-    c = Canvas(320, 160)
+    the supports are. Graphic_Multi turns the draw size round, so this is the
+    north/south canvas on its side: (320 + 2 * HAMMOCK_PAD) x 160."""
+    pad = HAMMOCK_PAD
+    c = Canvas(320 + 2 * pad, 160)
     body = (208, 200, 188, 255)
     under = (170, 162, 150, 255)
     weave = (184, 176, 164, 210)
     selvedge = (170, 162, 150, 235)
     cord = (104, 94, 82, 255)
     cord_lt = (140, 128, 114, 255)
-    x0, x1 = 76, 244
+    x0, x1 = 76 + pad, 244 + pad
     cy, ring_y = 72, 44
     width, sag, belly_h = 2.5 * 0.62, 8, 4
 
@@ -4101,8 +4368,8 @@ def hammock_side():
     def belly(x):
         return near(x) + belly_h * math.sin(math.pi * t_of(x)) ** 1.4
 
-    c.ellipse(160, 146, 84, 8, (0, 0, 0, 45))                 # shadow on the floor
-    for end_x, ring_x in ((x0, 5), (x1, 315)):
+    c.ellipse(160 + pad, 146, 84, 8, (0, 0, 0, 45))           # shadow on the floor
+    for end_x, ring_x in ((x0, 5), (x1, 315 + 2 * pad)):
         for k in range(-3, 4):
             ey = cy + k * 2.4
             c.line(ring_x, ring_y, end_x, ey, cord, 2.6)
@@ -4126,7 +4393,7 @@ def hammock_side():
         c.circle(x, near(x), 2.2, selvedge)                    # rolled near rim
     for x in range(x0 + 2, x1 - 1, 3):
         c.circle(x, far(x) + 1, 1.6, selvedge)
-    cx = 132
+    cx = 132 + pad
     mid = cy + droop(cx)
     c.rect(cx - 22, mid - 11, cx + 22, mid + 11, (226, 220, 210, 255), 9)   # cushion
     c.line(cx - 15, mid, cx + 15, mid, weave, 1.5)

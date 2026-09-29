@@ -206,7 +206,9 @@ namespace EntertainingIdeas
             }
             Vector3 at = parent.DrawPos;
             at.y += Props.altitudeOffset;
-            graphic.Draw(at, Rot4.North, parent, 0f);
+            // The table stays upright (drawRotated false); what is on it turns
+            // with the facing, drawn as it is when the table faces south.
+            graphic.Draw(at, Rot4.North, parent, 180f - parent.Rotation.AsAngle);
         }
 
         public override string CompInspectStringExtra()

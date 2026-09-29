@@ -109,8 +109,7 @@ def animation():
     captions = ("PINS STANDING, BALL WAITING", "BALL MID LANE", "PINS SCATTERED")
     for i, frame in enumerate(("0", "3", "5")):
         base, bw, bh = img("SkittlesLane_east.png")
-        ov, ow, oh = img("SkittlesLaneRoll_%s.png" % frame)
-        ov, ow, oh = rotate(ov, ow, oh, 3)      # south strip -> east, as the comp does
+        ov, ow, oh = img("SkittlesLaneRollEast_%s.png" % frame)   # the side-on strip
         s_ = (W - 60) / float(bw)
         yy = y + i * 172
         preview.blit(c, base, bw, bh, 30, yy, s_)

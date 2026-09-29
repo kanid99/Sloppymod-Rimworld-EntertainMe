@@ -47,7 +47,7 @@ SECTIONS = [
     ("AQUARIUM  INDUSTRIAL  2X1",
      ["Aquarium_south.png", "AquariumLifeSouth_0.png", "AquariumLifeSouth_4.png"]),
     ("SKITTLES LANE  MEDIEVAL  1X5",
-     ["SkittlesLane_south.png", "SkittlesLaneRoll_2.png", "SkittlesLaneRoll_5.png"]),
+     ["SkittlesLane_south.png", "SkittlesLaneRollSouth_2.png", "SkittlesLaneRollEast_5.png"]),
     ("KARAOKE MACHINE  INDUSTRIAL  A CROWD GATHERS",
      ["KaraokeMachine_south.png", "KaraokeMachineSingSouth_1.png", "KaraokeMachineSingSouth_4.png"]),
     ("GRAVBALL COURT  ULTRA  3X3",
