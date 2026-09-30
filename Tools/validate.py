@@ -266,6 +266,18 @@ for name, node in thing_defs.items():
         fail("%s is made from stuff but sets constructEffect - the game reports a "
              "config error (the stuff's construct effect always wins); drop it" % name)
 
+for path in xml_files(DEFS):
+    root = parsed(path)
+    if root is None:
+        continue
+    for node in root.iter():
+        if node.tag not in ("label", "description") or not node.text:
+            continue
+        text = node.text.replace("\\n", "\n").replace("\\t", "\t")
+        if text != text.strip():
+            fail("%s: a <%s> starting or ending in whitespace (%r) - the game reports "
+                 "a config error for it" % (os.path.relpath(path, ROOT), node.tag, node.text[:40]))
+
 for name, node in terrain_defs.items():
     if inherited(node, "fertility") is None:
         fail("terrain %s has no <fertility> - RimWorld 1.6 reports a config error "
