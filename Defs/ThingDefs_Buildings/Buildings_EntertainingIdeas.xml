@@ -672,7 +672,14 @@
     <canOverlapZones>true</canOverlapZones>
     <building>
       <isEdifice>false</isEdifice>
+      <!-- With clearBuildingArea off, the way conduits and ceiling fans
+           are set up: hanging it never clears or deconstructs what
+           stands on the floor tile below, and furniture can still be
+           built there afterwards. -->
+      <isInert>true</isInert>
+      <canBuildNonEdificesUnder>true</canBuildNonEdificesUnder>
     </building>
+    <clearBuildingArea>false</clearBuildingArea>
     <placeWorkers>
       <li>EntertainingIdeas.PlaceWorker_WallMountedDisplay</li>
     </placeWorkers>
@@ -2277,7 +2284,14 @@
     <leaveResourcesWhenKilled>false</leaveResourcesWhenKilled>
     <building>
       <isEdifice>false</isEdifice>
+      <!-- With clearBuildingArea off, the way conduits and ceiling fans
+           are set up: hanging it never clears or deconstructs what
+           stands on the floor tile below, and furniture can still be
+           built there afterwards. -->
+      <isInert>true</isInert>
+      <canBuildNonEdificesUnder>true</canBuildNonEdificesUnder>
     </building>
+    <clearBuildingArea>false</clearBuildingArea>
     <placeWorkers>
       <li>EntertainingIdeas.PlaceWorker_WallMountedDisplay</li>
     </placeWorkers>
