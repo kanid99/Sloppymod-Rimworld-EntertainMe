@@ -514,7 +514,6 @@
     <defaultPlacingRot>South</defaultPlacingRot>
     <fillPercent>0.4</fillPercent>
     <pathCost>60</pathCost>
-    <constructEffect>ConstructMetal</constructEffect>
     <constructionSkillPrerequisite>5</constructionSkillPrerequisite>
     <statBases>
       <MaxHitPoints>110</MaxHitPoints>
@@ -1195,7 +1194,6 @@
     <tickerType>Normal</tickerType>
     <fillPercent>0.45</fillPercent>
     <pathCost>60</pathCost>
-    <constructEffect>ConstructMetal</constructEffect>
     <constructionSkillPrerequisite>5</constructionSkillPrerequisite>
     <statBases>
       <MaxHitPoints>110</MaxHitPoints>

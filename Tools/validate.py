@@ -244,6 +244,33 @@ for name, node in thing_defs.items():
                  "list entries, so the building would get two of each"
                  % (name, ancestor, ", ".join(clash)))
 
+# --- The game's own def config errors that can be seen from the XML ---------
+# RimWorld checks these at startup and logs them as red errors.
+def inherited(node, tag):
+    """The first value of tag on node or up its ParentName chain."""
+    seen = set()
+    while node is not None:
+        value = node.find(tag)
+        if value is not None:
+            return value
+        parent = node.get("ParentName")
+        if parent in seen:
+            return None
+        seen.add(parent)
+        node = named.get(parent)
+    return None
+
+
+for name, node in thing_defs.items():
+    if inherited(node, "stuffCategories") is not None and inherited(node, "constructEffect") is not None:
+        fail("%s is made from stuff but sets constructEffect - the game reports a "
+             "config error (the stuff's construct effect always wins); drop it" % name)
+
+for name, node in terrain_defs.items():
+    if inherited(node, "fertility") is None:
+        fail("terrain %s has no <fertility> - RimWorld 1.6 reports a config error "
+             "for every terrain without one" % name)
+
 # --- C# classes named from XML, and their animation frames ------------------
 source_classes = set()
 defof_fields = []        # (DefOf class, def type, defName)

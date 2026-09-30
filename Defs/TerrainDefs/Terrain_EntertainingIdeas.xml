@@ -18,6 +18,7 @@
     <edgeType>Hard</edgeType>
     <renderPrecedence>360</renderPrecedence>
     <pathCost>2</pathCost>
+    <fertility>0</fertility>
     <statBases>
       <Beauty>1</Beauty>
       <Cleanliness>0.3</Cleanliness>
@@ -52,6 +53,7 @@
     <!-- Wading is slower than walking, but this is a pool, not a river: it
          must not be so expensive that pawns path all the way around it. -->
     <pathCost>18</pathCost>
+    <fertility>0</fertility>
     <statBases>
       <Beauty>4</Beauty>
       <Cleanliness>0.4</Cleanliness>
@@ -83,6 +85,7 @@
     <edgeType>Hard</edgeType>
     <renderPrecedence>362</renderPrecedence>
     <pathCost>18</pathCost>
+    <fertility>0</fertility>
     <statBases>
       <Beauty>0</Beauty>
       <Cleanliness>0</Cleanliness>
@@ -105,6 +108,7 @@
     <edgeType>Hard</edgeType>
     <renderPrecedence>362</renderPrecedence>
     <pathCost>18</pathCost>
+    <fertility>0</fertility>
     <statBases>
       <Beauty>-4</Beauty>
       <Cleanliness>-0.6</Cleanliness>
