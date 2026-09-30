@@ -5,14 +5,14 @@
   <packageId>kanid99.entertainingideas</packageId>
   <!-- Stamped with the build number, date and commit by Tools/package.sh
        when a zip is cut, so an installed copy says which build it is. -->
-  <modVersion>0.9.92</modVersion>
+  <modVersion>0.9.93</modVersion>
   <supportedVersions>
     <li>1.5</li>
     <li>1.6</li>
   </supportedVersions>
-  <description>Build 0.9.92
+  <description>Build 0.9.93
 
-37 new recreation buildings, one for nearly every rung of the tech ladder, so a colony always has something worth doing - whether it is chewing pemmican in a hide tent or running an archotech lounge.
+42 new recreation buildings, one for nearly every rung of the tech ladder, so a colony always has something worth doing - whether it is chewing pemmican in a hide tent or running an archotech lounge.
 
 RimWorld 1.5 and 1.6. No new research: everything gates on projects the game already has. No Harmony, no dependencies, and safe to add to an existing save. Things animate while they are being used - pinball balls fly, arcade screens play, fish swim, sacks arc through the air.
 
@@ -38,8 +38,11 @@ INDUSTRIAL
 - Swimming pool - painted as terrain in any shape; the filter claims every tile joined to it.
 - Aquarium, air hockey, massage chair, heated tub, bowling lane, and two clockwork orreries.
 
+FITNESS
+- Trampoline, punching bag, weight bench, exercise bike and bouldering wall. Colonists really bounce, climb and pedal; the bag swings where it is hit, the bike feeds the power grid, and a proper session leaves them feeling they have worked out.
+
 SPACER AND ULTRA
-- Vista panels, 1 to 3 tiles wide, set into the wall - dawn, daylight, sunset and stars on the local clock, easing cabin fever.
+- Vista panels, 1 to 3 tiles wide, hung on a wall - dawn, daylight, sunset and stars on the local clock, easing cabin fever.
 - Hologame pod, dreamloop holotheater and gravball court.
 
 GOOD TO KNOW

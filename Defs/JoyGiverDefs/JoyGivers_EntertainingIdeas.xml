@@ -391,4 +391,77 @@
     </requiredCapacities>
   </JoyGiverDef>
 
+  <!-- Fitness equipment. -->
+  <JoyGiverDef>
+    <defName>EI_Exercise_Trampoline</defName>
+    <giverClass>EntertainingIdeas.JoyGiver_Exercise</giverClass>
+    <baseChance>2.5</baseChance>
+    <thingDefs>
+      <li>EI_Trampoline</li>
+    </thingDefs>
+    <jobDef>EI_Exercise_Trampoline</jobDef>
+    <joyKind>EI_Exercise</joyKind>
+    <requiredCapacities>
+      <li>Moving</li>
+    </requiredCapacities>
+  </JoyGiverDef>
+
+  <JoyGiverDef>
+    <defName>EI_Exercise_PunchingBag</defName>
+    <giverClass>EntertainingIdeas.JoyGiver_Exercise</giverClass>
+    <baseChance>2.5</baseChance>
+    <thingDefs>
+      <li>EI_PunchingBag</li>
+    </thingDefs>
+    <jobDef>EI_Exercise_PunchingBag</jobDef>
+    <joyKind>EI_Exercise</joyKind>
+    <requiredCapacities>
+      <li>Moving</li>
+      <li>Manipulation</li>
+    </requiredCapacities>
+  </JoyGiverDef>
+
+  <JoyGiverDef>
+    <defName>EI_Exercise_WeightBench</defName>
+    <giverClass>EntertainingIdeas.JoyGiver_Exercise</giverClass>
+    <baseChance>2.5</baseChance>
+    <thingDefs>
+      <li>EI_WeightBench</li>
+    </thingDefs>
+    <jobDef>EI_Exercise_WeightBench</jobDef>
+    <joyKind>EI_Exercise</joyKind>
+    <requiredCapacities>
+      <li>Manipulation</li>
+    </requiredCapacities>
+  </JoyGiverDef>
+
+  <JoyGiverDef>
+    <defName>EI_Exercise_ExerciseBike</defName>
+    <giverClass>EntertainingIdeas.JoyGiver_Exercise</giverClass>
+    <baseChance>2.5</baseChance>
+    <thingDefs>
+      <li>EI_ExerciseBike</li>
+    </thingDefs>
+    <jobDef>EI_Exercise_ExerciseBike</jobDef>
+    <joyKind>EI_Exercise</joyKind>
+    <requiredCapacities>
+      <li>Moving</li>
+    </requiredCapacities>
+  </JoyGiverDef>
+
+  <JoyGiverDef>
+    <defName>EI_Exercise_BoulderingWall</defName>
+    <giverClass>EntertainingIdeas.JoyGiver_Exercise</giverClass>
+    <baseChance>2.5</baseChance>
+    <thingDefs>
+      <li>EI_BoulderingWall</li>
+    </thingDefs>
+    <jobDef>EI_Exercise_BoulderingWall</jobDef>
+    <joyKind>EI_Exercise</joyKind>
+    <requiredCapacities>
+      <li>Moving</li>
+      <li>Manipulation</li>
+    </requiredCapacities>
+  </JoyGiverDef>
+
 </Defs>

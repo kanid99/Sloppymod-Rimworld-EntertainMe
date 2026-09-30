@@ -5831,5 +5831,15 @@ def _build_tangle():
 
 _register("tangle", _build_tangle)
 
+def _build_fitness():
+    # Modelled in 3D and drawn by fitness.py; written straight to disk, so
+    # there is nothing to hand the texture overview.
+    import fitness
+    fitness.build_all(OUT)
+    return None
+
+
+_register("fitness", _build_fitness)
+
 if __name__ == "__main__":
     main()

@@ -80,4 +80,18 @@
     </stages>
   </ThoughtDef>
 
+  <!-- After a proper session on any of the fitness equipment. -->
+  <ThoughtDef>
+    <defName>EI_WorkedOut</defName>
+    <durationDays>0.3</durationDays>
+    <stackLimit>1</stackLimit>
+    <stages>
+      <li>
+        <label>worked out</label>
+        <description>Everything aches in the way that means it did some good.</description>
+        <baseMoodEffect>3</baseMoodEffect>
+      </li>
+    </stages>
+  </ThoughtDef>
+
 </Defs>

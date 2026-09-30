@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Defs>
+
+  <!-- The fitness equipment's own kind of recreation, so a gym counts as
+       something different to do rather than more of the dexterity games. -->
+  <JoyKindDef>
+    <defName>EI_Exercise</defName>
+    <label>exercise</label>
+  </JoyKindDef>
+
+</Defs>

@@ -2870,4 +2870,281 @@
     </comps>
   </ThingDef>
 
+  <!-- ======================== Fitness equipment ========================= -->
+  <!-- Modelled in 3D and drawn from RimWorld's camera (Source/TextureGen/
+       fitness.py). The canvases are square, with the footprint's centre below
+       the middle, so each carries a drawOffset lifting the picture back onto
+       its footprint. The colonist using one is placed on the model by
+       CompExercise's bodyAt, in the same model coordinates. -->
+
+  <ThingDef ParentName="EI_JoyBuildingBase">
+    <defName>EI_Trampoline</defName>
+    <label>trampoline</label>
+    <description>A round sheet of woven mat on a ring of springs, with a padded cover over them for the look of the thing. A colonist climbs on, starts bouncing, and after about three bounces remembers what it was like to be nine.\n\nChildren get more out of it than anyone. Colonists who move badly now and then come down wrong and bruise a leg; the fit almost never do. A proper session leaves anyone feeling they have worked out.</description>
+    <graphicData>
+      <texPath>EntertainingIdeas/Buildings/Trampoline</texPath>
+      <graphicClass>Graphic_Single</graphicClass>
+      <drawSize>(3,3)</drawSize>
+      <damageData>
+        <rect>(0.1,0.1,2.8,2.8)</rect>
+      </damageData>
+    </graphicData>
+    <size>(3,3)</size>
+    <rotatable>false</rotatable>
+    <passability>Standable</passability>
+    <pathCost>30</pathCost>
+    <fillPercent>0.2</fillPercent>
+    <statBases>
+      <MaxHitPoints>120</MaxHitPoints>
+      <WorkToBuild>3200</WorkToBuild>
+      <Mass>40</Mass>
+      <Beauty>2</Beauty>
+      <JoyGainFactor>1.15</JoyGainFactor>
+    </statBases>
+    <costList>
+      <Steel>60</Steel>
+      <Cloth>40</Cloth>
+    </costList>
+    <building>
+      <joyKind>EI_Exercise</joyKind>
+    </building>
+    <comps>
+      <li Class="EntertainingIdeas.CompProperties_Exercise">
+        <motion>Bounce</motion>
+        <onBuilding>true</onBuilding>
+        <!-- The mat's centre, drawn a little above the middle of the picture. -->
+        <bodyAt>(0,0,0.21)</bodyAt>
+        <bounceTicks>64</bounceTicks>
+        <bounceHeight>0.55</bounceHeight>
+        <bruiseChance>0.01</bruiseChance>
+        <childJoyFactor>1.5</childJoyFactor>
+      </li>
+      <!-- The mat dipping under each landing: 8 frames of 8 ticks, the same
+           64-tick bounce the colonist is lifted on. -->
+      <li Class="EntertainingIdeas.CompProperties_AnimatedScreen">
+        <framePath>EntertainingIdeas/Buildings/TrampolineBounce</framePath>
+        <frameCount>8</frameCount>
+        <ticksPerFrame>8</ticksPerFrame>
+        <drawSize>(3,3)</drawSize>
+        <altitudeOffset>0.01</altitudeOffset>
+        <playJobs>
+          <li>EI_Exercise_Trampoline</li>
+        </playJobs>
+      </li>
+    </comps>
+    <researchPrerequisites>
+      <li>ComplexFurniture</li>
+    </researchPrerequisites>
+  </ThingDef>
+
+  <ThingDef ParentName="EI_JoyBuildingBase">
+    <defName>EI_PunchingBag</defName>
+    <label>punching bag</label>
+    <description>A heavy canvas bag packed with rags and sand, hung on a chain from a steel stand. Colonists work through their frustrations on it one jab at a time, and it swings, circles and settles back as if nothing happened.\n\nRegular use trains melee. A proper session leaves anyone feeling they have worked out.</description>
+    <graphicData>
+      <texPath>EntertainingIdeas/Buildings/PunchingBagStand</texPath>
+      <graphicClass>Graphic_Multi</graphicClass>
+      <drawSize>(2,2)</drawSize>
+      <drawOffset>(0,0,0.5625)</drawOffset>
+      <damageData>
+        <rect>(0.15,0.1,0.7,0.8)</rect>
+      </damageData>
+    </graphicData>
+    <rotatable>true</rotatable>
+    <defaultPlacingRot>South</defaultPlacingRot>
+    <hasInteractionCell>true</hasInteractionCell>
+    <interactionCellOffset>(0,0,1)</interactionCellOffset>
+    <placeWorkers>
+      <li>PlaceWorker_PreventInteractionSpotOverlap</li>
+    </placeWorkers>
+    <fillPercent>0.35</fillPercent>
+    <pathCost>50</pathCost>
+    <statBases>
+      <MaxHitPoints>100</MaxHitPoints>
+      <WorkToBuild>1800</WorkToBuild>
+      <Mass>25</Mass>
+      <Beauty>0</Beauty>
+      <JoyGainFactor>1.0</JoyGainFactor>
+    </statBases>
+    <costList>
+      <Steel>40</Steel>
+      <Cloth>25</Cloth>
+    </costList>
+    <building>
+      <joyKind>EI_Exercise</joyKind>
+    </building>
+    <comps>
+      <li Class="EntertainingIdeas.CompProperties_Exercise">
+        <motion>Punch</motion>
+      </li>
+      <!-- The bag itself: a pendulum under the arm, drawn from 49 pre-drawn
+           swing positions. The stand is the building's own texture. -->
+      <li Class="EntertainingIdeas.CompProperties_PunchingBag"/>
+    </comps>
+  </ThingDef>
+
+  <ThingDef ParentName="EI_JoyBuildingBase">
+    <defName>EI_WeightBench</defName>
+    <label>weight bench</label>
+    <description>A padded bench under a rack, and a steel bar with iron plates on it. A colonist lies back, unracks the bar, presses it until their arms have opinions about it, and racks it again.\n\nA proper session leaves anyone feeling they have worked out.</description>
+    <graphicData>
+      <texPath>EntertainingIdeas/Buildings/WeightBench</texPath>
+      <graphicClass>Graphic_Multi</graphicClass>
+      <drawSize>(2.5,2.5)</drawSize>
+      <drawOffset>(0,0,0.3125)</drawOffset>
+      <damageData>
+        <rect>(0.2,0.1,0.6,1.8)</rect>
+      </damageData>
+    </graphicData>
+    <size>(1,2)</size>
+    <rotatable>true</rotatable>
+    <defaultPlacingRot>South</defaultPlacingRot>
+    <fillPercent>0.3</fillPercent>
+    <pathCost>50</pathCost>
+    <statBases>
+      <MaxHitPoints>120</MaxHitPoints>
+      <WorkToBuild>2500</WorkToBuild>
+      <Mass>45</Mass>
+      <Beauty>0</Beauty>
+      <JoyGainFactor>1.0</JoyGainFactor>
+    </statBases>
+    <costList>
+      <Steel>80</Steel>
+    </costList>
+    <building>
+      <joyKind>EI_Exercise</joyKind>
+    </building>
+    <comps>
+      <li Class="EntertainingIdeas.CompProperties_Exercise">
+        <motion>Lift</motion>
+        <onBuilding>true</onBuilding>
+        <bodyAt>(0,-0.05,0.5)</bodyAt>
+      </li>
+      <!-- The bar is its own overlay, drawn over the colonist lying under it:
+           racked when nobody is using the bench, pressed up and down when
+           somebody is. -->
+      <li Class="EntertainingIdeas.CompProperties_AnimatedScreen">
+        <framePath>EntertainingIdeas/Buildings/WeightBenchBar</framePath>
+        <frameCount>8</frameCount>
+        <ticksPerFrame>12</ticksPerFrame>
+        <idleFramePath>EntertainingIdeas/Buildings/WeightBenchBarRacked</idleFramePath>
+        <idleFrameCount>1</idleFrameCount>
+        <drawSize>(2.5,2.5)</drawSize>
+        <perFacing>true</perFacing>
+        <drawOverPawns>true</drawOverPawns>
+        <playJobs>
+          <li>EI_Exercise_WeightBench</li>
+        </playJobs>
+      </li>
+    </comps>
+  </ThingDef>
+
+  <ThingDef ParentName="EI_JoyBuildingBase">
+    <defName>EI_ExerciseBike</defName>
+    <label>exercise bike</label>
+    <description>A bicycle that goes nowhere, with a heavy flywheel where the front wheel should be. Somebody worked out that the flywheel might as well turn a generator while it was at it, so a colonist pedalling puts a little power into whatever it is wired to - nothing while nobody rides it.\n\nA proper session leaves anyone feeling they have worked out.</description>
+    <graphicData>
+      <texPath>EntertainingIdeas/Buildings/ExerciseBike</texPath>
+      <graphicClass>Graphic_Multi</graphicClass>
+      <drawSize>(2,2)</drawSize>
+      <drawOffset>(0,0,0.328125)</drawOffset>
+      <damageData>
+        <rect>(0.2,0.1,0.6,0.8)</rect>
+      </damageData>
+    </graphicData>
+    <rotatable>true</rotatable>
+    <defaultPlacingRot>South</defaultPlacingRot>
+    <tickerType>Normal</tickerType>
+    <fillPercent>0.3</fillPercent>
+    <pathCost>50</pathCost>
+    <statBases>
+      <MaxHitPoints>100</MaxHitPoints>
+      <WorkToBuild>3000</WorkToBuild>
+      <Mass>30</Mass>
+      <Beauty>0</Beauty>
+      <JoyGainFactor>1.0</JoyGainFactor>
+    </statBases>
+    <costList>
+      <Steel>50</Steel>
+      <ComponentIndustrial>2</ComponentIndustrial>
+    </costList>
+    <building>
+      <joyKind>EI_Exercise</joyKind>
+    </building>
+    <comps>
+      <li Class="CompProperties_Power">
+        <compClass>EntertainingIdeas.CompPowerPlantPedal</compClass>
+        <basePowerConsumption>-100</basePowerConsumption>
+        <transmitsPower>true</transmitsPower>
+      </li>
+      <li Class="EntertainingIdeas.CompProperties_Exercise">
+        <motion>Pedal</motion>
+        <onBuilding>true</onBuilding>
+        <!-- On the saddle. -->
+        <bodyAt>(0,0.12,0.82)</bodyAt>
+      </li>
+      <li Class="EntertainingIdeas.CompProperties_AnimatedScreen">
+        <framePath>EntertainingIdeas/Buildings/ExerciseBikePedal</framePath>
+        <frameCount>8</frameCount>
+        <ticksPerFrame>5</ticksPerFrame>
+        <drawSize>(2,2)</drawSize>
+        <perFacing>true</perFacing>
+        <playJobs>
+          <li>EI_Exercise_ExerciseBike</li>
+        </playJobs>
+      </li>
+    </comps>
+    <researchPrerequisites>
+      <li>Electricity</li>
+    </researchPrerequisites>
+  </ThingDef>
+
+  <ThingDef ParentName="EI_JoyBuildingBase">
+    <defName>EI_BoulderingWall</defName>
+    <label>bouldering wall</label>
+    <description>A plywood panel leaning back on timber braces, studded with bright resin holds, and a thick crash mat laid in front of it. Colonists work their way up hand over hand, hang at the top for a moment of triumph, and drop back onto the mat to do it again by a different route.\n\nA proper session leaves anyone feeling they have worked out.</description>
+    <graphicData>
+      <texPath>EntertainingIdeas/Buildings/BoulderingWall</texPath>
+      <graphicClass>Graphic_Multi</graphicClass>
+      <drawSize>(4,4)</drawSize>
+      <drawOffset>(0,0,0.34375)</drawOffset>
+      <damageData>
+        <rect>(0.05,0.1,1.9,0.8)</rect>
+      </damageData>
+    </graphicData>
+    <size>(2,1)</size>
+    <rotatable>true</rotatable>
+    <defaultPlacingRot>South</defaultPlacingRot>
+    <!-- The crash mat is drawn on the row in front, where the climber stands.
+         Offsets are given for a north-facing building and turned with it, so
+         +1 is the front of one facing south, as with the pinball tables. -->
+    <hasInteractionCell>true</hasInteractionCell>
+    <interactionCellOffset>(0,0,1)</interactionCellOffset>
+    <placeWorkers>
+      <li>PlaceWorker_PreventInteractionSpotOverlap</li>
+    </placeWorkers>
+    <passability>Impassable</passability>
+    <fillPercent>0.5</fillPercent>
+    <statBases>
+      <MaxHitPoints>200</MaxHitPoints>
+      <WorkToBuild>3500</WorkToBuild>
+      <Mass>60</Mass>
+      <Beauty>2</Beauty>
+      <JoyGainFactor>1.1</JoyGainFactor>
+      <Flammability>0.8</Flammability>
+    </statBases>
+    <costList>
+      <WoodLog>90</WoodLog>
+      <Cloth>30</Cloth>
+    </costList>
+    <building>
+      <joyKind>EI_Exercise</joyKind>
+    </building>
+    <comps>
+      <li Class="EntertainingIdeas.CompProperties_Exercise">
+        <motion>Climb</motion>
+      </li>
+    </comps>
+  </ThingDef>
+
 </Defs>

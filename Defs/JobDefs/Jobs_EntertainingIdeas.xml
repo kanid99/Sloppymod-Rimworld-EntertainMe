@@ -319,4 +319,58 @@
     <allowOpportunisticPrefix>true</allowOpportunisticPrefix>
   </JobDef>
 
+  <!-- Fitness: one driver for all of them, told what to do by the
+       equipment's CompExercise. -->
+  <JobDef>
+    <defName>EI_Exercise_Trampoline</defName>
+    <driverClass>EntertainingIdeas.JobDriver_Exercise</driverClass>
+    <reportString>bouncing on the trampoline.</reportString>
+    <joyDuration>3000</joyDuration>
+    <joyMaxParticipants>1</joyMaxParticipants>
+    <joyKind>EI_Exercise</joyKind>
+    <allowOpportunisticPrefix>true</allowOpportunisticPrefix>
+  </JobDef>
+
+  <JobDef>
+    <defName>EI_Exercise_PunchingBag</defName>
+    <driverClass>EntertainingIdeas.JobDriver_Exercise</driverClass>
+    <reportString>working the punching bag.</reportString>
+    <joyDuration>3000</joyDuration>
+    <joyMaxParticipants>1</joyMaxParticipants>
+    <joySkill>Melee</joySkill>
+    <joyXpPerTick>0.004</joyXpPerTick>
+    <joyKind>EI_Exercise</joyKind>
+    <allowOpportunisticPrefix>true</allowOpportunisticPrefix>
+  </JobDef>
+
+  <JobDef>
+    <defName>EI_Exercise_WeightBench</defName>
+    <driverClass>EntertainingIdeas.JobDriver_Exercise</driverClass>
+    <reportString>lifting weights.</reportString>
+    <joyDuration>3000</joyDuration>
+    <joyMaxParticipants>1</joyMaxParticipants>
+    <joyKind>EI_Exercise</joyKind>
+    <allowOpportunisticPrefix>true</allowOpportunisticPrefix>
+  </JobDef>
+
+  <JobDef>
+    <defName>EI_Exercise_ExerciseBike</defName>
+    <driverClass>EntertainingIdeas.JobDriver_Exercise</driverClass>
+    <reportString>pedalling the exercise bike.</reportString>
+    <joyDuration>3500</joyDuration>
+    <joyMaxParticipants>1</joyMaxParticipants>
+    <joyKind>EI_Exercise</joyKind>
+    <allowOpportunisticPrefix>true</allowOpportunisticPrefix>
+  </JobDef>
+
+  <JobDef>
+    <defName>EI_Exercise_BoulderingWall</defName>
+    <driverClass>EntertainingIdeas.JobDriver_Exercise</driverClass>
+    <reportString>climbing the bouldering wall.</reportString>
+    <joyDuration>3000</joyDuration>
+    <joyMaxParticipants>1</joyMaxParticipants>
+    <joyKind>EI_Exercise</joyKind>
+    <allowOpportunisticPrefix>true</allowOpportunisticPrefix>
+  </JobDef>
+
 </Defs>
