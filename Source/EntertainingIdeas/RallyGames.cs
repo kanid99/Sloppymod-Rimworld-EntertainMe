@@ -448,6 +448,18 @@ namespace EntertainingIdeas
     /// <summary>Stand at an end of the table, face down it, and play.</summary>
     public class JobDriver_Rally : JobDriver
     {
+        /// <summary>
+        /// The "played a game" tale this job's def records on completion is a
+        /// pawn-and-thing tale: the base driver passes only the pawn, and the
+        /// game logs an error building it. Name the table too, as vanilla's
+        /// game drivers do.
+        /// </summary>
+        public override object[] TaleParameters()
+        {
+            Thing played = job.GetTarget(TargetIndex.A).Thing;
+            return new object[] { pawn, played != null ? played.def : (Def)job.def };
+        }
+
         private Thing Table
         {
             get { return job.GetTarget(TargetIndex.A).Thing; }

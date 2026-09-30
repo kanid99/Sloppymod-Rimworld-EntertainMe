@@ -283,6 +283,43 @@ for name, node in terrain_defs.items():
         fail("terrain %s has no <fertility> - RimWorld 1.6 reports a config error "
              "for every terrain without one" % name)
 
+# A job whose def records a tale on completion hands the tale the driver's
+# TaleParameters(). The base JobDriver gives only the pawn; pawn-and-def tales
+# such as PlayedGame then fail to build, with an error every time a game ends.
+# Vanilla's watch and sit-facing drivers pass the thing too.
+TALE_SAFE_BASES = {"JobDriver_WatchBuilding", "JobDriver_SitFacingBuilding"}
+source_text = ""
+if os.path.isdir(SRC):
+    for filename in sorted(os.listdir(SRC)):
+        if filename.endswith(".cs"):
+            with open(os.path.join(SRC, filename), encoding="utf-8") as handle:
+                source_text += handle.read() + "\n"
+
+
+def passes_tale_thing(klass, depth=0):
+    match = re.search(r"class\s+%s\s*:\s*(\w+)" % re.escape(klass), source_text)
+    if not match or depth > 8:
+        return False
+    body = source_text[match.end():]
+    following = re.search(r"\n    (public|internal)?\s*(abstract\s+|static\s+)*class\s", body)
+    if "TaleParameters()" in (body[:following.start()] if following else body):
+        return True
+    base = match.group(1)
+    return base in TALE_SAFE_BASES or passes_tale_thing(base, depth + 1)
+
+
+for path in xml_files(DEFS):
+    root = parsed(path)
+    if root is None:
+        continue
+    for node in root.findall("JobDef"):
+        driver = (node.findtext("driverClass") or "").strip()
+        if node.findtext("taleOnCompletion") and driver.startswith(NAMESPACE + "."):
+            if not passes_tale_thing(driver.split(".", 1)[1]):
+                fail("%s records the %s tale, but %s passes it only the pawn - "
+                     "override TaleParameters() to add the building's def"
+                     % (node.findtext("defName"), node.findtext("taleOnCompletion"), driver))
+
 # --- C# classes named from XML, and their animation frames ------------------
 source_classes = set()
 defof_fields = []        # (DefOf class, def type, defName)
