@@ -3125,6 +3125,11 @@
     </placeWorkers>
     <passability>Impassable</passability>
     <fillPercent>0.5</fillPercent>
+    <!-- Impassable but only half height is deliberate: nobody walks through a climbing panel,
+         but it is low enough to see and shoot over. RimWorld flags that combination as a config
+         error on the assumption it is a mistake; this is vanilla's own switch for saying it
+         is not. -->
+    <disableImpassableShotOverConfigError>true</disableImpassableShotOverConfigError>
     <statBases>
       <MaxHitPoints>200</MaxHitPoints>
       <WorkToBuild>3500</WorkToBuild>
