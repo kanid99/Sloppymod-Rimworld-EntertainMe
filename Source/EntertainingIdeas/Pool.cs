@@ -277,6 +277,7 @@ namespace EntertainingIdeas
         // pool fills outward from the filter and drains back toward it.
         private List<IntVec3> cells = new List<IntVec3>();
         private int nextRecountTick;
+        private bool sharedPool;
 
         private CompProperties_PoolController Props
         {
@@ -418,12 +419,13 @@ namespace EntertainingIdeas
                 Recount();
             }
 
-            // A bigger pool is a bigger pump.
+            // A bigger pool is a bigger pump. Kept at the real draw while off,
+            // as vanilla's consumers are: the power net reads it to decide
+            // whether it can afford to switch the filter back on, and a 0 there
+            // had it switch on, overload and brown out again forever.
             if (power != null)
             {
-                power.PowerOutput = power.PowerOn
-                    ? -(Props.basePowerConsumption + Props.powerPerTile * cells.Count)
-                    : 0f;
+                power.PowerOutput = -(Props.basePowerConsumption + Props.powerPerTile * cells.Count);
             }
 
             // 250 ticks is one rare tick; 60000 is a day.
@@ -495,12 +497,31 @@ namespace EntertainingIdeas
                 return;
             }
 
+            // Tiles another filter already runs are its, not ours: the older
+            // filter keeps a pool two were built beside, rather than both
+            // claiming it with their own water and fighting over the water line.
+            HashSet<IntVec3> taken = new HashSet<IntVec3>();
+            foreach (Thing other in map.listerThings.ThingsOfDef(parent.def))
+            {
+                CompPoolController controller = other == parent ? null : other.TryGetComp<CompPoolController>();
+                if (controller != null && other.thingIDNumber < parent.thingIDNumber)
+                {
+                    taken.UnionWith(controller.cells);
+                }
+            }
+            sharedPool = false;
+
             HashSet<IntVec3> seen = new HashSet<IntVec3>();
             Queue<IntVec3> queue = new Queue<IntVec3>();
             foreach (IntVec3 adjacent in GenAdj.CellsAdjacent8Way(parent))
             {
                 if (adjacent.InBounds(map) && IsPoolCell(map, adjacent) && seen.Add(adjacent))
                 {
+                    if (taken.Contains(adjacent))
+                    {
+                        sharedPool = true;
+                        continue;
+                    }
                     queue.Enqueue(adjacent);
                 }
             }
@@ -512,7 +533,7 @@ namespace EntertainingIdeas
                 for (int i = 0; i < 4; i++)
                 {
                     IntVec3 next = cell + GenAdj.CardinalDirections[i];
-                    if (next.InBounds(map) && IsPoolCell(map, next) && seen.Add(next))
+                    if (next.InBounds(map) && IsPoolCell(map, next) && !taken.Contains(next) && seen.Add(next))
                     {
                         queue.Enqueue(next);
                     }
@@ -567,7 +588,16 @@ namespace EntertainingIdeas
         // --- IServiceable: a pool off the plumbing is filled by the bucket ---
         public bool NeedsService
         {
-            get { return handFill && !Plumbed && cells.Count > 0 && litres < Capacity - 0.01f; }
+            // Asking whenever it was a drop short sent a hauler to the river for
+            // every few litres of evaporation. Now it waits until a tile's worth
+            // is gone, or a twentieth of a big pool - the water line drops by a
+            // tile or so at the edge, then a load tops it up - and never longer
+            // than a whole load.
+            get
+            {
+                float wait = Mathf.Min(Props.litresPerLoad, Mathf.Max(Props.litresPerTile, Capacity * 0.05f));
+                return handFill && !Plumbed && cells.Count > 0 && Capacity - litres >= wait;
+            }
         }
 
         public int ServiceWorkTicks
@@ -610,7 +640,9 @@ namespace EntertainingIdeas
         {
             if (cells.Count == 0)
             {
-                return "No pool attached: lay pool basin next to this unit.";
+                return sharedPool
+                    ? "Another filtration unit already runs this pool."
+                    : "No pool attached: lay pool basin next to this unit.";
             }
 
             string line = cells.Count + " tiles, "
@@ -821,7 +853,8 @@ namespace EntertainingIdeas
         /// <summary>Chance a swim in foul water makes the swimmer ill.</summary>
         private const float SicknessChance = 0.3f;
 
-        private int spotsLeft = 6;
+        private const int SpotsPerSwim = 6;
+        private int spotsLeft = SpotsPerSwim;
         private bool swamInFoul;
 
         private Thing Filter
@@ -850,7 +883,7 @@ namespace EntertainingIdeas
         public override void ExposeData()
         {
             base.ExposeData();
-            Scribe_Values.Look(ref spotsLeft, "EI_swimSpotsLeft", 6);
+            Scribe_Values.Look(ref spotsLeft, "EI_swimSpotsLeft", SpotsPerSwim);
             Scribe_Values.Look(ref swamInFoul, "EI_swamInFoul", false);
         }
 
@@ -886,11 +919,29 @@ namespace EntertainingIdeas
             Toil pickSpot = ToilMaker.MakeToil("EI_PickSwimSpot");
             pickSpot.initAction = delegate
             {
+                // The first spot is the one the giver found and the job already
+                // reserved; after that each new spot is reserved as the old one
+                // is let go, so two swimmers never head for the same tile and a
+                // spot left behind is free for someone else.
+                if (spotsLeft == SpotsPerSwim && job.targetA.Cell.IsValid)
+                {
+                    spotsLeft--;
+                    return;
+                }
                 IntVec3 cell;
                 if (spotsLeft > 0 && JoyGiver_Swim.TryFindWetCell(pawn, PoolCells(), out cell))
                 {
                     spotsLeft--;
+                    ReservationManager reservations = pawn.Map.reservationManager;
+                    if (reservations.ReservedBy(job.targetA, pawn, job))
+                    {
+                        reservations.Release(job.targetA, pawn, job);
+                    }
                     job.SetTarget(TargetIndex.A, cell);
+                    if (!pawn.ReserveSittableOrSpot(cell, job, false))
+                    {
+                        EndJobWith(JobCondition.Succeeded);
+                    }
                 }
                 else
                 {

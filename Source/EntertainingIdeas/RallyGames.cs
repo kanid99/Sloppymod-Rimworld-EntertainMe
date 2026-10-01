@@ -389,7 +389,7 @@ namespace EntertainingIdeas
                     PathEndMode.Touch,
                     TraverseParms.For(pawn),
                     40f,
-                    t => Usable(pawn, t) && TryFindSpot(pawn, t, out spot));
+                    t => Usable(pawn, t, def.jobDef) && TryFindSpot(pawn, t, def.jobDef, out spot));
                 if (table != null && spot.IsValid)
                 {
                     return JobMaker.MakeJob(def.jobDef, table, spot);
@@ -398,20 +398,29 @@ namespace EntertainingIdeas
             return null;
         }
 
-        private static bool Usable(Pawn pawn, Thing table)
+        private static bool Usable(Pawn pawn, Thing table, JobDef jobDef)
         {
             if (table.IsForbidden(pawn) || table.IsBurning() || !table.IsSociallyProper(pawn))
             {
                 return false;
             }
             CompRallyGame game = table.TryGetComp<CompRallyGame>();
-            return game != null && game.Ready && game.PlayerCount(pawn) < 2;
+            if (game == null || !game.Ready)
+            {
+                return false;
+            }
+            // Players at the ends, or everyone already sent here if more.
+            int players = System.Math.Max(game.PlayerCount(pawn), CommittedPlayers.Count(table, jobDef, pawn));
+            return players < 2;
         }
 
-        private static bool TryFindSpot(Pawn pawn, Thing table, out IntVec3 spot)
+        private static readonly List<Pawn> sent = new List<Pawn>();
+
+        private static bool TryFindSpot(Pawn pawn, Thing table, JobDef jobDef, out IntVec3 spot)
         {
             spot = IntVec3.Invalid;
             CompRallyGame game = table.TryGetComp<CompRallyGame>();
+            CommittedPlayers.Of(table, jobDef, pawn, sent);
             float best = float.MaxValue;
             for (int end = 0; end < 2; end++)
             {
@@ -421,6 +430,16 @@ namespace EntertainingIdeas
                     continue;               // taken: go to the other end
                 }
                 TableEnds.Cells(table, end, tmp);
+                // Someone already on their way to this end has it too.
+                bool claimed = false;
+                for (int s = 0; s < sent.Count && !claimed; s++)
+                {
+                    claimed = tmp.Contains(sent[s].CurJob.targetB.Cell);
+                }
+                if (claimed)
+                {
+                    continue;
+                }
                 for (int c = 0; c < tmp.Count; c++)
                 {
                     IntVec3 cell = tmp[c];
@@ -441,6 +460,7 @@ namespace EntertainingIdeas
                 }
             }
             tmp.Clear();
+            sent.Clear();
             return spot.IsValid;
         }
     }

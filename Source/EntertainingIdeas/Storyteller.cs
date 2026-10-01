@@ -73,8 +73,20 @@ namespace EntertainingIdeas
                 {
                     continue;
                 }
-                Building building = cell.GetFirstBuilding(map);
-                if (building == null || !IsFireDef(building.def, minSize))
+                // The whole cell, not GetFirstBuilding: a conduit or a pipe laid
+                // there before the campfire is the first building, and hid it.
+                Building building = null;
+                List<Thing> things = cell.GetThingList(map);
+                for (int i = 0; i < things.Count; i++)
+                {
+                    Building candidate = things[i] as Building;
+                    if (candidate != null && IsFireDef(candidate.def, minSize))
+                    {
+                        building = candidate;
+                        break;
+                    }
+                }
+                if (building == null)
                 {
                     continue;
                 }

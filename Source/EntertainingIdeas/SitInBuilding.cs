@@ -49,7 +49,10 @@ namespace EntertainingIdeas
 
         private static bool Usable(Pawn pawn, Thing thing)
         {
-            if (thing.IsForbidden(pawn) || thing.IsBurning())
+            // Not in a prison cell or somebody else's bedroom, as vanilla's
+            // interact-building givers check.
+            if (thing.IsForbidden(pawn) || thing.IsBurning()
+                || !thing.IsSociallyProper(pawn) || !thing.IsPoliticallyProper(pawn))
             {
                 return false;
             }

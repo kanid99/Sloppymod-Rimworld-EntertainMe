@@ -200,14 +200,13 @@
 
   <!-- Vanilla's watch-building driver, unchanged: it puts the colonist on a
        free spot in the throwing area, faces them at the board and runs the joy
-       tick. It reserves that spot and not the board, which is what lets a
-       second colonist join - the same reason several pawns can watch one
-       television. The cap at two lives in the giver.
+       tick. It reserves that spot, and the board for up to joyMaxParticipants
+       colonists at once - the same way several pawns can watch one
+       television.
 
-       joyMaxParticipants below is NOT what limits it: the field is declared on
-       JobDef and never read anywhere in the game's assembly. It is set because
-       vanilla's own defs set it and it records the intent, but nothing
-       consults it. -->
+       joyMaxParticipants is what caps it at two: the driver reserves the board
+       for up to that many, and the giver checks it before sending anyone. Left
+       out it is 1 and the second player is turned away. -->
   <JobDef>
     <defName>EI_Play_Cornhole</defName>
     <driverClass>JobDriver_WatchBuilding</driverClass>

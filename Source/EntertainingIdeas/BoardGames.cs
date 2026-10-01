@@ -251,7 +251,7 @@ namespace EntertainingIdeas
                     PathEndMode.Touch,
                     TraverseParms.For(pawn),
                     40f,
-                    t => Usable(pawn, t)
+                    t => Usable(pawn, t, def.jobDef)
                          && JoyGiver_Jigsaw.TryFindSeat(pawn, t, RequiresChair(t), out seat));
                 if (table != null && seat.IsValid)
                 {
@@ -267,14 +267,21 @@ namespace EntertainingIdeas
             return game == null || game.Props.requireChair;
         }
 
-        private static bool Usable(Pawn pawn, Thing table)
+        private static bool Usable(Pawn pawn, Thing table, JobDef jobDef)
         {
             if (table.IsForbidden(pawn) || table.IsBurning() || !table.IsSociallyProper(pawn))
             {
                 return false;
             }
             CompBoardGame game = table.TryGetComp<CompBoardGame>();
-            return game != null && game.PlayerCount(pawn) < game.Props.maxPlayers;
+            if (game == null)
+            {
+                return false;
+            }
+            // Seated players, or everyone already sent here if more: the
+            // ones still walking to a chair count too.
+            int players = System.Math.Max(game.PlayerCount(pawn), CommittedPlayers.Count(table, jobDef, pawn));
+            return players < game.Props.maxPlayers;
         }
     }
 

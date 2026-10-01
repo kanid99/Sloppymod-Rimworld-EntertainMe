@@ -138,8 +138,10 @@ namespace EntertainingIdeas
         {
             AddFinishAction(delegate
             {
+                // Only a game actually played: a colonist called away on the
+                // way to the lane never reached their spot and rolled nothing.
                 Thing thing = job.GetTarget(TargetIndex.A).Thing;
-                if (thing != null)
+                if (thing != null && pawn.Spawned && pawn.Position == job.GetTarget(TargetIndex.B).Cell)
                 {
                     CompPinDeck deck = thing.TryGetComp<CompPinDeck>();
                     if (deck != null)

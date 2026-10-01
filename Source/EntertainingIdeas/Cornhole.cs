@@ -85,10 +85,14 @@ namespace EntertainingIdeas
     /// area, the standing spots, the reservations and the placement overlay all
     /// come from the def's watchBuilding fields.
     ///
-    /// The only thing added is the cap. Cornhole is a two-player game and the
-    /// throwing area holds more than two, so the third colonist along is told
-    /// the board is busy. joyMaxParticipants on the JobDef does not do this:
-    /// that field is declared and never read anywhere in the game's assembly.
+    /// The cap at two players is the JobDef's joyMaxParticipants: vanilla's
+    /// watch-building driver reserves the board for up to that many, and its
+    /// giver checks the same number before sending anyone. (An earlier note
+    /// here said the field was never read - that came from the reference
+    /// assemblies the mod compiles against, which have no method bodies to
+    /// read it in. Left out, it is 1, and the second player is turned away.)
+    /// The count of players in the throwing area below is a second guard on
+    /// the same limit, for the pawn already standing there.
     /// </summary>
     public class JoyGiver_Cornhole : JoyGiver_WatchBuilding
     {

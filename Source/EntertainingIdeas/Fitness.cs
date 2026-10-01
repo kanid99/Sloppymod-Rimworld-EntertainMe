@@ -348,7 +348,8 @@ namespace EntertainingIdeas
 
         private static bool Usable(Pawn pawn, Thing thing)
         {
-            if (thing.IsForbidden(pawn) || thing.IsBurning() || !thing.IsSociallyProper(pawn))
+            if (thing.IsForbidden(pawn) || thing.IsBurning()
+                || !thing.IsSociallyProper(pawn) || !thing.IsPoliticallyProper(pawn))
             {
                 return false;
             }
