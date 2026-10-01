@@ -256,6 +256,11 @@
     <defName>EI_ListenToStory</defName>
     <driverClass>EntertainingIdeas.JobDriver_ListenToStory</driverClass>
     <reportString>listening to a story.</reportString>
+    <!-- The audience, all reserving the stump through vanilla's watch-building
+         job, which allows this many at once. Left out, it defaults to 1: the
+         first listener took the only place and everyone else was told there
+         was no room. The teller claims only the stump's cell. -->
+    <joyMaxParticipants>8</joyMaxParticipants>
     <joyDuration>3000</joyDuration>
     <joyKind>Social</joyKind>
     <allowOpportunisticPrefix>true</allowOpportunisticPrefix>
@@ -290,6 +295,9 @@
     <defName>EI_Play_NoughtsCrosses</defName>
     <driverClass>JobDriver_WatchBuilding</driverClass>
     <reportString>playing lawn noughts and crosses.</reportString>
+    <!-- Two players, as the cornhole giver allows. Left out, it defaults to 1 and
+         the second player is turned away. -->
+    <joyMaxParticipants>2</joyMaxParticipants>
     <joyDuration>3600</joyDuration>
     <joySkill>Shooting</joySkill>
     <joyXpPerTick>0.004</joyXpPerTick>
@@ -302,6 +310,8 @@
     <defName>EI_Play_FourInARow</defName>
     <driverClass>JobDriver_WatchBuilding</driverClass>
     <reportString>playing four-in-a-row.</reportString>
+    <!-- Two players, as the cornhole giver allows. -->
+    <joyMaxParticipants>2</joyMaxParticipants>
     <joyDuration>3000</joyDuration>
     <joySkill>Intellectual</joySkill>
     <joyXpPerTick>0.0015</joyXpPerTick>

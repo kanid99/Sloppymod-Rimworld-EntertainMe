@@ -320,6 +320,34 @@ for path in xml_files(DEFS):
                      "override TaleParameters() to add the building's def"
                      % (node.findtext("defName"), node.findtext("taleOnCompletion"), driver))
 
+# A job on a shared building reserves it for up to joyMaxParticipants pawns,
+# through vanilla's watch, sit-facing and television drivers. Left out, that is
+# 1, and every colonist after the first is told there is no room - the
+# storyteller's audience and the two-player lawn games both shipped that way.
+# Say how many, even when it is 1.
+SHARED_DRIVERS = {"JobDriver_WatchBuilding", "JobDriver_SitFacingBuilding", "JobDriver_WatchTelevision"}
+
+
+def driver_base(klass, depth=0):
+    match = re.search(r"class\s+%s\s*:\s*(\w+)" % re.escape(klass), source_text)
+    if not match or depth > 8:
+        return None
+    base = match.group(1)
+    return base if base in SHARED_DRIVERS else driver_base(base, depth + 1)
+
+
+for path in xml_files(DEFS):
+    root = parsed(path)
+    if root is None:
+        continue
+    for node in root.findall("JobDef"):
+        driver = (node.findtext("driverClass") or "").strip()
+        shared = driver in SHARED_DRIVERS or (
+            driver.startswith(NAMESPACE + ".") and driver_base(driver.split(".", 1)[1]) is not None)
+        if shared and node.findtext("joyMaxParticipants") is None:
+            fail("%s uses %s but does not set joyMaxParticipants - it defaults to 1, so only "
+                 "one colonist can use the building at a time" % (node.findtext("defName"), driver))
+
 # --- C# classes named from XML, and their animation frames ------------------
 source_classes = set()
 defof_fields = []        # (DefOf class, def type, defName)
