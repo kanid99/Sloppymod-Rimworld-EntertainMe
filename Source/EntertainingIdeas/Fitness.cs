@@ -61,11 +61,24 @@ namespace EntertainingIdeas
         public float childJoyFactor = 1f;
         /// <summary>How long a session must run to count as a workout.</summary>
         public int workoutTicks = 900;
+        /// <summary>
+        /// Given after a workout: a short-lived boost to the stats the
+        /// equipment trains. A new workout replaces it, so it never stacks.
+        /// </summary>
+        public HediffDef workoutBuff;
+        /// <summary>Skills trained while using it, on top of the JobDef's joySkill.</summary>
+        public List<ExerciseSkillXp> trainSkills = new List<ExerciseSkillXp>();
 
         public CompProperties_Exercise()
         {
             compClass = typeof(CompExercise);
         }
+    }
+
+    public class ExerciseSkillXp
+    {
+        public SkillDef skill;
+        public float xpPerTick;
     }
 
     public class CompExercise : ThingComp
@@ -497,6 +510,17 @@ namespace EntertainingIdeas
                 return;
             }
             exercise.MarkUsed();
+            if (pawn.skills != null)
+            {
+                List<ExerciseSkillXp> training = exercise.Props.trainSkills;
+                for (int i = 0; i < training.Count; i++)
+                {
+                    if (training[i].skill != null)
+                    {
+                        pawn.skills.Learn(training[i].skill, training[i].xpPerTick * delta);
+                    }
+                }
+            }
             ExerciseMotion motion = exercise.Props.motion;
             if (motion == ExerciseMotion.Lift)
             {
@@ -536,14 +560,33 @@ namespace EntertainingIdeas
             {
                 return;
             }
-            if (played >= exercise.Props.workoutTicks && pawn.needs != null && pawn.needs.mood != null)
+            if (played >= exercise.Props.workoutTicks)
             {
-                pawn.needs.mood.thoughts.memories.TryGainMemory(EI_FitnessDefOf.EI_WorkedOut);
+                if (pawn.needs != null && pawn.needs.mood != null)
+                {
+                    pawn.needs.mood.thoughts.memories.TryGainMemory(EI_FitnessDefOf.EI_WorkedOut);
+                }
+                GiveBuff(exercise.Props.workoutBuff);
             }
             if (exercise.Props.bruiseChance > 0f && played > 300)
             {
                 MaybeBruise(exercise.Props.bruiseChance);
             }
+        }
+
+        /// <summary>Starts the buff afresh, replacing one still running.</summary>
+        private void GiveBuff(HediffDef buff)
+        {
+            if (buff == null || pawn.health == null || pawn.Dead)
+            {
+                return;
+            }
+            Hediff running = pawn.health.hediffSet.GetFirstHediffOfDef(buff);
+            if (running != null)
+            {
+                pawn.health.RemoveHediff(running);
+            }
+            pawn.health.AddHediff(HediffMaker.MakeHediff(buff, pawn));
         }
 
         /// <summary>

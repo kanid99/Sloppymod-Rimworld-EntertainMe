@@ -347,7 +347,8 @@
     <joyDuration>3000</joyDuration>
     <joyMaxParticipants>1</joyMaxParticipants>
     <joySkill>Melee</joySkill>
-    <joyXpPerTick>0.004</joyXpPerTick>
+    <!-- About 60 XP a full session: a real help to a novice, nothing like a fight. -->
+    <joyXpPerTick>0.02</joyXpPerTick>
     <joyKind>EI_Exercise</joyKind>
     <allowOpportunisticPrefix>true</allowOpportunisticPrefix>
   </JobDef>

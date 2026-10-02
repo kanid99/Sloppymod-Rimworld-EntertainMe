@@ -49,4 +49,82 @@
     </stages>
   </HediffDef>
 
+  <!-- After a workout on the fitness equipment: a day of feeling the benefit,
+       in the stats that equipment trains. A new workout replaces it rather
+       than stacking. -->
+  <HediffDef Name="EI_WorkoutBuffBase" Abstract="True">
+    <hediffClass>HediffWithComps</hediffClass>
+    <defaultLabelColor>(0.55, 0.85, 1.0)</defaultLabelColor>
+    <isBad>false</isBad>
+    <initialSeverity>1</initialSeverity>
+    <comps>
+      <li Class="HediffCompProperties_Disappears">
+        <disappearsAfterTicks>60000</disappearsAfterTicks>
+        <showRemainingTime>true</showRemainingTime>
+      </li>
+    </comps>
+  </HediffDef>
+
+  <HediffDef ParentName="EI_WorkoutBuffBase">
+    <defName>EI_Pumped</defName>
+    <label>pumped</label>
+    <description>Fresh from the weight bench. Heavy things feel a little lighter for a while.</description>
+    <stages>
+      <li>
+        <statFactors>
+          <CarryingCapacity>1.15</CarryingCapacity>
+          <MiningSpeed>1.1</MiningSpeed>
+          <ConstructionSpeed>1.05</ConstructionSpeed>
+        </statFactors>
+      </li>
+    </stages>
+  </HediffDef>
+
+  <HediffDef ParentName="EI_WorkoutBuffBase">
+    <defName>EI_GoodStamina</defName>
+    <label>good stamina</label>
+    <description>Fresh from the exercise bike. Legs and lungs are warmed up, and the day takes a little longer to wear them out.</description>
+    <stages>
+      <li>
+        <statFactors>
+          <MoveSpeed>1.05</MoveSpeed>
+          <RestFallRateFactor>0.9</RestFallRateFactor>
+        </statFactors>
+      </li>
+    </stages>
+  </HediffDef>
+
+  <HediffDef ParentName="EI_WorkoutBuffBase">
+    <defName>EI_Sharp</defName>
+    <label>sharp</label>
+    <description>Fresh from the punching bag. Hands quick, footwork light.</description>
+    <stages>
+      <li>
+        <statOffsets>
+          <MeleeHitChance>2</MeleeHitChance>
+          <MeleeDodgeChance>3</MeleeDodgeChance>
+        </statOffsets>
+      </li>
+    </stages>
+  </HediffDef>
+
+  <HediffDef ParentName="EI_WorkoutBuffBase">
+    <defName>EI_Limber</defName>
+    <label>limber</label>
+    <description>Fresh from the bouldering wall. Loose, nimble and a little surer of hand.</description>
+    <stages>
+      <li>
+        <statFactors>
+          <MoveSpeed>1.03</MoveSpeed>
+        </statFactors>
+        <capMods>
+          <li>
+            <capacity>Manipulation</capacity>
+            <offset>0.03</offset>
+          </li>
+        </capMods>
+      </li>
+    </stages>
+  </HediffDef>
+
 </Defs>

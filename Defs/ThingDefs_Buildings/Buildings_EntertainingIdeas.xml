@@ -2940,7 +2940,7 @@
   <ThingDef ParentName="EI_JoyBuildingBase">
     <defName>EI_PunchingBag</defName>
     <label>punching bag</label>
-    <description>A heavy canvas bag packed with rags and sand, hung on a chain from a steel stand. Colonists work through their frustrations on it one jab at a time, and it swings, circles and settles back as if nothing happened.\n\nRegular use trains melee. A proper session leaves anyone feeling they have worked out.</description>
+    <description>A heavy canvas bag packed with rags and sand, hung on a chain from a steel stand. Colonists work through their frustrations on it one jab at a time, and it swings, circles and settles back as if nothing happened.\n\nRegular use trains melee. A proper session leaves anyone feeling they have worked out, and sharp for a day: a little quicker to land a blow and to slip one.</description>
     <graphicData>
       <texPath>EntertainingIdeas/Buildings/PunchingBagStand</texPath>
       <graphicClass>Graphic_Multi</graphicClass>
@@ -2976,6 +2976,7 @@
     <comps>
       <li Class="EntertainingIdeas.CompProperties_Exercise">
         <motion>Punch</motion>
+        <workoutBuff>EI_Sharp</workoutBuff>
       </li>
       <!-- The bag itself: a pendulum under the arm, drawn from 49 pre-drawn
            swing positions. The stand is the building's own texture. -->
@@ -2986,7 +2987,7 @@
   <ThingDef ParentName="EI_JoyBuildingBase">
     <defName>EI_WeightBench</defName>
     <label>weight bench</label>
-    <description>A padded bench under a rack, and a steel bar with iron plates on it. A colonist lies back, unracks the bar, presses it until their arms have opinions about it, and racks it again.\n\nA proper session leaves anyone feeling they have worked out.</description>
+    <description>A padded bench under a rack, and a steel bar with iron plates on it. A colonist lies back, unracks the bar, presses it until their arms have opinions about it, and racks it again.\n\nTrains mining and construction a little. A proper session leaves anyone feeling they have worked out, and pumped for a day: able to carry more, and quicker at mining and building.</description>
     <graphicData>
       <texPath>EntertainingIdeas/Buildings/WeightBench</texPath>
       <graphicClass>Graphic_Multi</graphicClass>
@@ -3019,6 +3020,11 @@
         <motion>Lift</motion>
         <onBuilding>true</onBuilding>
         <bodyAt>(0,-0.05,0.5)</bodyAt>
+        <workoutBuff>EI_Pumped</workoutBuff>
+        <trainSkills>
+          <li><skill>Mining</skill><xpPerTick>0.008</xpPerTick></li>
+          <li><skill>Construction</skill><xpPerTick>0.008</xpPerTick></li>
+        </trainSkills>
       </li>
       <!-- The bar is its own overlay, drawn over the colonist lying under it:
            racked when nobody is using the bench, pressed up and down when
@@ -3042,7 +3048,7 @@
   <ThingDef ParentName="EI_JoyBuildingBase">
     <defName>EI_ExerciseBike</defName>
     <label>exercise bike</label>
-    <description>A bicycle that goes nowhere, with a heavy flywheel where the front wheel should be. Somebody worked out that the flywheel might as well turn a generator while it was at it, so a colonist pedalling puts a little power into whatever it is wired to - nothing while nobody rides it.\n\nA proper session leaves anyone feeling they have worked out.</description>
+    <description>A bicycle that goes nowhere, with a heavy flywheel where the front wheel should be. Somebody worked out that the flywheel might as well turn a generator while it was at it, so a colonist pedalling puts a little power into whatever it is wired to - nothing while nobody rides it.\n\nA proper session leaves anyone feeling they have worked out, with good stamina for a day: a little faster on their feet and slower to tire.</description>
     <graphicData>
       <texPath>EntertainingIdeas/Buildings/ExerciseBike</texPath>
       <graphicClass>Graphic_Multi</graphicClass>
@@ -3082,6 +3088,7 @@
         <onBuilding>true</onBuilding>
         <!-- On the saddle. -->
         <bodyAt>(0,0.12,0.82)</bodyAt>
+        <workoutBuff>EI_GoodStamina</workoutBuff>
       </li>
       <li Class="EntertainingIdeas.CompProperties_AnimatedScreen">
         <framePath>EntertainingIdeas/Buildings/ExerciseBikePedal</framePath>
@@ -3102,7 +3109,7 @@
   <ThingDef ParentName="EI_JoyBuildingBase">
     <defName>EI_BoulderingWall</defName>
     <label>bouldering wall</label>
-    <description>A plywood panel leaning back on timber braces, studded with bright resin holds, and a thick crash mat laid in front of it. Colonists work their way up hand over hand, hang at the top for a moment of triumph, and drop back onto the mat to do it again by a different route.\n\nA proper session leaves anyone feeling they have worked out.</description>
+    <description>A plywood panel leaning back on timber braces, studded with bright resin holds, and a thick crash mat laid in front of it. Colonists work their way up hand over hand, hang at the top for a moment of triumph, and drop back onto the mat to do it again by a different route.\n\nTrains construction a little. A proper session leaves anyone feeling they have worked out, and limber for a day: a little quicker on their feet and surer of hand.</description>
     <graphicData>
       <texPath>EntertainingIdeas/Buildings/BoulderingWall</texPath>
       <graphicClass>Graphic_Multi</graphicClass>
@@ -3148,6 +3155,10 @@
     <comps>
       <li Class="EntertainingIdeas.CompProperties_Exercise">
         <motion>Climb</motion>
+        <workoutBuff>EI_Limber</workoutBuff>
+        <trainSkills>
+          <li><skill>Construction</skill><xpPerTick>0.008</xpPerTick></li>
+        </trainSkills>
       </li>
     </comps>
   </ThingDef>
