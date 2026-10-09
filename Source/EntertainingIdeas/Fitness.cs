@@ -485,7 +485,7 @@ namespace EntertainingIdeas
             switch (exercise.Props.motion)
             {
                 case ExerciseMotion.Lift:
-                    pawn.jobs.posture = PawnPosture.LayingOnGroundNormal;
+                    pawn.jobs.posture = PawnPosture.LayingOnGroundFaceUp;
                     pawn.Rotation = Equipment.Rotation;
                     break;
                 case ExerciseMotion.Pedal:
@@ -524,7 +524,7 @@ namespace EntertainingIdeas
             ExerciseMotion motion = exercise.Props.motion;
             if (motion == ExerciseMotion.Lift)
             {
-                pawn.jobs.posture = PawnPosture.LayingOnGroundNormal;
+                pawn.jobs.posture = PawnPosture.LayingOnGroundFaceUp;
             }
             if (motion == ExerciseMotion.Punch && Find.TickManager.TicksGame >= nextPunchTick)
             {
@@ -626,6 +626,26 @@ namespace EntertainingIdeas
                 Messages.Message(pawn.LabelShort + " came down badly on the " + Equipment.LabelShort
                                  + " and bruised their " + hurt.Label + ".",
                                  pawn, MessageTypeDefOf.NegativeHealthEvent);
+            }
+        }
+
+        /// <summary>
+        /// On the weight bench: lying on their back with the head at the rack
+        /// end, under the bar. The rack is at the bench's back, so the head
+        /// points the opposite way to the bench's facing. Without this the
+        /// game lays them out by the pawn's own facing - face down, head at
+        /// the wrong end.
+        /// </summary>
+        public override Rot4 ForcedLayingRotation
+        {
+            get
+            {
+                CompExercise exercise = Exercise;
+                if (exercising && exercise != null && exercise.Props.motion == ExerciseMotion.Lift)
+                {
+                    return Equipment.Rotation.Opposite;
+                }
+                return base.ForcedLayingRotation;
             }
         }
 
