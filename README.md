@@ -7,7 +7,7 @@ knucklebones on day one; an archotech lounge gets a room-sized shared
 hallucination.
 
 Mostly XML, plus a small assembly for the parts that move. No Harmony, no mod
-dependencies. Supports RimWorld **1.5 and 1.6**, with a separate assembly built
+dependencies. Supports RimWorld **1.5, 1.6 and 1.7**, with a separate assembly built
 for each — see [Versions](#versions).
 
 ## What it adds
