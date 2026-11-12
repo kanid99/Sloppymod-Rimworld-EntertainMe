@@ -2847,7 +2847,10 @@ LANE_MODERN = dict(frame=(44, 48, 62, 255), lane=(224, 192, 138, 255),
                    ball_hi=(152, 120, 220, 255), foul=(196, 72, 60, 230))
 
 
-def draw_skittles(c, frame=None, total=6, modern=False):
+def draw_skittles(c, frame=None, total=6, modern=False, pins=True):
+    """The lane from above, pins at the far end. pins=False leaves them off,
+    for the north view: that is this drawing turned round, and pins stood on
+    their heads would be wrong, so they are stood up afterwards."""
     import math
     p = None if frame is None else float(frame) / (total - 1)
     pal = LANE_MODERN if modern else LANE_RUSTIC
@@ -2874,21 +2877,8 @@ def draw_skittles(c, frame=None, total=6, modern=False):
             c.circle(dx, 836, 2.6, (150, 120, 80, 200))
         c.rect(106, 200, 114, 800, (58, 64, 84, 255), 3)        # ball return rail
 
-    scattered = p is not None and p > 0.72
-    for row, xs in enumerate(rows):
-        py = 46 + row * 27
-        for k, px in enumerate(xs):
-            if scattered:
-                shove = (p - 0.72) / 0.28
-                ang = (row * 1.7 + k * 2.3)
-                px = px + math.cos(ang) * 26 * shove
-                py2 = py + math.sin(ang) * 20 * shove - 6 * shove
-                tilt = 5 * shove
-            else:
-                py2, tilt = py, 0
-            c.ellipse(px, py2, 7 + tilt, 9 - tilt * 0.4, DARK)
-            c.ellipse(px, py2, 5.5 + tilt, 7.5 - tilt * 0.4, (238, 232, 218, 255))
-            c.ellipse(px, py2 - 2, 3.4, 2.6, (196, 62, 54, 255))
+    if pins:
+        lane_end_pins(c, p, modern)
 
     if p is None:
         bx, by = 64, 846
@@ -2905,6 +2895,54 @@ def draw_skittles(c, frame=None, total=6, modern=False):
 
 
 PIN_W, PIN_H = 11, 34
+PIN_END_SCALE = 0.8               # pins seen from the ends, against 27 px between rows
+PIN_END_FOOT = 9                  # a pin stands this far below its spot's centre
+PIN_END_TOP = {False: 46, True: 62}   # first row's y; the bowling rows clear the pinsetter
+
+
+def lane_end_pins(c, p, modern, turned=False):
+    """The pins as they stand from either end of the lane: upright, the way the
+    side views draw them, not circles seen from straight above. They rise up
+    the screen from where they stand, so the nearer rows are drawn last.
+    turned puts them at the near end, for the north view."""
+    rows = PIN_ROWS_TENPIN if modern else PIN_ROWS
+    scattered = p is not None and p > 0.72
+    shove = (p - 0.72) / 0.28 if scattered else 0.0
+    placed = []
+    for row, xs in enumerate(rows):
+        for k, across in enumerate(xs):
+            x, y, tilt = float(across), float(PIN_END_TOP[modern] + row * 27), 0.0
+            if scattered:
+                ang = row * 1.7 + k * 2.3
+                x = min(110.0, max(18.0, x + math.cos(ang) * 26 * shove))   # stays on the lane
+                y += math.sin(ang) * 20 * shove - 6 * shove
+                tilt = (-1.25 if (row + k) % 2 else 1.15) * shove
+            if turned:
+                x, y, tilt = 128 - x, 896 - y, -tilt
+            placed.append((y, x, tilt))
+    for py, px, tilt in sorted(placed):
+        lane_pin(c, px, py + PIN_END_FOOT, tilt=tilt, scale=PIN_END_SCALE)
+
+
+def _lane_north(frame, total, modern):
+    """The north view: the lane turned round, then the pins stood upright on it."""
+    c = Canvas(128, 896)
+    draw_skittles(c, frame, total, modern=modern, pins=False)
+    rp, rw, rh = rotate(c.pixels(), c.w, c.h, 2)
+    top = Canvas(128, 896)
+    lane_end_pins(top, None if frame is None else float(frame) / (total - 1), modern, turned=True)
+    tp = top.pixels()
+    out = bytearray(rp)
+    for i in range(0, len(out), 4):
+        a = tp[i + 3]
+        if a == 255:
+            out[i:i + 4] = tp[i:i + 4]
+        elif a:
+            f = a / 255.0
+            for k in range(3):
+                out[i + k] = int(tp[i + k] * f + out[i + k] * (1 - f) + 0.5)
+            out[i + 3] = max(out[i + 3], a)
+    return out, rw, rh
 
 
 def lane_pin(c, x, y, tilt=0.0, scale=1.0):
@@ -2981,13 +3019,14 @@ def lane_side(modern, phase=None):
 
 
 def _lane(name, modern):
-    """South is the top-down drawing (pins at the far end), north the same
-    turned round; east and west are the lane side-on (lane_side)."""
+    """South is the lane from above with the pins standing at the far end,
+    north the same lane turned round with the pins standing at the near end;
+    east and west are the lane side-on (lane_side)."""
     c = Canvas(128, 896)
     draw_skittles(c, None, modern=modern)
     px, w, h = c.pixels(), c.w, c.h
     write_png(os.path.join(OUT, "%s_south.png" % name), w, h, px)
-    rp, rw, rh = rotate(px, w, h, 2)
+    rp, rw, rh = _lane_north(None, 6, modern)
     write_png(os.path.join(OUT, "%s_north.png" % name), rw, rh, rp)
     east = lane_side(modern)
     east.save(os.path.join(OUT, "%s_east.png" % name))
@@ -3004,7 +3043,7 @@ def _lane_frames(name, modern, total=6):
         draw_skittles(c, i, total, modern=modern)
         px, w, h = c.pixels(), c.w, c.h
         write_png(os.path.join(OUT, "%sSouth_%d.png" % (name, i)), w, h, px)
-        rp, rw, rh = rotate(px, w, h, 2)
+        rp, rw, rh = _lane_north(i, total, modern)
         write_png(os.path.join(OUT, "%sNorth_%d.png" % (name, i)), rw, rh, rp)
         east = lane_side(modern, float(i) / (total - 1))
         east.save(os.path.join(OUT, "%sEast_%d.png" % (name, i)))
@@ -4415,10 +4454,16 @@ CH_SEAM = (156, 114, 70, 220)
 # Side-on (east; west is the same drawing mirrored): the hole end is raised,
 # so the board's top is a slanted strip, higher at that end. These place it;
 # CompCornholeGame lands sacks on the same strip.
+#
+# The top is as deep as the board is wide: 88 px from the ends, and 0.8 of
+# that side-on, which is what the fitness models' camera gives a flat top. It
+# used to be 34, which made the board read half as wide once it was turned.
+# The slope and the top's centre are where they were, so only the depth share
+# in CompCornholeGame (SideDepthShare) changes with it.
 CH_SIDE_X = (12, 244)
-CH_SIDE_EDGE = (66, 96)           # the top's near edge at each end, y
-CH_SIDE_DEPTH = 34                # how deep the top reads, foreshortened
-CH_SIDE_GROUND = 106
+CH_SIDE_EDGE = (84, 114)          # the top's near edge at each end, y
+CH_SIDE_DEPTH = 70                # how deep the top reads, foreshortened
+CH_SIDE_GROUND = 124
 
 
 def _ch_side_edge(x):
@@ -4455,7 +4500,7 @@ def cornhole_view(facing):
         c = MirrorCanvas(base) if facing == "west" else base
         x0, x1 = CH_SIDE_X
         edge, depth, ground = _ch_side_edge, CH_SIDE_DEPTH, CH_SIDE_GROUND
-        c.ellipse(128, ground + 2, 118, 6, (0, 0, 0, 50))
+        c.ellipse(128, ground + 1, 118, 3, (0, 0, 0, 50))
         for lx, col in ((x0 + 20, CH_PLANK_DK), (x0 + 8, darker(CH_PLANK_DK, 0.8))):   # legs
             c.rect(lx - 4, edge(lx) + 6, lx + 4, ground, DARK, 2)
             c.rect(lx - 2.5, edge(lx) + 7, lx + 2.5, ground - 1, col, 1.5)
@@ -4469,11 +4514,11 @@ def cornhole_view(facing):
             shade = tuple(int(CH_PLANK_LT[i] + (CH_PLANK_DK[i] - CH_PLANK_LT[i]) * t * 0.6) for i in range(3))
             c.poly([(xa, edge(xa) - depth + 2), (xb, edge(xb) - depth + 2),
                     (xb, edge(xb) - 1), (xa, edge(xa) - 1)], shade + (255,))
-        for k in range(1, 4):                                   # plank seams, foreshortened
-            c.line(x0 + 4, edge(x0) - depth * k / 4.0, x1 - 4, edge(x1) - depth * k / 4.0,
+        for k in range(1, 5):                                   # plank seams: five planks, as from the ends
+            c.line(x0 + 4, edge(x0) - depth * k / 5.0, x1 - 4, edge(x1) - depth * k / 5.0,
                    (156, 114, 70, 200), 1.2)
         hx = x0 + 46
-        _ch_hole(c, hx, edge(hx) - depth / 2.0, 14, 7.5)
+        _ch_hole(c, hx, edge(hx) - depth / 2.0, 14, 11.5)
         c.line(x0 + 2, edge(x0) + 5, x1 - 2, edge(x1) + 5, darker(CH_PLANK_DK, 0.75), 1.2)
         return base
 

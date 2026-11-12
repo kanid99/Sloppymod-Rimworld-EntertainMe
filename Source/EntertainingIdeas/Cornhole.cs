@@ -279,9 +279,9 @@ namespace EntertainingIdeas
                 return spot;
             }
             // Side-on the board's top is a slanted strip, higher at the hole
-            // end and only about a quarter of a tile deep as it reads - the
-            // same strip the east and west textures draw - so the sack lands
-            // on it rather than in the air beside it.
+            // end and about half a tile deep as it reads - the same strip the
+            // east and west textures draw - so the sack lands on it rather
+            // than in the air beside it.
             spot.x += parent.Rotation == Rot4.East ? -along : along;
             spot.z += along * SideSlope + across * SideDepthShare;
             return spot;
@@ -290,7 +290,7 @@ namespace EntertainingIdeas
         /// <summary>How much higher the side-on top reads per tile toward the hole end.</summary>
         private const float SideSlope = 0.13f;
         /// <summary>The side-on top's depth as a share of the board's width.</summary>
-        private const float SideDepthShare = 0.4f;
+        private const float SideDepthShare = 0.8f;
 
         /// <summary>
         /// Whether an earlier throw is still lying on the board. Cornhole just
